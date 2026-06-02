@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmacia Claret — Central</title>
+  <meta name="theme-color" content="#1E38A6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Farmacia Claret">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1160 1160'><rect width='1160' height='1160' rx='160' fill='%2379C820'/><g transform='translate(44.5,1160) scale(0.1,-0.1)' fill='%231E38A6' fill-rule='evenodd' stroke='none'><path d='M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z'/></g></svg>">
+  <link rel="manifest" id="pwa-manifest">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ════ LOGIN OVERLAY ════ -->
+<div id="ov-login" style="position:fixed;inset:0;background:linear-gradient(135deg,#0d1d5a 0%,#111827 50%,#0a1840 100%);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:var(--sans)">
+  <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(26,59,174,.35) 0%,transparent 70%);top:-80px;left:-80px;pointer-events:none"></div>
+  <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(61,181,74,.2) 0%,transparent 70%);bottom:-60px;right:-60px;pointer-events:none"></div>
+  <div style="position:relative;background:rgba(255,255,255,.04);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:44px 48px;width:360px;max-width:92vw;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05) inset">
+    <div style="text-align:center;margin-bottom:32px">
+      <svg width="64" height="64" viewBox="0 0 1160 1160" style="border-radius:16px;display:block;margin:0 auto 16px;box-shadow:0 8px 24px rgba(26,59,174,.4)" xmlns="http://www.w3.org/2000/svg"><rect width="1160" height="1160" fill="#79C820"/><g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none"><path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/></g></svg>
+      <div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-.3px">Farmacia Claret</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:5px;letter-spacing:2px;text-transform:uppercase">Sistema Central</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Usuario</label>
+      <input id="login-user" type="text" placeholder="mayra · grismar · ines · gerente · miguel" autocomplete="username"
+        style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);color:#fff;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;font-family:var(--sans)"
+        onfocus="this.style.borderColor='rgba(26,59,174,.8)';this.style.boxShadow='0 0 0 3px rgba(26,59,174,.25)'"
+        onblur="this.style.borderColor='rgba(255,255,255,.12)';this.style.boxShadow='none'"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    </div>
+    <div style="margin-bottom:24px">
+      <label style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Contraseña</label>
+      <input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"
+        style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);color:#fff;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;font-family:var(--sans)"
+        onfocus="this.style.borderColor='rgba(26,59,174,.8)';this.style.boxShadow='0 0 0 3px rgba(26,59,174,.25)'"
+        onblur="this.style.borderColor='rgba(255,255,255,.12)';this.style.boxShadow='none'"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button onclick="doLogin()"
+      style="width:100%;padding:13px;background:linear-gradient(135deg,#1A3BAE,#2347c8);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:all .2s;box-shadow:0 4px 20px rgba(26,59,174,.5);font-family:var(--sans)"
+      onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 28px rgba(26,59,174,.65)'"
+      onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 20px rgba(26,59,174,.5)'">
+      Ingresar →
+    </button>
+    <div id="login-error" style="color:#f87171;font-size:12px;text-align:center;margin-top:12px;min-height:16px"></div>
+    <div style="text-align:center;margin-top:20px;font-size:11px;color:rgba(255,255,255,.25)">© 2025 Droguería Claret · Acceso seguro</div>
+  </div>
+</div>
+
+
+<!-- ════ SIDEBAR ════ -->
+<!-- TASA ALERT BANNER -->
+<div id="tasa-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#b45309,#d97706);color:#fff;font-size:13px;font-weight:600;padding:7px 16px;display:none;align-items:center;justify-content:space-between;gap:12px">
+  <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> La tasa BCV no ha sido actualizada hoy — los montos en Bs pueden estar desactualizados.</span>
+  <button onclick="abrirTasa()" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.5);color:#fff;border-radius:6px;padding:3px 12px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0">Actualizar ahora</button>
+</div>
+<!-- INACTIVIDAD BANNER -->
+<div id="inactivity-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9998;background:linear-gradient(90deg,#7c3aed,#a855f7);color:#fff;font-size:13px;font-weight:600;padding:7px 16px;align-items:center;justify-content:space-between;gap:12px">
+  <span>⏱ Tu sesión cerrará en 2 minutos por inactividad.</span>
+  <button onclick="extendSession()" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.5);color:#fff;border-radius:6px;padding:3px 12px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0">Seguir conectado</button>
+</div>
+<button class="sb-expand" onclick="toggleSidebar()" title="Mostrar menú">▶</button>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+<svg width="46" height="46" viewBox="0 0 1160 1160" style="border-radius:50%;flex-shrink:0;display:block" xmlns="http://www.w3.org/2000/svg">
+          <!-- Lime green background — shows through plant-shaped holes as the logo -->
+          <rect width="1160" height="1160" fill="#79C820"/>
+          <!-- Blue rectangle with evenodd cutouts = lime plant visible on blue field -->
+          <g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none">
+            <path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/>
+          </g>
+        </svg>
+        <div class="sidebar-title">Farmacia Claret</div>
+        <div class="sidebar-sub">Sistema Central</div>
+      </div>
+      <button onclick="toggleSidebar()" title="Ocultar menú" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;padding:2px 4px;border-radius:4px;line-height:1;flex-shrink:0;margin-top:2px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">◀</button>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section ines-hide">Módulos</div>
+    <div class="nav-tab active ines-hide" onclick="showTab('panel')" id="tab-panel"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg></span> Panel</div>
+    <div class="nav-tab ines-hide" onclick="showTab('bancos')" id="tab-bancos"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></span> Bancos &amp; Pagos</div>
+    <div class="sidebar-section ines-hide">Préstamos</div>
+    <div class="nav-tab ines-hide" onclick="showTab('prestamos-fcia')" id="tab-prestamos-fcia"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg></span> Farmacia <span class="tab-badge" id="badge-prestamos-fcia"></span></div>
+    <div class="nav-tab ines-hide" onclick="showTab('prestamos-drog')" id="tab-prestamos-drog"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 11v4"/><path d="M14 13h-4"/><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg></span> Droguería <span class="tab-badge" id="badge-prestamos-drog"></span></div>
+    <div class="sidebar-section ines-hide">Facturas</div>
+    <div class="nav-tab ines-hide" onclick="showTab('fact-farmacia')" id="tab-fact-farmacia"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg></span> Farmacia <span class="tab-badge" id="badge-fact-farmacia"></span></div>
+    <div class="nav-tab ines-hide" onclick="showTab('fact-drogueria')" id="tab-fact-drogueria"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg></span> Droguería <span class="tab-badge" id="badge-fact-drogueria"></span></div>
+    <div class="sidebar-section ines-hide">Registros</div>
+    <div class="nav-tab ines-hide" onclick="showTab('historial')" id="tab-historial"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></span> Historial</div>
+    <div class="nav-tab" onclick="showTab('verif-ines')" id="tab-verif-ines"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></span> Ing. Administrativo</div>
+    <div class="sidebar-section" id="section-gerencia-admin">Análisis</div>
+    <div class="nav-tab gerente-admin-only" onclick="showTab('gerencia')" id="tab-gerencia"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span> Gerencia</div>
+    <div class="nav-tab admin-only" onclick="showTab('admin-panel')" id="tab-admin-panel"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span> Admin Panel</div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="tasa-display" onclick="abrirTasa()" title="Clic para actualizar la tasa del día">
+      <span class="tasa-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></span>
+      <span id="tasa-valor">—</span>
+    </div>
+    <div class="sidebar-user">
+      <span id="user-indicator" style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <button onclick="doLogout()" title="Cerrar sesión" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;flex-shrink:0" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ════ CONTENT ════ -->
+<div class="app-content">
+<div class="mobile-topbar"><button class="mtb-menu" onclick="toggleMobileSidebar()" aria-label="Menú"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button><svg class="mtb-logo" viewBox="0 0 1160 1160" xmlns="http://www.w3.org/2000/svg"><rect width="1160" height="1160" fill="#79C820"/><g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none"><path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/></g></svg><span class="mtb-title">Farmacia Claret</span><button class="mtb-tasa" onclick="abrirTasa()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg><span id="tasa-valor-mobile">—</span></button></div>
+<main class="main">
+
+  <!-- ════ PANEL ════ -->
+  <div id="page-panel" class="page active">
+    <p class="section-title">Panel General</p>
+    <div id="panel-cards"></div>
+    <div id="panel-alerts" style="margin-top:16px"></div>
+    <div id="panel-resumen" style="margin-top:16px"></div>
+  </div>
+
+  <!-- ════ BANCOS ════ -->
+  <div id="page-bancos" class="page">
+    <div id="bancos-content"></div>
+    <div id="bancos-verif-content" style="padding:0 20px 20px"></div>
+  </div>
+
+  <!-- ════ PRÉSTAMOS FARMACIA ════ -->
+  <div id="page-prestamos-fcia" class="page">
+    <div id="prestamos-farmacia-content"></div>
+  </div>
+
+  <!-- ════ PRÉSTAMOS DROGUERÍA ════ -->
+  <div id="page-prestamos-drog" class="page">
+    <div id="prestamos-drogueria-content"></div>
+  </div>
+
+  <!-- ════ FACTURAS FARMACIA ════ -->
+  <div id="page-fact-farmacia" class="page">
+    <div id="farmacia-content"></div>
+  </div>
+
+  <!-- ════ FACTURAS DROGUERÍA ════ -->
+  <div id="page-fact-drogueria" class="page">
+    <div id="drogueria-content"></div>
+  </div>
+
+  <!-- ════ INES VERIFICACIÓN ════ -->
+  <div id="page-verif-ines" class="page">
+    <div id="verif-ines-content"></div>
+  </div>
+
+  <!-- ════ HISTORIAL ════ -->
+  <div id="page-historial" class="page">
+    <div id="historial-content">
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn btn-accent btn-sm grismar-hide" data-ht="prestamos" onclick="histTab=this.dataset.ht;renderHistorial()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg> Préstamos</button>
+        <button class="btn btn-ghost btn-sm" data-ht="facturas" onclick="histTab=this.dataset.ht;renderHistorial()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg> Facturas</button>
+      </div>
+      <div id="historial-inner"></div>
+    </div>
+  </div>
+
+  <!-- ════ GERENCIA ════ -->
+  <div id="page-gerencia" class="page">
+    <div id="gerencia-content"></div>
+  </div>
+
+  <!-- ════ ADMIN PANEL ════ -->
+  <div id="page-admin-panel" class="page">
+    <div id="admin-panel-content"></div>
+  </div>
+
+</main>
+<!-- ════ MODAL NUEVO PRÉSTAMO ════ -->
+<div class="overlay" id="ov-prestamo">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="ov-prestamo-title">Nuevo Préstamo</span>
+      <button class="modal-x" onclick="closeOverlay('ov-prestamo')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-prestamo" onsubmit="guardarNuevoPrestamo(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Entidad *</label>
+            <select class="form-input" id="np-entidad" required>
+              <option value="FARMACIA">Farmacia</option>
+              <option value="DROGUERIA">Droguería</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Banco *</label>
+            <select class="form-input" id="np-banco" required>
+              <option value="">Seleccionar...</option>
+              <option>BANESCO</option><option>BDV</option><option>BNC</option>
+              <option>CARIBE</option><option>MERCANTIL</option><option>PROVINCIAL</option><option>TESORO</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nº Crédito / ID</label>
+            <input class="form-input" id="np-numero" placeholder="Ej: 9600123456 (opcional)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de Inicio *</label>
+            <input class="form-input" type="date" id="np-fecha-inicio" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto Original (USD) *</label>
+            <input class="form-input" type="number" step="0.01" id="np-monto-original" placeholder="0.00" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cuota Mensual (USD) *</label>
+            <input class="form-input" type="number" step="0.01" id="np-cuota" placeholder="0.00" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Total de Cuotas *</label>
+            <input class="form-input" type="number" id="np-total-cuotas" placeholder="Ej: 48" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cuotas ya pagadas</label>
+            <input class="form-input" type="number" id="np-cuotas-hechas" placeholder="0" value="0" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Saldo Actual (USD) *</label>
+            <input class="form-input" type="number" step="0.01" id="np-saldo" placeholder="0.00" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Próxima Cuota *</label>
+            <input class="form-input" type="date" id="np-proxima-cuota" required>
+          </div>
+        </div>
+        <div id="np-error" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px"></div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" onclick="closeOverlay('ov-prestamo')">Cancelar</button>
+          <button type="submit" class="btn btn-accent"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg> Guardar Préstamo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-factura">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="ov-factura-title">Nueva Factura</span>
+      <button class="modal-x" onclick="closeOverlay('ov-factura')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-factura" onsubmit="guardarFactura(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Empresa *</label>
+            <select class="form-input" id="f-empresa" required>
+              <option value="farmacia">Farmacia</option>
+              <option value="drogueria">Droguería</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Proveedor *</label>
+            <input class="form-input" id="f-proveedor" list="list-proveedores" autocomplete="off" required placeholder="Nombre del proveedor">
+            <datalist id="list-proveedores"></datalist>
+          </div>
+          <div class="form-group">
+            <label class="form-label"># Factura *</label>
+            <input class="form-input" id="f-factura" required placeholder="Ej: 3630">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado</label>
+            <select class="form-input" id="f-estado_base">
+              <option value="VIGENTE">Vigente</option>
+              <option value="VENCIDA">Vencida</option>
+              <option value="CONSIGNACION">Consignación</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha Factura</label>
+            <input class="form-input" type="date" id="f-fecha">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha Vencimiento</label>
+            <input class="form-input" type="date" id="f-vence">
+          </div>
+          <hr class="form-div">
+          <div class="form-group span2" id="f-tasa-aviso" style="display:none;">
+            <div style="background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--amber);display:flex;align-items:center;gap:8px;">
+              <span>Bs/$</span>
+              <span id="f-tasa-texto">Tasa del día: —</span>
+              <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto;font-size:11px" onclick="abrirTasa()">Actualizar</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto Bs (original)</label>
+            <input class="form-input" type="number" step="0.01" id="f-monto_bs" placeholder="0.00" oninput="onMontoBsInput()">
+            <span class="form-hint" id="hint-bs-to-usd"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto $ (USD)</label>
+            <input class="form-input" type="number" step="0.01" id="f-monto_usd" placeholder="0.00" oninput="onMontoUsdInput()">
+            <span class="form-hint" id="hint-usd-to-bs"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Abonado $ (total)</label>
+            <input class="form-input" type="number" step="0.01" id="f-abonos_usd" placeholder="0.00" readonly style="background:var(--surface2);color:var(--muted)">
+            <span class="form-hint">Se registra con el botón "Abonar" en cada factura</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nota de Crédito (Bs)</label>
+            <input class="form-input" type="number" step="0.01" id="f-nc" placeholder="0.00" oninput="calcMontoBsPagar()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Retención (Bs)</label>
+            <input class="form-input" type="number" step="0.01" id="f-ret" placeholder="0.00" oninput="calcMontoBsPagar()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto Bs a Pagar</label>
+            <input class="form-input" type="number" step="0.01" id="f-monto_bs_pagar" placeholder="Auto-calculado">
+            <span class="form-hint">Se calcula: Monto Bs − N/C − Retención</span>
+          </div>
+          <div class="form-group span2">
+            <label class="form-label">Detalle / Notas</label>
+            <textarea class="form-input" id="f-detalle" rows="2" placeholder="Observaciones, estado de pago, etc."></textarea>
+          </div>
+        </div>
+        <input type="hidden" id="f-id">
+        <button type="submit" style="display:none"></button>
+      </form>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-factura')">Cancelar</button>
+      <button class="btn btn-accent" onclick="document.getElementById('form-factura').requestSubmit()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg> Guardar</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ov-pagar">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg> Marcar como Pagada</span>
+      <button class="modal-x" onclick="closeOverlay('ov-pagar')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="ov-pagar-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px;"></div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">Fecha de Pago</label>
+        <input class="form-input" type="date" id="pagar-fecha">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nota (opcional)</label>
+        <textarea class="form-input" id="pagar-nota" rows="2" placeholder="Ej: Transferencia BDV, ref #123456"></textarea>
+      </div>
+      <input type="hidden" id="pagar-id">
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-pagar')">Cancelar</button>
+      <button class="btn btn-green" onclick="confirmarPago()">Confirmar Pago</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ov-abonar">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg> Abonar a Factura</span>
+      <button class="modal-x" onclick="closeOverlay('ov-abonar')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto">
+      <div id="abonar-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;font-size:13px;"></div>
+      <div class="fact-write-only">
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Monto de este abono</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="form-input" id="abonar-moneda" style="max-width:96px" onchange="onAbonarInput()">
+            <option value="USD">$ USD</option>
+            <option value="BS">Bs</option>
+          </select>
+          <input class="form-input" type="number" step="0.01" id="abonar-monto" placeholder="0.00" oninput="onAbonarInput()" style="flex:1;font-family:var(--mono);font-size:16px">
+        </div>
+        <span class="form-hint" id="abonar-conv"></span>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <div class="form-group" style="flex:1;margin:0">
+          <label class="form-label">Fecha</label>
+          <input class="form-input" type="date" id="abonar-fecha">
+        </div>
+        <div class="form-group" style="flex:2;margin:0">
+          <label class="form-label">Nota / referencia</label>
+          <input class="form-input" id="abonar-nota" placeholder="Ej: Transf. BDV #123456">
+        </div>
+      </div>
+      <button class="btn btn-accent" style="width:100%" onclick="registrarAbono()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Registrar abono</button>
+      </div>
+      <div id="abonar-historial" style="margin-top:16px"></div>
+      <input type="hidden" id="abonar-id">
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-abonar')">Cerrar</button>
+    </div>
+  </div>
+</div>
+<button id="ia-fab" class="gerente-admin-only" onclick="abrirAsistente()" aria-label="Asistente" title="Asistente"><svg width="56" height="56" viewBox="0 0 1160 1160" style="display:block;border-radius:50%;"><rect width="1160" height="1160" fill="#79C820"/><g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none"><path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/></g></svg></button>
+<div class="overlay" id="ov-asistente">
+  <div class="modal narrow" style="height:82vh;max-height:82vh">
+    <div class="modal-hd">
+      <span class="modal-title"><span style="display:inline-block;vertical-align:-4px;margin-right:6px"><svg width="18" height="18" viewBox="0 0 1160 1160" style="display:block;border-radius:50%;"><rect width="1160" height="1160" fill="#79C820"/><g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none"><path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/></g></svg></span>Asistente</span>
+      <button class="modal-x" onclick="cerrarAsistente()">×</button>
+    </div>
+    <div class="modal-body" id="ia-mensajes" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px"></div>
+    <div class="modal-ft" style="gap:8px">
+      <button id="ia-mic" class="btn btn-ghost btn-icon" onclick="iaVoz()" title="Hablar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg></button>
+      <input id="ia-input" class="form-input" style="flex:1;min-width:0" placeholder="Escribe o habla tu pregunta..." onkeydown="if(event.key==='Enter')iaEnviar()">
+      <button class="btn btn-accent" onclick="iaEnviar()">Enviar</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ov-detalle">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Detalle del Préstamo</span>
+      <button class="modal-x" onclick="closeOverlay('ov-detalle')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto">
+      <div id="detalle-info" style="font-size:13px"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-detalle')">Cerrar</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ov-tasa">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg> Tasa del Día</span>
+      <button class="modal-x" onclick="closeOverlay('ov-tasa')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto">
+      <div id="tasa-info-actual" style="background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:13px;"></div>
+      <div class="form-group">
+        <label class="form-label">Tasa de Hoy (Bs por $1 USD)</label>
+        <input class="form-input" type="number" step="0.01" id="tasa-nueva" placeholder="Ej: 544.58" style="font-family:var(--mono);font-size:16px;">
+        <span class="form-hint">Ingresa cuántos bolívares equivalen a 1 dólar hoy (fuente: BCV)</span>
+      </div>
+      <div style="border-top:1px solid var(--border);margin:20px 0 16px;padding-top:16px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:var(--text)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> Agregar tasa de fecha anterior</div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div style="flex:1">
+            <label class="form-label" style="font-size:11px">Fecha</label>
+            <input class="form-input" type="date" id="hist-fecha" style="font-size:13px">
+          </div>
+          <div style="flex:1">
+            <label class="form-label" style="font-size:11px">Tasa Bs/$</label>
+            <input class="form-input" type="number" step="0.01" id="hist-tasa" placeholder="0.00" style="font-family:var(--mono);font-size:13px">
+          </div>
+          <button class="btn btn-accent btn-sm" onclick="guardarTasaFecha()" style="white-space:nowrap">+ Agregar</button>
+        </div>
+      </div>
+      <div id="historial-tasas-lista" style="max-height:260px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-tasa')">Cerrar</button>
+      <button class="btn btn-amber" onclick="guardarTasa()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg> Guardar Tasa de Hoy</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="ov-pago">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> Registrar Pago de Cuota</span>
+      <button class="modal-x" onclick="closeOverlay('ov-pago')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="pago-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px;line-height:1.6;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Fecha del pago</label>
+          <input class="form-input" type="date" id="pago-fecha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">N° de cuota</label>
+          <input class="form-input" type="number" min="1" id="pago-cuota" placeholder="Ej: 5">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Monto pagado (Bs)</label>
+          <input class="form-input" type="number" step="0.01" id="pago-bs" placeholder="0.00"
+            oninput="onPagoBsInput()" style="font-family:var(--mono)">
+          <span class="form-hint" id="pago-bs-hint" style="color:var(--muted);font-size:11px"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tasa BCV (Bs/$)</label>
+          <input class="form-input" type="number" step="0.01" id="pago-tasa" placeholder="Ej: 60.00"
+            oninput="onPagoBsInput()" style="font-family:var(--mono)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nota (opcional)</label>
+        <input class="form-input" type="text" id="pago-nota" placeholder="Ej: Transferencia BDV ref #12345">
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-pago')">Cancelar</button>
+      <button class="btn btn-green" onclick="guardarPago()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg> Confirmar Pago</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-delete">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title" style="color:var(--red)">Eliminar Factura</span>
+      <button class="modal-x" onclick="closeOverlay('ov-delete')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="delete-id">
+      <p style="margin-bottom:12px;color:var(--muted);font-size:13px">Esta acción es permanente y no se puede deshacer.</p>
+      <div id="delete-info" style="background:var(--red-light);border:1px solid #fca5a5;border-radius:var(--radius-sm);padding:12px;font-size:13px;line-height:1.5;"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-delete')">Cancelar</button>
+      <button class="btn btn-red" onclick="ejecutarEliminar()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── CDN libs ─────────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+<!-- ── App modules (order matters) ─────────────────────────────────────── -->
+
+<script src="js/config.js"></script>
+<script src="js/util.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/tasa.js"></script>
+<script src="js/facturas.js"></script>
+<script src="js/prestamos.js"></script>
+<script src="js/bancos.js"></script>
+<script src="js/panel.js"></script>
+<script src="js/gerencia-admin.js"></script>
+<script src="js/main.js"></script>
+</div><!-- /app-content -->
+
+<!-- ════ MOBILE OVERLAY ════ -->
+<div class="mobile-overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- ════ BOTTOM NAVIGATION (mobile) ════ -->
+<nav class="bottom-nav" id="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bn-tab ines-hide active" id="bn-panel" onclick="showTab('panel');setActiveBnTab('bn-panel')">
+      <span class="bn-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></span><span>Panel</span>
+    </button>
+    <button class="bn-tab ines-hide" id="bn-facturas" onclick="showTab('fact-farmacia');setActiveBnTab('bn-facturas')">
+      <span class="bn-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></span><span>Facturas</span>
+      <span class="bn-badge" id="bn-badge-facturas"></span>
+    </button>
+    <button class="bn-tab ines-hide" id="bn-prestamos" onclick="showTab('prestamos-fcia');setActiveBnTab('bn-prestamos')">
+      <span class="bn-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></span><span>Préstamos</span>
+      <span class="bn-badge" id="bn-badge-prestamos"></span>
+    </button>
+    <button class="bn-tab" id="bn-historial" onclick="showTab('historial');setActiveBnTab('bn-historial')">
+      <span class="bn-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></span><span>Historial</span>
+    </button>
+    <button class="bn-tab" id="bn-verif" onclick="showTab('verif-ines');setActiveBnTab('bn-verif')" style="display:none">
+      <span class="bn-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></span><span>Verif.</span>
+    </button>
+    <button class="bn-tab" id="bn-gerencia" onclick="showTab('gerencia');setActiveBnTab('bn-gerencia')" style="display:none">
+      <span class="bn-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span>Gerencia</span>
+    </button>
+    <button class="bn-tab" id="bn-menu" onclick="toggleMobileSidebar()">
+      <span class="bn-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></span><span>Menú</span>
+    </button>
+  </div>
+</nav>
+</body>
+</html>
