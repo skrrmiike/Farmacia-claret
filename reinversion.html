@@ -99,6 +99,7 @@
     <input id="gatePin" type="password" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off">
     <div style="margin-top:16px"><button class="btn" id="gateBtn" onclick="entrar()">Entrar</button></div>
     <div id="gateErr"></div>
+    <div id="gateVer" class="mini" style="margin-top:14px;opacity:.6"></div>
   </div>
 </div>
 
@@ -110,6 +111,7 @@
     <div>
       <h1>Operación Reinversión — Claret</h1>
       <div class="tasa" id="hdrTasa">BCV — · Binance — · spread —</div>
+      <div class="tasa" id="hdrVer" style="opacity:.7"></div>
     </div>
     <button class="gear" onclick="openAjustes()">⚙</button>
   </div>
@@ -128,7 +130,8 @@
     <div class="card">
       <h2>Corte para Mayra (automático)</h2>
       <div class="big" id="mCorte">$0</div>
-      <div class="sub">lo que Mayra debe pagar del día · <span id="mCorteBs">Bs 0</span></div>
+      <div class="sub">lo que Mayra debe pasarte del día · <span id="mCorteBs">Bs 0</span></div>
+      <div class="note" id="mCorteIva" style="margin-top:6px"></div>
       <div class="btnrow">
         <a class="btn wa" id="waMayra" href="#" target="_blank" rel="noopener">Pedir a Mayra por WhatsApp</a>
       </div>
@@ -157,6 +160,32 @@
 
   <!-- ===== SEMANA (Reunir dólares · cambio) ===== -->
   <section id="tab-semana" class="hide">
+    <div class="card" id="cardSemCurso">
+      <h2>Semana en curso</h2>
+      <div class="mini" id="scRango" style="margin-bottom:8px">jueves → hoy · cargando…</div>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Venta</div><div class="v" id="scVenta">$0</div><div class="mini" id="scVentaOv"></div></div>
+        <div class="kpi"><div class="l">Reinversión (costo real)</div><div class="v" id="scReinv">$0</div><div class="mini" id="scReinvOv"></div></div>
+      </div>
+      <div class="kpis" style="margin-top:8px">
+        <div class="kpi"><div class="l">IVA</div><div class="v" id="scIva">$0</div><div class="mini" id="scIvaOv"></div></div>
+        <div class="kpi"><div class="l">Ganancia neta</div><div class="v" id="scNeto">$0</div><div class="mini" id="scNetoOv"></div></div>
+      </div>
+      <div class="note" style="margin-top:10px">
+        <b>Capital real en Binance (USDT)</b>
+        <div class="prod"><div><div class="nm">Reunido esta semana</div><div class="mt" id="scCapNota">estimado por la app</div></div><div class="rt"><b id="scCap">$0</b></div></div>
+        <div class="prod"><div><div class="nm">Ganancia neta en $ reales</div><div class="mt">lo que la ganancia vale en dólares Binance</div></div><div class="rt"><b id="scNetoUsdt">$0</b></div></div>
+      </div>
+      <div class="btnrow" style="margin-top:10px;flex-wrap:wrap;gap:6px">
+        <button class="btn sec" style="padding:8px 12px" onclick="editarSem('venta')">✎ Venta</button>
+        <button class="btn sec" style="padding:8px 12px" onclick="editarSem('reinv')">✎ Reinversión</button>
+        <button class="btn sec" style="padding:8px 12px" onclick="editarSem('iva')">✎ IVA</button>
+        <button class="btn sec" style="padding:8px 12px" onclick="editarSem('neto')">✎ Ganancia</button>
+        <button class="btn sec" style="padding:8px 12px" onclick="editarSem('capital')">✎ Capital</button>
+      </div>
+      <div class="btnrow" style="margin-top:4px"><button class="btn sec" id="scReset" onclick="resetSem()" style="display:none">↺ Volver a lo calculado por la app</button></div>
+      <div class="note" style="margin-top:6px">La app suma sola lo vendido de la semana (jueves → hoy) y calcula venta, costo real, IVA y ganancia. Si un número no cuadra con tu realidad, tócalo con ✎ y ponlo a mano — quedará marcado como <b>ajustado por ti</b>.</div>
+    </div>
     <div class="card">
       <h2>Reunir dólares · cambio Binance</h2>
       <div class="big" id="cbReunido">$0</div>
@@ -205,8 +234,9 @@
         <div class="kpi"><div class="l">Utilidad</div><div class="v" id="anSemUtil">$0</div></div>
       </div>
       <div class="btnrow" style="margin-top:12px"><button class="btn" id="anBtnXls" onclick="descargarExcelSemana()">⬇️ Descargar Excel de la semana</button></div>
-      <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="ordenCompraEdilso()">📋 Orden de compra para Edilso (imagen)</button></div>
-      <div class="mini" id="anXlsMsg" style="margin-top:6px">La orden sugiere reponer lo que se vendió esta semana, agrupado por Pepsi, Coca y chucherías. Puedes compartirla como imagen por WhatsApp.</div>
+      <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="openOrdenEdilso()">📋 Órdenes de compra para Edilso (por rubro)</button></div>
+      <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="openEstimado()">💰 Estimado de compra (privado, con costos)</button></div>
+      <div class="mini" id="anXlsMsg" style="margin-top:6px">Edilso recibe una orden por rubro (Pepsi, Coca-Cola y chucherías por separado, cada una para su proveedor). El estimado privado es solo para ti: te muestra cuánto gastarías, con el costo de cada producto y el total en $ y en Bs.</div>
     </div>
     <div class="card">
       <div class="note">Las ventas y ganancias reales por producto se ven también en la pestaña <b>🧮 Cierre</b>, día a día.</div>
@@ -264,6 +294,41 @@
       <div id="cieTop"></div>
     </div>
   </section>
+
+  <!-- ===== CENTRAL (tablero gerente, toda la farmacia, en vivo) ===== -->
+  <section id="tab-central" class="hide">
+    <div class="card">
+      <h2>Claret Central · en vivo</h2>
+      <div class="mini" id="cenRango" style="margin-bottom:8px">día 12 a 12 · semana lunes a domingo</div>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Hoy · unidades</div><div class="v" id="cenDiaUds">—</div></div>
+        <div class="kpi"><div class="l">Hoy · ventas (Bs)</div><div class="v" id="cenDiaBs">—</div></div>
+      </div>
+      <div class="kpis" style="margin-top:8px">
+        <div class="kpi"><div class="l">Semana · unidades</div><div class="v" id="cenSemUds">—</div></div>
+        <div class="kpi"><div class="l">Semana · ventas (Bs)</div><div class="v" id="cenSemBs">—</div></div>
+      </div>
+      <div class="mini" id="cenUpd" style="margin-top:8px">—</div>
+      <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="loadCentral()">↻ Actualizar ahora</button></div>
+    </div>
+    <div class="card">
+      <div style="margin-bottom:8px"><div class="seg">
+        <button type="button" id="cenSegDia" class="on" onclick="cenSetPer('dia')">Hoy</button>
+        <button type="button" id="cenSegSem" onclick="cenSetPer('sem')">Semana</button>
+      </div></div>
+      <div class="grid2">
+        <div>
+          <div class="mini" style="font-weight:700;margin-bottom:4px">🏆 Top por unidades</div>
+          <div id="cenTopUds"><div class="mini">Cargando…</div></div>
+        </div>
+        <div>
+          <div class="mini" style="font-weight:700;margin-bottom:4px">💵 Top por monto (Bs)</div>
+          <div id="cenTopMonto"><div class="mini">Cargando…</div></div>
+        </div>
+      </div>
+      <div class="note" id="cenNota" style="margin-top:8px"></div>
+    </div>
+  </section>
 </main>
 
 <nav class="hide" id="navbar">
@@ -273,6 +338,7 @@
   <button data-tab="analisis" onclick="go('analisis')"><span class="ic">📊</span>Análisis</button>
   <button data-tab="mayra" onclick="go('mayra')"><span class="ic">🧾</span>Mayra</button>
   <button data-tab="cierre" onclick="go('cierre')"><span class="ic">🧮</span>Cierre</button>
+  <button data-tab="central" onclick="go('central')"><span class="ic">🏥</span>Central</button>
 </nav>
 
 <!-- Dialog: producto -->
@@ -318,13 +384,13 @@
   </div>
   <div class="grid2" style="margin-top:10px">
     <div><label>Tasa Binance — VENTA $ (Bs/$)</label><input id="aBinanceV" type="number" inputmode="decimal"></div>
-    <div><label>% de Mayra (sobre la venta)</label><input id="aMayraPct" type="number" inputmode="decimal" placeholder="ej. 10"></div>
+    <div><label>WhatsApp Mayra</label><input id="aWaMayra" inputmode="tel" placeholder="58414..."></div>
   </div>
   <div class="grid2" style="margin-top:10px">
-    <div><label>WhatsApp Mayra</label><input id="aWaMayra" inputmode="tel" placeholder="58414..."></div>
     <div><label>WhatsApp Edilso</label><input id="aWaEdilso" inputmode="tel" placeholder="58414..."></div>
+    <div></div>
   </div>
-  <div class="mini" style="margin-top:6px">Mayra recibe ese % de la <b>venta total</b>. Compra = tasa a la que compras dólares a diario; Venta = tasa a la que los vendes para pagar a proveedores.</div>
+  <div class="mini" style="margin-top:6px">Los precios ya incluyen IVA (16%); la app te muestra tu utilidad neta después de IVA. Compra = tasa a la que compras dólares a diario; Venta = tasa a la que los vendes para pagar a proveedores.</div>
   <div class="mini" id="aSpread" style="margin-top:8px"></div>
   <div class="btnrow" style="margin-top:14px">
     <button class="btn sec" onclick="closeDlg('dlgAjustes')">Cerrar</button>
@@ -379,6 +445,28 @@
   </div>
 </div></dialog>
 
+<!-- Dialog: estimado de compra (privado) -->
+<dialog id="dlgEstimado"><div class="dlg">
+  <h3>💰 Estimado de compra (privado)</h3>
+  <div class="mini" style="margin-bottom:6px">Solo para ti. Cantidades = lo vendido esta semana × su costo.</div>
+  <div id="estLista" style="max-height:48vh;overflow:auto"></div>
+  <div class="prod" style="border-top:2px solid var(--line);margin-top:6px"><div><div class="nm">Gasto estimado total</div><div class="mt" id="estNota">—</div></div><div class="rt"><b id="estTot">$0</b><span class="mini" id="estTotBs">Bs 0</span></div></div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn sec" onclick="closeDlg('dlgEstimado')">Cerrar</button>
+    <button class="btn" onclick="estimadoImagen()">🖼 Guardar como imagen</button>
+  </div>
+</div></dialog>
+
+<!-- Dialog: órdenes de Edilso por rubro -->
+<dialog id="dlgOrden"><div class="dlg">
+  <h3>📋 Orden de compra — Edilso</h3>
+  <div class="mini" style="margin-bottom:8px">Una orden por rubro (cada proveedor la suya). Toca un rubro para generar su imagen y compartirla; luego vuelve por el siguiente.</div>
+  <div id="ordenBotones"></div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn sec" onclick="closeDlg('dlgOrden')">Cerrar</button>
+  </div>
+</div></dialog>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const $=(s)=>document.querySelector(s), $$=(s)=>document.querySelectorAll(s);
@@ -392,6 +480,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
+const APP_VER='v1 · 11/09';   // sube este número cada vez que se publique un cambio
 
 let PIN='';
 let lastSync='';
@@ -422,6 +511,7 @@ async function boot(){
   }
   $('#splash').classList.add('hide');
   $('#gate').classList.remove('hide');
+  var gv=$('#gateVer'); if(gv) gv.textContent='Versión '+APP_VER;
   setTimeout(()=>$('#gatePin').focus(),100);
 }
 async function entrar(){
@@ -447,6 +537,7 @@ function mostrarApp(){
   $('#hdr').classList.remove('hide');
   $('#app').classList.remove('hide');
   $('#navbar').classList.remove('hide');
+  var hv=$('#hdrVer'); if(hv) hv.textContent='Versión '+APP_VER;
   render(); loadHoyReal();
 }
 
@@ -480,7 +571,7 @@ function factor(){ const b=state.cfg.binance; return (b>0)? (state.bcv/b) : 1; }
 
 /* ---------- navegación ---------- */
 function go(tab){
-  ['hoy','productos','semana','analisis','mayra','cierre'].forEach(t=>$('#tab-'+t).classList.toggle('hide',t!==tab));
+  ['hoy','productos','semana','analisis','mayra','cierre','central'].forEach(t=>$('#tab-'+t).classList.toggle('hide',t!==tab));
   $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   render(); window.scrollTo(0,0);
   if(tab==='hoy') loadHoyReal();
@@ -488,6 +579,7 @@ function go(tab){
   if(tab==='cierre') loadCierre();
   if(tab==='analisis') loadAnalisisSemana();
   if(tab==='semana') loadCambio();
+  if(tab==='central'){ loadCentral(); startCentralTimer(); } else stopCentralTimer();
 }
 let _semData=null;
 async function loadAnalisisSemana(){
@@ -560,26 +652,23 @@ async function loadCierre(){
     rango.textContent=fmtCarDT(d.desde)+' → '+fmtCarDT(d.hasta);
     const cats=d.por_cat||[];
     if($('#cieCats')) $('#cieCats').innerHTML = cats.map(cc=>`<div class="kpi"><div class="l">${catLabel(cc.cat)}</div><div class="v">${money2(cc.monto)}</div><div class="mini">${cc.unid} uds</div></div>`).join('');
-    // Reinversión y Utilidad
+    // Reinversión, Utilidad bruta, IVA, Utilidad neta
     const reinv=Number(d.total_reinv)||0, util=Number(d.total_util)||0;
+    const iva=Number(d.iva_neto)||0, utilNeto=(d.total_util_neto!=null?Number(d.total_util_neto):util-iva);
     if($('#cieUtil')) $('#cieUtil').innerHTML =
         `<div class="kpi"><div class="l">Reinversión</div><div class="v">${money2(reinv)}</div><div class="mini">reponer lo vendido</div></div>`
-      + `<div class="kpi"><div class="l">Utilidad</div><div class="v">${money2(util)}</div><div class="mini">venta − costo</div></div>`;
-    // Reparto con Mayra (% sobre la venta total)
-    let rep='';
-    if(d.mayra_pct!=null){
-      rep = `<div class="note"><b>Reparto</b>`
-        + `<div class="mini">Venta ${money2(d.total_monto)} − Reinversión ${money2(reinv)} = Utilidad ${money2(util)}</div>`
-        + `<div class="mini">Mayra (${d.mayra_pct}% de la venta): <b>${money2(d.total_mayra)}</b></div>`
-        + `<div class="mini">Para nosotros (utilidad − Mayra): <b>${money2(d.total_nuestro)}</b></div>`
+      + `<div class="kpi"><div class="l">Utilidad bruta</div><div class="v">${money2(util)}</div><div class="mini">venta − costo</div></div>`;
+    // Desglose de IVA (precios con IVA incluido, crédito fiscal sobre compras)
+    let rep = `<div class="note"><b>Tu ganancia después de IVA</b>`
+        + `<div class="mini">Venta ${money2(d.total_monto)} − Reinversión ${money2(reinv)} = Utilidad bruta <b>${money2(util)}</b></div>`
+        + `<div class="mini">IVA (16% de la ganancia): <b>−${money2(iva)}</b></div>`
+        + `<div class="mini">Utilidad neta (lo que te queda): <b>${money2(utilNeto)}</b></div>`
         + `</div>`;
-    }
     if($('#cieReparto')) $('#cieReparto').innerHTML = rep;
     // Notas + avisos
     let nota = (cieModo==='cerrado'
       ? (d.cubre_finde ? 'Corte del lunes: cubre el fin de semana (viernes → lunes).' : 'Corte del día, ventana 9am a 9am.')
       : 'Ventas de hoy, desde el último corte de las 9am hasta ahorita (en vivo).');
-    if(d.mayra_pct==null && Number(d.total_monto)>0) nota += `<div class="mini" style="color:#c58a00;margin-top:6px">⚠ Falta poner el % de Mayra en Ajustes para ver su parte.</div>`;
     if(Number(d.venta_sin_costo)>0) nota += `<div class="mini" style="color:#c58a00;margin-top:4px">⚠ ${d.n_sin_costo} producto(s) sin costo cargado (${money2(d.venta_sin_costo)} en ventas) — no se cuentan en la utilidad todavía.</div>`;
     $('#cieNota').innerHTML = nota;
     const P=d.productos||[];
@@ -690,6 +779,82 @@ let cbTipo='compra';
 async function loadCambio(){
   try{ const d=await api('cambio_list'); cambio=d||cambio; renderCambio(); }
   catch(e){ /* silencioso */ }
+  loadSemanaCurso();
+}
+
+/* ---------- Semana en curso (acumulado jueves → hoy, con ajuste manual) ---------- */
+const SEMOVKEY='opReinvSemOv_v1';
+let semCurso={ base:null, key:'' };
+function _semOvAll(){ try{ return JSON.parse(localStorage.getItem(SEMOVKEY)||'{}')||{}; }catch(e){ return {}; } }
+function _semOv(){ const k=semCurso.key; if(!k) return {}; return _semOvAll()[k]||{}; }
+function _semSetOv(campo,val){
+  const all=_semOvAll(); const k=semCurso.key||'x';
+  if(!all[k]) all[k]={};
+  if(val==null || isNaN(val)) delete all[k][campo]; else all[k][campo]=val;
+  if(Object.keys(all[k]).length===0) delete all[k];
+  try{ localStorage.setItem(SEMOVKEY, JSON.stringify(all)); }catch(e){}
+}
+async function loadSemanaCurso(){
+  if(!$('#scVenta')) return;
+  try{
+    const d=await api('cierre',{modo:'semana'});
+    const venta=Number(d.total_monto)||0;
+    const reinv=Number(d.total_reinv)||0;
+    const iva=Number(d.iva_neto)||0;
+    const neto=(d.total_util_neto!=null?Number(d.total_util_neto):((Number(d.total_util)||0)-iva));
+    semCurso.base={venta,reinv,iva,neto,desde:d.desde,hasta:d.hasta};
+    semCurso.key=(d.desde||'').slice(0,10);
+    renderSemanaCurso();
+  }catch(e){ if($('#scRango')) $('#scRango').textContent='No se pudo cargar la semana.'; }
+}
+function _semVal(campo){
+  const ov=_semOv(); const b=semCurso.base||{};
+  if(ov[campo]!=null) return {v:Number(ov[campo]), aj:true};
+  if(campo==='capital') return {v:Number(cambio.reunido_usd)||0, aj:false};
+  return {v:Number(b[campo])||0, aj:false};
+}
+function renderSemanaCurso(){
+  if(!semCurso.base){ return; }
+  const b=semCurso.base;
+  const f=(iso)=>{const c=new Date(new Date(iso).getTime()-4*3600e3);const p=n=>String(n).padStart(2,'0');return p(c.getUTCDate())+'/'+p(c.getUTCMonth()+1)+' '+p(c.getUTCHours())+':'+p(c.getUTCMinutes());};
+  if(b.desde&&b.hasta) S('#scRango','Del '+f(b.desde)+' al '+f(b.hasta)+' (jueves → hoy)');
+  const set=(sel,campo)=>{
+    const r=_semVal(campo);
+    S(sel, money2(r.v));
+    const ov=$(sel+'Ov'); if(ov) ov.textContent = r.aj ? 'ajustado por ti' : '';
+  };
+  set('#scVenta','venta'); set('#scReinv','reinv'); set('#scIva','iva'); set('#scNeto','neto');
+  // Capital real en Binance (USDT)
+  const cap=_semVal('capital');
+  S('#scCap', money2(cap.v));
+  const cn=$('#scCapNota'); if(cn) cn.textContent = cap.aj ? 'ajustado por ti' : 'estimado por la app (dólares reunidos)';
+  // Ganancia neta convertida a dólares reales (Binance)
+  const neto=_semVal('neto').v;
+  const bcv=Number(state.bcv)||0, tComp=Number(state.cfg.binance)||0;
+  const netoUsdt=(bcv>0 && tComp>0) ? (neto*bcv/tComp) : 0;
+  S('#scNetoUsdt', (bcv>0 && tComp>0) ? money2(netoUsdt) : '$— (pon tasa Binance)');
+  // botón de reset visible solo si hay algún ajuste
+  const hayAj=Object.keys(_semOv()).length>0;
+  const rb=$('#scReset'); if(rb) rb.style.display = hayAj ? '' : 'none';
+}
+function editarSem(campo){
+  const lbl={venta:'Venta de la semana',reinv:'Reinversión (costo real)',iva:'IVA',neto:'Ganancia neta',capital:'Capital real en Binance (USDT)'}[campo]||campo;
+  const actual=_semVal(campo).v;
+  const inp=prompt('Ajustar '+lbl+' (en $).\nDeja vacío para volver a lo que calcula la app.', (actual||0).toFixed(2));
+  if(inp===null) return;
+  const t=inp.trim();
+  if(t===''){ _semSetOv(campo,null); toast('Volvió a lo calculado por la app'); }
+  else{
+    const v=Number(t.replace(',','.'));
+    if(isNaN(v)){ toast('Número no válido'); return; }
+    _semSetOv(campo,v); toast(lbl+' ajustado');
+  }
+  renderSemanaCurso();
+}
+function resetSem(){
+  if(!confirm('¿Quitar todos tus ajustes y volver a lo que calcula la app?')) return;
+  const all=_semOvAll(); delete all[semCurso.key]; try{ localStorage.setItem(SEMOVKEY, JSON.stringify(all)); }catch(e){}
+  toast('Ajustes borrados'); renderSemanaCurso();
 }
 function renderCambio(){
   const c=state.cfg;
@@ -808,29 +973,124 @@ async function facturaMayra(){
   const P=(d.productos||[]).slice().sort((a,b)=>Number(b.monto)-Number(a.monto));
   if(!P.length){ toast('Aún no hay ventas hoy'); return; }
   const total=Number(d.total_monto)||0, tasa=Number(state.bcv)||0;
+  const ivaVenta=total*0.16/1.16;   // IVA contenido en el precio (precios con IVA incluido)
   const rows=P.map(p=>({izq:p.nombre, sub:`${p.vendido} × ${money2(p.precio)}`, der:money2(p.monto)}));
   const fecha=new Date().toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const totales=[{l:'Total a pagar (USD)', v:money2(total), big:true},
-    {l:`En bolívares · BCV ${fmt(tasa)}`, v: tasa>0?bs(Math.round(total*tasa)):'—'}];
+    {l:`En bolívares · BCV ${fmt(tasa)}`, v: tasa>0?bs(Math.round(total*tasa)):'—'},
+    {l:'IVA incluido en la venta (16%)', v:money2(ivaVenta)}];
   await _drawFactura({titulo:'Corte para Mayra', fecha, rows, totales,
-    pie:'Pago en bolívares a la tasa BCV del día.\n¡Gracias!', name:'Factura_Mayra_'+hoyStr()});
+    pie:'Precios con IVA incluido. Pago en bolívares a la tasa BCV del día.\n¡Gracias!', name:'Factura_Mayra_'+hoyStr()});
 }
-async function ordenCompraEdilso(){
-  toast('Generando orden…');
-  let d; try{ d=await api('reporte_semana_data'); }catch(e){ toast('No se pudo leer la semana'); return; }
+async function openOrdenEdilso(){
+  toast('Cargando…');
+  let d=_semData; if(!d){ try{ d=await api('reporte_semana_data'); _semData=d; }catch(e){ toast('No se pudo leer la semana'); return; } }
   const sal=(d.salidas||[]).filter(s=>Number(s.uds)>0);
-  if(!sal.length){ toast('No hay ventas esta semana todavía'); return; }
+  const box=$('#ordenBotones');
+  if(!sal.length){ if(box) box.innerHTML='<div class="mini">No hay ventas esta semana todavía.</div>'; $('#dlgOrden').showModal(); return; }
   const orden=['pepsi','coca','chuche','medicina'];
   const cats={}; sal.forEach(s=>{ const c=s.cat||'otros'; (cats[c]=cats[c]||[]).push(s); });
+  window._ordenCats=cats;
+  const keys=Object.keys(cats).sort((a,b)=>{ const ia=orden.indexOf(a),ib=orden.indexOf(b); return (ia<0?9:ia)-(ib<0?9:ib); });
+  box.innerHTML=keys.map(c=>{
+    const uds=cats[c].reduce((a,s)=>a+(Number(s.uds)||0),0);
+    const ic=c==='pepsi'?'🥤':(c==='coca'?'🧴':(c==='chuche'?'🍬':'💊'));
+    return `<div class="btnrow" style="margin-top:6px"><button class="btn" onclick="ordenCat('${c}')">${ic} ${catLabel(c)||c} · ${cats[c].length} productos (${uds} uds)</button></div>`;
+  }).join('');
+  $('#dlgOrden').showModal();
+}
+async function ordenCat(c){
+  const cats=window._ordenCats||{}; const items=cats[c]; if(!items||!items.length){ toast('Sin productos'); return; }
+  toast('Generando…');
   const rows=[]; let totUds=0;
-  Object.keys(cats).sort((a,b)=>{ const ia=orden.indexOf(a),ib=orden.indexOf(b); return (ia<0?9:ia)-(ib<0?9:ib); })
-    .forEach(c=>{ rows.push({sec:catLabel(c)||c});
-      cats[c].sort((a,b)=>Number(b.uds)-Number(a.uds)).forEach(s=>{ totUds+=Number(s.uds)||0;
-        rows.push({izq:s.descr||s.codigo, sub:'vendidas: '+(Number(s.uds)||0), der:(Number(s.uds)||0)+' uds'}); }); });
+  items.slice().sort((a,b)=>Number(b.uds)-Number(a.uds)).forEach(s=>{ const u=Number(s.uds)||0; totUds+=u;
+    rows.push({izq:s.descr||s.codigo, sub:'vendidas: '+u, der:u+' uds'}); });
   const fecha='Semana '+new Date().toLocaleDateString('es-VE',{day:'numeric',month:'short'})+' · reponer lo vendido';
-  await _drawFactura({titulo:'Orden de compra — Edilso', fecha, rows,
-    totales:[{l:'Total de unidades a reponer', v:totUds+' uds', big:false}],
-    pie:'Cantidades sugeridas = lo vendido esta semana.\nAjusta lo que haga falta antes de comprar.', name:'Orden_Compra_'+hoyStr()});
+  await _drawFactura({titulo:'Orden de compra — '+(catLabel(c)||c), fecha, rows,
+    totales:[{l:'Total de unidades', v:totUds+' uds', big:false}],
+    pie:'Solo '+(catLabel(c)||c)+'. Cantidades sugeridas = lo vendido esta semana.\nAjusta lo que haga falta antes de comprar.',
+    name:'Orden_'+(catLabel(c)||c).replace(/[^A-Za-z]/g,'')+'_'+hoyStr()});
+}
+async function _estimadoRows(){
+  let d=_semData; if(!d){ try{ d=await api('reporte_semana_data'); _semData=d; }catch(e){ return null; } }
+  const sal=(d.salidas||[]).filter(s=>Number(s.uds)>0);
+  if(!sal.length) return null;
+  const orden=['pepsi','coca','chuche','medicina'];
+  const cats={}; sal.forEach(s=>{ const c=s.cat||'otros'; (cats[c]=cats[c]||[]).push(s); });
+  const grupos=[]; let totalUsd=0, sinCosto=0;
+  Object.keys(cats).sort((a,b)=>{const ia=orden.indexOf(a),ib=orden.indexOf(b);return (ia<0?9:ia)-(ib<0?9:ib);})
+   .forEach(c=>{ const items=cats[c].sort((a,b)=>Number(b.uds)-Number(a.uds)).map(s=>{
+      const uds=Number(s.uds)||0, cu=Number(s.costo)||0;
+      const sub=(s.reinv!=null? Number(s.reinv) : uds*cu);
+      if(cu<=0) sinCosto++; else totalUsd+=sub;
+      return {descr:s.descr||s.codigo, uds, cu, sub, sinc:cu<=0};
+    }); grupos.push({cat:c, items}); });
+  return {grupos, totalUsd, sinCosto};
+}
+async function openEstimado(){
+  toast('Calculando…');
+  const e=await _estimadoRows(); const box=$('#estLista');
+  if(!e){ if(box) box.innerHTML='<div class="mini">No hay ventas esta semana todavía.</div>'; S('#estTot','$0'); S('#estTotBs','Bs 0'); S('#estNota','—'); $('#dlgEstimado').showModal(); return; }
+  const tasa=Number(state.bcv)||0; window._estE=e;
+  box.innerHTML=e.grupos.map(g=>{
+    const head=`<div style="margin:8px 0 2px;font-weight:700;color:#0a7d3b">${catLabel(g.cat)||g.cat}</div>`;
+    const rows=g.items.map(it=>`<div class="prod"><div><div class="nm">${it.descr}</div><div class="mt">${it.uds} × ${it.sinc?'(sin costo)':money2(it.cu)}</div></div><div class="rt"><b>${it.sinc?'—':money2(it.sub)}</b></div></div>`).join('');
+    return head+rows;
+  }).join('');
+  S('#estTot',money2(e.totalUsd));
+  S('#estTotBs', tasa>0? bs(Math.round(e.totalUsd*tasa)) : 'Bs —');
+  S('#estNota', e.sinCosto>0? (e.sinCosto+' sin costo (no suman)') : ('a tasa BCV '+fmt(tasa)));
+  $('#dlgEstimado').showModal();
+}
+async function estimadoImagen(){
+  const e=window._estE || await _estimadoRows();
+  if(!e){ toast('No hay datos'); return; }
+  const tasa=Number(state.bcv)||0; const rows=[];
+  e.grupos.forEach(g=>{ rows.push({sec:catLabel(g.cat)||g.cat});
+    g.items.forEach(it=> rows.push({izq:it.descr, sub:`${it.uds} × ${it.sinc?'(sin costo)':money2(it.cu)}`, der: it.sinc?'—':money2(it.sub)})); });
+  const totales=[{l:'Gasto estimado (USD)', v:money2(e.totalUsd), big:true},
+    {l:`En bolívares · BCV ${fmt(tasa)}`, v: tasa>0?bs(Math.round(e.totalUsd*tasa)):'—'}];
+  const fecha='Semana '+new Date().toLocaleDateString('es-VE',{day:'numeric',month:'short'})+' · uso interno';
+  await _drawFactura({titulo:'Estimado de compra (interno)', fecha, rows, totales,
+    pie:(e.sinCosto>0?('⚠ '+e.sinCosto+' producto(s) sin costo cargado — no suman al total.\n'):'')+'Documento privado. No es para el proveedor.',
+    name:'Estimado_Compra_'+hoyStr()});
+}
+
+/* ---------- Central: tablero en vivo de la farmacia (gerente) ---------- */
+let central=null, cenPer='dia', _cenTimer=null;
+function startCentralTimer(){ stopCentralTimer(); _cenTimer=setInterval(()=>{ if(!$('#tab-central').classList.contains('hide')) loadCentral(true); }, 60000); }
+function stopCentralTimer(){ if(_cenTimer){ clearInterval(_cenTimer); _cenTimer=null; } }
+function cenSetPer(p){ cenPer=(p==='sem')?'sem':'dia';
+  $('#cenSegDia').classList.toggle('on',cenPer==='dia'); $('#cenSegSem').classList.toggle('on',cenPer==='sem');
+  renderCentral(); }
+async function loadCentral(silencioso){
+  if(!silencioso){ S('#cenTopUds','') ; const a=$('#cenTopUds'),b=$('#cenTopMonto'); if(a&&!central)a.innerHTML='<div class="mini">Cargando…</div>'; if(b&&!central)b.innerHTML='<div class="mini">Cargando…</div>'; }
+  try{ const d=await api('farmacia_top',{limit:15}); central=d; renderCentral(); }
+  catch(e){ if(!central){ const a=$('#cenTopUds'); if(a) a.innerHTML='<div class="mini">No se pudo cargar.</div>'; } }
+}
+function _cenList(arr, conMonto){
+  if(!arr||!arr.length) return '<div class="mini">Sin ventas en esta ventana.</div>';
+  return arr.map((r,i)=>{
+    const val = conMonto ? bs(r.monto||0) : ((r.uds||0)+' uds');
+    const sub = conMonto ? ((r.uds||0)+' uds') : (r.monto!=null?bs(r.monto):'');
+    const nm=(r.descripcion||r.codigo||'').replace(/</g,'&lt;');
+    return `<div class="prod"><div><div class="nm">${i+1}. ${nm}</div><div class="mt">${sub}</div></div><div class="rt"><b>${val}</b></div></div>`;
+  }).join('');
+}
+function renderCentral(){
+  const d=central; if(!d) return;
+  S('#cenDiaUds', (Number(d.dia_uds)||0).toLocaleString('es-VE')+' uds');
+  S('#cenSemUds', (Number(d.sem_uds)||0).toLocaleString('es-VE')+' uds');
+  S('#cenDiaBs', d.con_precio? bs(d.dia_monto) : 'Bs — (faltan precios)');
+  S('#cenSemBs', d.con_precio? bs(d.sem_monto) : 'Bs — (faltan precios)');
+  const upd=new Date(d.ahora||Date.now()).toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit'});
+  S('#cenUpd','Actualizado a las '+upd+' · se refresca solo cada minuto');
+  const tu = cenPer==='sem'? d.top_sem_uds : d.top_dia_uds;
+  const tm = cenPer==='sem'? d.top_sem_monto : d.top_dia_monto;
+  const bu=$('#cenTopUds'), bm=$('#cenTopMonto');
+  if(bu) bu.innerHTML=_cenList(tu,false);
+  if(bm) bm.innerHTML= d.con_precio? _cenList(tm,true) : '<div class="mini">Faltan precios para el top por monto.</div>';
+  S('#cenNota', cenPer==='sem'?'Semana en curso (lunes a domingo). Los datos vienen de A2 según sincroniza el puente (cada ~15 min).':'Día de hoy (medianoche a medianoche). Los datos vienen de A2 según sincroniza el puente (cada ~15 min).');
 }
 
 /* ---------- cálculos ---------- */
@@ -916,6 +1176,13 @@ async function loadHoyReal(){
     S('#mCorte',money2(corteHoy));
     const tasa=Number(state.bcv)||0;
     S('#mCorteBs',bs(corteHoy*tasa));
+    // Desglose IVA del día (informativo: Mayra te pasa el total; el IVA es tuyo por declarar)
+    window._hoyIva=Number(d.iva_neto)||0;
+    window._hoyUtilNeto=(d.total_util_neto!=null?Number(d.total_util_neto):(Number(d.total_util)||0)-window._hoyIva);
+    const ivi=$('#mCorteIva');
+    if(ivi) ivi.innerHTML = corteHoy>0
+      ? `Mayra te pasa el total (<b>${money2(corteHoy)}</b>). De ahí, IVA por declarar: <b>${money2(window._hoyIva)}</b> · tu utilidad neta del día: <b>${money2(window._hoyUtilNeto)}</b>.`
+      : '';
     const num=(state.cfg.waMayra||'').replace(/\D/g,'');
     const msg=`Hola Mayra, el corte de hoy es ${money2(corteHoy)} (${bs(corteHoy*tasa)} a tasa BCV ${tasa}). Por favor transfiéreme para comprar los dólares. ¡Gracias!`;
     const wa=$('#waMayra'); if(wa) wa.href='https://wa.me/'+num+'?text='+encodeURIComponent(msg);
@@ -1176,7 +1443,6 @@ function openAjustes(){
   $('#aMeta').value=c.meta;$('#aTope').value=c.tope;$('#aRetiro').value=c.retiro;$('#aMargenObj').value=c.margenObj;
   $('#aBCV').value=state.bcv||''; $('#aBinance').value=c.binance||'';
   $('#aWaMayra').value=c.waMayra||'';$('#aWaEdilso').value=c.waEdilso||'';
-  $('#aMayraPct').value=(c.mayraPct==null?'':c.mayraPct);
   $('#aBinanceV').value=(c.binanceVenta==null?'':c.binanceVenta);
   showSpread(); $('#dlgAjustes').showModal();
   $('#aBinance').oninput=showSpread;
@@ -1193,7 +1459,7 @@ async function saveAjustes(){
     retiro:parseFloat($('#aRetiro').value)||200, margenObj:parseFloat($('#aMargenObj').value)||30,
     binance:parseFloat($('#aBinance').value)||0,
     waMayra:$('#aWaMayra').value.trim(), waEdilso:$('#aWaEdilso').value.trim(),
-    mayraPct:_pn($('#aMayraPct').value), binanceVenta:_pn($('#aBinanceV').value)
+    binanceVenta:_pn($('#aBinanceV').value)
   };
   $('#aGuardar').disabled=true;
   try{
