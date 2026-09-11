@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Operación Reinversión — Claret</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#0f1720; --muted:#6b7580;
+    --line:#e7eaee; --brand:#1f4e5f; --brand2:#2b7a8f; --ok:#0f9d58; --warn:#e8a020; --bad:#d64545;
+    --pepsi:#0d4a9c; --med:#7a3ea3; --chuche:#c9791f; --coca:#c0392b; --chip:#eef2f4;
+    --shadow:0 1px 2px rgba(16,24,32,.06),0 4px 16px rgba(16,24,32,.05);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0e1216;--card:#161b21;--ink:#eef1f4;--muted:#98a2ad;--line:#242b33;--chip:#1d242b;--shadow:0 1px 2px rgba(0,0,0,.3);}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:78px}
+  header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,var(--brand),var(--brand2));color:#fff;padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top,0))}
+  header .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  header h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.2px}
+  header .tasa{font-size:11.5px;opacity:.92;margin-top:2px}
+  .gear{background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:10px;font-size:16px}
+  main{max-width:560px;margin:0 auto;padding:14px 14px 20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px;box-shadow:var(--shadow)}
+  .card h2{font-size:13px;margin:0 0 10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .big{font-size:30px;font-weight:720;letter-spacing:-.5px}
+  .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{background:var(--chip);border-radius:12px;padding:11px 12px}
+  .kpi .l{font-size:11.5px;color:var(--muted)}
+  .kpi .v{font-size:19px;font-weight:680;margin-top:3px}
+  .bar{height:8px;border-radius:99px;background:var(--chip);overflow:hidden;margin-top:8px}
+  .bar>i{display:block;height:100%;background:var(--brand2);border-radius:99px}
+  .bar.ok>i{background:var(--ok)} .bar.warn>i{background:var(--warn)}
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 4px}
+  input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink);font-size:15px;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:var(--brand2)}
+  input[readonly]{background:var(--chip);color:var(--muted)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .btn{display:block;width:100%;text-align:center;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:640;background:var(--brand);color:#fff;text-decoration:none;font-family:inherit;cursor:pointer}
+  .btn.sec{background:var(--chip);color:var(--ink)}
+  .btn.wa{background:#25D366;color:#0a2a15}
+  .btn:active{transform:scale(.99)}
+  .btn[disabled]{opacity:.55}
+  .btnrow{display:flex;gap:8px;margin-top:8px}
+  .chip{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;color:#fff}
+  .chip.pepsi{background:var(--pepsi)} .chip.med{background:var(--med)} .chip.chuche{background:var(--chuche)} .chip.coca{background:var(--coca)}
+  .prod{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .prod:last-child{border-bottom:none}
+  .prod .nm{font-weight:600;font-size:14.5px}
+  .prod .mt{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .prod .rt{margin-left:auto;text-align:right;font-size:12px;color:var(--muted)}
+  .prod .rt b{display:block;font-size:15px;color:var(--ink)}
+  .mini{font-size:11px;color:var(--muted)}
+  .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--chip)}
+  .pill.ok{color:var(--ok)} .pill.warn{color:var(--warn)} .pill.bad{color:var(--bad)}
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0))}
+  nav button{flex:1;background:none;border:none;color:var(--muted);font-size:10.5px;font-family:inherit;padding:5px 0;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+  nav button.on{color:var(--brand2)}
+  nav button .ic{font-size:19px;line-height:1}
+  .note{font-size:12px;color:var(--muted);line-height:1.5}
+  .del{color:var(--bad);background:none;border:none;font-size:12px;padding:4px 6px;cursor:pointer}
+  dialog{border:none;border-radius:18px;padding:0;max-width:420px;width:92%;background:var(--card);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  dialog::backdrop{background:rgba(8,12,16,.5)}
+  .dlg{padding:16px}
+  .dlg h3{margin:0 0 12px;font-size:16px}
+  .seg{display:flex;background:var(--chip);border-radius:11px;padding:3px;gap:3px}
+  .seg button{flex:1;border:none;background:none;padding:9px;border-radius:9px;font-weight:600;color:var(--muted);font-size:13px;font-family:inherit;cursor:pointer}
+  .seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+  .hide{display:none!important}
+  .center{text-align:center}
+  .warnbox{background:rgba(232,160,32,.12);border:1px solid rgba(232,160,32,.35);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--ink);line-height:1.5}
+  .sugbox{background:rgba(43,122,143,.12);border:1px solid rgba(43,122,143,.35);border-radius:11px;padding:9px 11px;font-size:12.5px;line-height:1.5;margin-top:8px}
+  .sugbox b{color:var(--brand2)}
+  /* ---- PIN gate ---- */
+  #gate{position:fixed;inset:0;z-index:100;background:linear-gradient(160deg,var(--brand),#0d2b35);display:flex;align-items:center;justify-content:center;padding:24px}
+  #gate .box{background:var(--card);border-radius:20px;padding:26px 22px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center}
+  #gate .logo{font-size:34px;margin-bottom:6px}
+  #gate h2{margin:0 0 4px;font-size:18px}
+  #gate p{margin:0 0 18px;font-size:12.5px;color:var(--muted)}
+  #gate input{text-align:center;font-size:24px;letter-spacing:8px;font-weight:700}
+  #gateErr{color:var(--bad);font-size:12.5px;margin-top:10px;min-height:16px}
+  /* ---- loading overlay ---- */
+  #splash{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--muted);font-size:13px}
+  .spin{width:26px;height:26px;border:3px solid var(--chip);border-top-color:var(--brand2);border-radius:50%;animation:sp 0.8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ===== PIN GATE ===== -->
+<div id="gate" class="hide">
+  <div class="box">
+    <div class="logo">🔐</div>
+    <h2>Operación Reinversión</h2>
+    <p>Escribe tu PIN para entrar</p>
+    <input id="gatePin" type="password" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off">
+    <div style="margin-top:16px"><button class="btn" id="gateBtn" onclick="entrar()">Entrar</button></div>
+    <div id="gateErr"></div>
+  </div>
+</div>
+
+<!-- ===== SPLASH ===== -->
+<div id="splash"><div class="spin"></div><div>Conectando con Claret Central…</div></div>
+
+<header class="hide" id="hdr">
+  <div class="row">
+    <div>
+      <h1>Operación Reinversión — Claret</h1>
+      <div class="tasa" id="hdrTasa">BCV — · Binance — · spread —</div>
+    </div>
+    <button class="gear" onclick="openAjustes()">⚙</button>
+  </div>
+</header>
+
+<main class="hide" id="app">
+  <!-- ===== HOY ===== -->
+  <section id="tab-hoy">
+    <div class="card">
+      <h2>Hoy · <span id="hoyFecha"></span></h2>
+      <div class="big" id="hoyMonto">$0</div>
+      <div class="sub">venta de hoy en vivo (desde A2) · <span id="hoyUnid">0</span> unidades</div>
+      <div class="note" style="margin-top:6px">Se toma solo del inventario de A2 a medida que vendes. Ya no hay que registrar nada a mano.</div>
+    </div>
+
+    <div class="card">
+      <h2>Corte para Mayra (automático)</h2>
+      <div class="big" id="mCorte">$0</div>
+      <div class="sub">lo que Mayra debe pagar del día · <span id="mCorteBs">Bs 0</span></div>
+      <div class="btnrow">
+        <a class="btn wa" id="waMayra" href="#" target="_blank" rel="noopener">Pedir a Mayra por WhatsApp</a>
+      </div>
+      <div class="btnrow">
+        <button class="btn sec" onclick="facturaMayra()">🧾 Factura del corte (imagen)</button>
+      </div>
+      <div class="btnrow">
+        <button class="btn sec" onclick="go('semana');openCambio('compra')">✓ Ya compré los dólares (registrar)</button>
+      </div>
+      <div class="note" style="margin-top:4px">El corte se calcula solo con lo vendido, se carga a la cuenta de Mayra y se le envía la factura por Telegram cada mañana a las 9. <b>Mayra paga en Bs a la tasa BCV del día.</b> Regla de oro: compra el dólar el mismo día que Mayra transfiere, y regístralo en <b>Semana → Reunir dólares</b>.</div>
+    </div>
+  </section>
+
+  <!-- ===== PRODUCTOS ===== -->
+  <section id="tab-productos" class="hide">
+    <div class="card">
+      <h2>Productos en la operación</h2>
+      <div class="sub" style="margin-bottom:6px">Solo lo que tomas tú: bebidas (Pepsi y Coca-Cola), chucherías y medicamentos en falla. El % que ves es el margen REAL (tras el spread).</div>
+      <div id="listaProd"></div>
+      <div id="prodToggle" style="margin-top:6px"></div>
+      <div class="btnrow"><button class="btn sec" onclick="refrescar(true)">↻ Actualizar existencias desde A2</button></div>
+      <div class="mini" id="a2SyncInfo" style="margin-top:6px"></div>
+      <div class="btnrow"><button class="btn" onclick="openProd()">+ Agregar producto</button></div>
+    </div>
+  </section>
+
+  <!-- ===== SEMANA (Reunir dólares · cambio) ===== -->
+  <section id="tab-semana" class="hide">
+    <div class="card">
+      <h2>Reunir dólares · cambio Binance</h2>
+      <div class="big" id="cbReunido">$0</div>
+      <div class="sub">dólares reunidos esta semana · <span id="cbReunidoBs">Bs 0</span> (a tasa venta)</div>
+      <div class="kpis" style="margin-top:8px">
+        <div class="kpi"><div class="l">Comprados 🟢</div><div class="v" id="cbComp">$0</div></div>
+        <div class="kpi"><div class="l">Vendidos 🔴</div><div class="v" id="cbVend">$0</div></div>
+      </div>
+      <div class="btnrow" style="margin-top:8px">
+        <button class="btn" onclick="openCambio('compra')">🟢 Compré dólares</button>
+        <button class="btn sec" onclick="openCambio('venta')">🔴 Vendí dólares</button>
+      </div>
+      <div class="note" id="cbSpreadNota" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <h2>Movimientos</h2>
+      <div id="cbLista"><div class="mini">Sin movimientos todavía.</div></div>
+    </div>
+    <div class="card">
+      <h2>¿Cómo funciona?</h2>
+      <div class="note">Dos tasas de Binance, dos usos distintos:
+        <br>• <b>Compra</b> (tasa a la que compras dólares): cada día que apartas dólares para ahorrar, registras aquí lo que compraste. Así reúnes tu capital durante la semana.
+        <br>• <b>Venta</b> (tasa a la que vendes dólares): cuando toca pagar a proveedores, vendes dólares para tener los bolívares. Registras aquí lo vendido.
+        <br>Lo <b>reunido</b> = comprados − vendidos. Es el capital en dólares que te queda disponible. Las tasas se ponen en Ajustes; cada movimiento puede llevar su propia tasa.</div>
+    </div>
+  </section>
+
+  <!-- ===== ANÁLISIS ===== -->
+  <section id="tab-analisis" class="hide">
+    <div class="card">
+      <h2>El spread BCV → Binance</h2>
+      <div class="prod"><div class="nm">Tasa BCV</div><div class="rt"><b id="anBcv">—</b></div></div>
+      <div class="prod"><div class="nm">Tasa Binance / mercado</div><div class="rt"><b id="anBinance">—</b></div></div>
+      <div class="prod"><div class="nm">Spread a tu favor</div><div class="rt"><b id="anSpread" style="color:var(--ok)">—</b></div></div>
+      <div class="note" style="margin-top:8px">Pagas a proveedores en Bs a tasa BCV (baja) y vendes tus dólares a Binance (alta). Ese spread es tu ganancia cambiaria.</div>
+    </div>
+    <div class="card">
+      <h2>Análisis de la semana</h2>
+      <div class="mini" id="anSemRango" style="margin-bottom:6px">jueves (llega mercancía) → hoy</div>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Entró (uds)</div><div class="v" id="anSemEnt">0</div><div class="mini">reposición</div></div>
+        <div class="kpi"><div class="l">Salió (uds)</div><div class="v" id="anSemSal">0</div><div class="mini">vendido</div></div>
+      </div>
+      <div class="kpis" style="margin-top:8px">
+        <div class="kpi"><div class="l">Venta</div><div class="v" id="anSemVenta">$0</div></div>
+        <div class="kpi"><div class="l">Utilidad</div><div class="v" id="anSemUtil">$0</div></div>
+      </div>
+      <div class="btnrow" style="margin-top:12px"><button class="btn" id="anBtnXls" onclick="descargarExcelSemana()">⬇️ Descargar Excel de la semana</button></div>
+      <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="ordenCompraEdilso()">📋 Orden de compra para Edilso (imagen)</button></div>
+      <div class="mini" id="anXlsMsg" style="margin-top:6px">La orden sugiere reponer lo que se vendió esta semana, agrupado por Pepsi, Coca y chucherías. Puedes compartirla como imagen por WhatsApp.</div>
+    </div>
+    <div class="card">
+      <div class="note">Las ventas y ganancias reales por producto se ven también en la pestaña <b>🧮 Cierre</b>, día a día.</div>
+    </div>
+  </section>
+
+  <!-- ===== MAYRA (libro de cuentas) ===== -->
+  <section id="tab-mayra" class="hide">
+    <div class="card">
+      <h2>Cuenta con Mayra</h2>
+      <div class="big" id="myrSaldo">$0</div>
+      <div class="sub">saldo que Mayra debe · <span id="myrSaldoBs">Bs 0</span></div>
+      <div class="kpis" style="margin-top:12px">
+        <div class="kpi"><div class="l">Cortes (te debe)</div><div class="v" id="myrCargos">$0</div></div>
+        <div class="kpi"><div class="l">Pagos (abonó)</div><div class="v" id="myrAbonos">$0</div></div>
+      </div>
+      <div class="btnrow"><button class="btn" onclick="openCobro()">📲 Cobrar varios cortes a Mayra</button></div>
+      <div class="btnrow"><button class="btn sec" onclick="openMov('pago')">+ Registrar pago de Mayra</button></div>
+      <div class="btnrow"><button class="btn sec" onclick="openMov('ajuste')">+ Ajuste manual</button></div>
+      <div class="note" style="margin-top:8px">El corte diario se carga <b>solo</b> aquí cada mañana (lo que Mayra te debe, calculado con lo vendido). Tú solo registras el <b>pago</b> cuando ella te transfiere, y el saldo baja. Toca un movimiento para borrarlo.</div>
+    </div>
+    <div class="card">
+      <h2>Movimientos</h2>
+      <div id="myrLista"></div>
+    </div>
+  </section>
+
+  <section id="tab-cierre" class="hide">
+    <div class="card">
+      <h2>Cierre diario</h2>
+      <div class="btnrow" style="gap:6px;margin:8px 0">
+        <button class="btn" id="cieCerr" onclick="setCierre('cerrado')">Último corte</button>
+        <button class="btn sec" id="cieCurso" onclick="setCierre('curso')">Hoy en curso</button>
+      </div>
+      <div class="big" id="cieMonto">$0</div>
+      <div class="sub"><span id="cieTotal">0</span> unidades vendidas · <span id="cieRango">cargando…</span></div>
+      <div class="kpis" id="cieCats" style="margin-top:10px"></div>
+      <div class="kpis" id="cieUtil" style="margin-top:8px"></div>
+      <div id="cieReparto" style="margin-top:8px"></div>
+      <div class="note" id="cieNota" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <h2>Vendido de lo nuestro</h2>
+      <div class="mini" style="margin-bottom:4px">producto · unidades · dinero</div>
+      <div id="cieLista"></div>
+    </div>
+    <div class="card">
+      <h2>🆕 Productos nuevos</h2>
+      <div class="note" style="margin-bottom:6px">Productos que ingresaron por primera vez al inventario en esta ventana (altas de Edilso).</div>
+      <div id="cieNuevos"></div>
+    </div>
+    <div class="card">
+      <h2>Top de la farmacia</h2>
+      <div class="note" style="margin-bottom:6px">Lo que más salió del inventario de A2 en esta ventana, para control general.</div>
+      <div id="cieTop"></div>
+    </div>
+  </section>
+</main>
+
+<nav class="hide" id="navbar">
+  <button data-tab="hoy" class="on" onclick="go('hoy')"><span class="ic">☀️</span>Hoy</button>
+  <button data-tab="productos" onclick="go('productos')"><span class="ic">📦</span>Productos</button>
+  <button data-tab="semana" onclick="go('semana')"><span class="ic">💱</span>Cambio</button>
+  <button data-tab="analisis" onclick="go('analisis')"><span class="ic">📊</span>Análisis</button>
+  <button data-tab="mayra" onclick="go('mayra')"><span class="ic">🧾</span>Mayra</button>
+  <button data-tab="cierre" onclick="go('cierre')"><span class="ic">🧮</span>Cierre</button>
+</nav>
+
+<!-- Dialog: producto -->
+<dialog id="dlgProd"><div class="dlg">
+  <h3 id="dlgProdT">Nuevo producto</h3>
+  <div style="margin-bottom:10px"><div class="seg"><button type="button" id="segPepsi" class="on" onclick="setCat('pepsi')">Pepsi</button><button type="button" id="segCoca" onclick="setCat('coca')">Coca-Cola</button><button type="button" id="segChu" onclick="setCat('chuche')">Chuchería</button><button type="button" id="segMed" onclick="setCat('medicina')">Medicina</button></div></div>
+  <label>Enlazar con A2 (para traer la existencia sola)</label>
+  <input id="pBuscarA2" placeholder="Busca por nombre o código en A2…" oninput="a2BuscarDeb(this.value)" autocomplete="off">
+  <div id="pA2res" style="max-height:150px;overflow:auto"></div>
+  <label>Nombre</label><input id="pNombre" placeholder="Ej: Pepsi 2L / Losartán 50mg">
+  <div class="grid2" style="margin-top:10px">
+    <div><label>Costo (USD)</label><input id="pCosto" type="number" inputmode="decimal" placeholder="0.00" oninput="previewMargen()"></div>
+    <div><label>Precio venta (USD)</label><input id="pPrecio" type="number" inputmode="decimal" placeholder="0.00" oninput="previewMargen()"></div>
+  </div>
+  <div style="margin-top:10px"><label>Código A2 <span class="mini">(si está enlazado, la existencia se actualiza sola)</span></label><input id="pCodigo" placeholder="(opcional)" oninput="onCodigoChange()"></div>
+  <div class="grid2" style="margin-top:10px">
+    <div><label id="pStockLbl">Stock actual (uds)</label><input id="pStock" type="number" inputmode="numeric" placeholder="0"></div>
+    <div><label>Venta semanal estimada</label><input id="pVenta" type="number" inputmode="numeric" placeholder="0"></div>
+  </div>
+  <div class="sugbox" id="pSug">Ingresa el costo para ver el margen real y el precio sugerido.</div>
+  <div class="mini" id="pHist" style="margin-top:8px"></div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn sec" onclick="closeDlg('dlgProd')">Cancelar</button>
+    <button class="btn" id="pGuardar" onclick="saveProd()">Guardar</button>
+  </div>
+  <div class="center" style="margin-top:8px"><button class="del hide" id="pDel" onclick="delProd()">Eliminar producto</button></div>
+</div></dialog>
+
+<!-- Dialog: ajustes -->
+<dialog id="dlgAjustes"><div class="dlg">
+  <h3>Ajustes</h3>
+  <div class="grid2">
+    <div><label>Meta ganancia/sem ($)</label><input id="aMeta" type="number" inputmode="decimal"></div>
+    <div><label>Tope inversión ($)</label><input id="aTope" type="number" inputmode="decimal"></div>
+  </div>
+  <div class="grid2" style="margin-top:10px">
+    <div><label>Retiro/sem para vivir ($)</label><input id="aRetiro" type="number" inputmode="decimal"></div>
+    <div><label>Margen real objetivo (%)</label><input id="aMargenObj" type="number" inputmode="decimal"></div>
+  </div>
+  <div class="grid2" style="margin-top:10px">
+    <div><label>Tasa BCV (Bs/$) <span class="mini">auto</span></label><input id="aBCV" type="number" inputmode="decimal" readonly></div>
+    <div><label>Tasa Binance — COMPRA $ (Bs/$)</label><input id="aBinance" type="number" inputmode="decimal"></div>
+  </div>
+  <div class="grid2" style="margin-top:10px">
+    <div><label>Tasa Binance — VENTA $ (Bs/$)</label><input id="aBinanceV" type="number" inputmode="decimal"></div>
+    <div><label>% de Mayra (sobre la venta)</label><input id="aMayraPct" type="number" inputmode="decimal" placeholder="ej. 10"></div>
+  </div>
+  <div class="grid2" style="margin-top:10px">
+    <div><label>WhatsApp Mayra</label><input id="aWaMayra" inputmode="tel" placeholder="58414..."></div>
+    <div><label>WhatsApp Edilso</label><input id="aWaEdilso" inputmode="tel" placeholder="58414..."></div>
+  </div>
+  <div class="mini" style="margin-top:6px">Mayra recibe ese % de la <b>venta total</b>. Compra = tasa a la que compras dólares a diario; Venta = tasa a la que los vendes para pagar a proveedores.</div>
+  <div class="mini" id="aSpread" style="margin-top:8px"></div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn sec" onclick="closeDlg('dlgAjustes')">Cerrar</button>
+    <button class="btn" id="aGuardar" onclick="saveAjustes()">Guardar</button>
+  </div>
+</div></dialog>
+
+<dialog id="dlgCobro"><div class="dlg">
+  <h3>Cobrar cortes a Mayra</h3>
+  <div class="mini" style="margin-bottom:8px">Marca los días que quieres cobrarle y se junta el total en un solo mensaje.</div>
+  <div id="cobroLista" style="max-height:46vh;overflow:auto"></div>
+  <div class="prod" style="border-top:2px solid var(--line);margin-top:6px"><div><div class="nm">Total a cobrar</div><div class="mt"><span id="cobroN">0</span> corte(s)</div></div><div class="rt"><b id="cobroTot">$0</b><span class="mini" id="cobroTotBs">Bs 0</span></div></div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn sec" onclick="closeDlg('dlgCobro')">Cerrar</button>
+    <button class="btn" id="cobroEnviar" onclick="enviarCobro()">Enviar por WhatsApp</button>
+  </div>
+</div></dialog>
+
+<!-- Dialog: movimiento Mayra -->
+<dialog id="dlgMov"><div class="dlg">
+  <h3 id="dlgMovT">Registrar pago</h3>
+  <div style="margin-bottom:10px"><div class="seg">
+    <button type="button" id="segPago" class="on" onclick="setMovTipo('pago')">Pago</button>
+    <button type="button" id="segCorte" onclick="setMovTipo('corte')">Corte</button>
+    <button type="button" id="segAjuste" onclick="setMovTipo('ajuste')">Ajuste</button>
+  </div></div>
+  <label>Fecha</label><input id="movFecha" type="date">
+  <label>Concepto</label><input id="movConcepto" placeholder="Ej: Pago semanal / Corte viernes">
+  <div class="grid2" style="margin-top:10px">
+    <div><label>Monto USD</label><input id="movUsd" type="number" inputmode="decimal" placeholder="0.00" oninput="movCalc()"></div>
+    <div><label>Monto Bs</label><input id="movBs" type="number" inputmode="decimal" placeholder="0" oninput="movCalcBs()"></div>
+  </div>
+  <div class="mini" id="movHint" style="margin-top:6px">Escribe uno de los dos montos; el otro se calcula con la tasa BCV del día.</div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn sec" onclick="closeDlg('dlgMov')">Cancelar</button>
+    <button class="btn" id="movGuardar" onclick="saveMov()">Guardar</button>
+  </div>
+</div></dialog>
+
+<!-- Dialog: cambio de dólares -->
+<dialog id="dlgCambio"><div class="dlg">
+  <h3 id="dlgCambioT">Movimiento de cambio</h3>
+  <div class="grid2" style="margin-top:6px">
+    <div><label>Dólares</label><input id="cbUsd" type="number" inputmode="decimal" placeholder="0.00" oninput="cbPrev()"></div>
+    <div><label>Tasa Binance (Bs/$)</label><input id="cbTasa" type="number" inputmode="decimal" placeholder="0" oninput="cbPrev()"></div>
+  </div>
+  <label style="margin-top:10px">Nota (opcional)</label><input id="cbNotaIn" placeholder="Ej: ahorro del día / pago a Pepsi">
+  <div class="mini" id="cbPrevBox" style="margin-top:8px"></div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn sec" onclick="closeDlg('dlgCambio')">Cancelar</button>
+    <button class="btn" id="cbGuardar" onclick="saveCambio()">Guardar</button>
+  </div>
+</div></dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const $=(s)=>document.querySelector(s), $$=(s)=>document.querySelectorAll(s);
+const money=(n)=>'$'+(Math.round(n||0)).toLocaleString('es-VE');
+const money2=(n)=>'$'+(Number(n)||0).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const bs=(n)=>'Bs '+(Math.round(n||0)).toLocaleString('es-VE');
+
+/* ---- Conexión con Claret Central ---- */
+const SUPA_FN='https://unuumkcapdtqmbwefbfg.supabase.co/functions/v1';
+const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVudXVta2NhcGR0cW1id2VmYmZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTgxMDUsImV4cCI6MjA5NTk5NDEwNX0.TMQ_YgWlNXrBboJcg5YfS6359Fhw6zv_N10K5m_xtrE';
+const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
+const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
+const PINKEY='opReinvPin_v1';
+
+let PIN='';
+let lastSync='';
+let state={ cfg:{}, productos:[], registros:[], caja:{semana:'',usd:0}, bcv:0, bcv_fecha:'' };
+
+const DEF={meta:1500,tope:5000,retiro:200,margenObj:30,binance:0,binanceVenta:null,semanasDemanda:4,waMayra:'',waEdilso:'',cicloDia:2,leadDias:1,colchonDias:3,mayraPct:null};
+
+/* ================= API ================= */
+async function api(action, extra={}){
+  const r=await fetch(SUPA_FN+'/op-api',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+ANON},
+    body:JSON.stringify(Object.assign({token:TK_STOCK,pin:PIN,action},extra))
+  });
+  const d=await r.json().catch(()=>({}));
+  if(r.status===403){ throw {pin:true}; }
+  if(!r.ok || !d.ok){ throw (d&&d.error)||('HTTP '+r.status); }
+  return d;
+}
+
+/* ================= PIN GATE ================= */
+async function boot(){
+  const saved=(()=>{try{return localStorage.getItem(PINKEY)||''}catch(e){return ''}})();
+  if(saved){
+    PIN=saved;
+    try{ const d=await api('estado'); aplicarEstado(d); mostrarApp(); return; }
+    catch(e){ PIN=''; try{localStorage.removeItem(PINKEY)}catch(_){} }
+  }
+  $('#splash').classList.add('hide');
+  $('#gate').classList.remove('hide');
+  setTimeout(()=>$('#gatePin').focus(),100);
+}
+async function entrar(){
+  const pin=($('#gatePin').value||'').trim();
+  if(!pin){ $('#gateErr').textContent='Escribe tu PIN'; return; }
+  $('#gateBtn').disabled=true; $('#gateErr').textContent='';
+  PIN=pin;
+  try{
+    const d=await api('estado');
+    try{localStorage.setItem(PINKEY,pin)}catch(e){}
+    aplicarEstado(d);
+    $('#gate').classList.add('hide');
+    mostrarApp();
+  }catch(e){
+    PIN='';
+    $('#gateErr').textContent = e&&e.pin ? 'PIN incorrecto' : 'No se pudo conectar. Revisa tu internet.';
+  }finally{ $('#gateBtn').disabled=false; }
+}
+$('#gatePin')&&$('#gatePin').addEventListener('keydown',e=>{ if(e.key==='Enter') entrar(); });
+
+function mostrarApp(){
+  $('#splash').classList.add('hide');
+  $('#hdr').classList.remove('hide');
+  $('#app').classList.remove('hide');
+  $('#navbar').classList.remove('hide');
+  render(); loadHoyReal();
+}
+
+function aplicarEstado(d){
+  state.cfg=Object.assign({},DEF,d.config||{});
+  state.productos=(d.productos||[]).map(p=>({
+    id:p.id, cat:p.cat||'pepsi', nombre:p.nombre||'', codigo:(p.codigo||'').trim(),
+    costo:Number(p.costo)||0, precio:Number(p.precio)||0, venta:Number(p.venta_estim)||0,
+    stock_manual:Number(p.stock_manual)||0, existencia:(p.existencia==null?null:Number(p.existencia))
+  }));
+  state.registros=(d.registros||[]).map(r=>({f:r.f,p:r.p,cod:r.cod,q:Number(r.q)||0}));
+  state.caja=d.caja||{semana:'',usd:0};
+  state.bcv=Number(d.bcv)||0; state.bcv_fecha=d.bcv_fecha||'';
+  const now=new Date();
+  lastSync=now.toLocaleDateString('es-VE',{day:'numeric',month:'short'})+' '+now.toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit'});
+}
+
+async function refrescar(manual){
+  if(manual) toast('Actualizando…');
+  try{ const d=await api('estado'); aplicarEstado(d); render(); if(manual) toast('Existencias actualizadas'); }
+  catch(e){ if(manual) toast(e&&e.pin?'Sesión expirada':'Sin conexión'); }
+}
+
+/* ================= stock helpers ================= */
+function stockDe(p){ return p.codigo ? (p.existencia==null?0:p.existencia) : (p.stock_manual||0); }
+function enlazado(p){ return !!p.codigo; }
+function existenciaDesconocida(p){ return !!p.codigo && p.existencia==null; }
+
+/* factor de conversión real */
+function factor(){ const b=state.cfg.binance; return (b>0)? (state.bcv/b) : 1; }
+
+/* ---------- navegación ---------- */
+function go(tab){
+  ['hoy','productos','semana','analisis','mayra','cierre'].forEach(t=>$('#tab-'+t).classList.toggle('hide',t!==tab));
+  $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  render(); window.scrollTo(0,0);
+  if(tab==='hoy') loadHoyReal();
+  if(tab==='mayra') loadMayra();
+  if(tab==='cierre') loadCierre();
+  if(tab==='analisis') loadAnalisisSemana();
+  if(tab==='semana') loadCambio();
+}
+let _semData=null;
+async function loadAnalisisSemana(){
+  try{
+    const d=await api('reporte_semana_data');
+    _semData=d;
+    S('#anSemEnt',(d.tot_ent_uds||0)+' uds');
+    S('#anSemSal',(d.tot_sal_uds||0)+' uds');
+    S('#anSemVenta',money2(d.tot_venta||0));
+    S('#anSemUtil',money2((Number(d.tot_venta)||0)-(Number(d.tot_reinv)||0)));
+    const f=(iso)=>{const c=new Date(new Date(iso).getTime()-4*3600e3);const p=n=>String(n).padStart(2,'0');return p(c.getUTCDate())+'/'+p(c.getUTCMonth()+1)+' '+p(c.getUTCHours())+':'+p(c.getUTCMinutes());};
+    if(d.desde&&d.hasta) S('#anSemRango','Del '+f(d.desde)+' al '+f(d.hasta)+' (jueves → hoy)');
+  }catch(e){ /* silencioso */ }
+}
+function descargarExcelSemana(){
+  if(typeof XLSX==='undefined'){ toast('Cargando Excel… intenta de nuevo en un momento'); return; }
+  const d=_semData;
+  if(!d){ toast('Aún no cargó el análisis'); return; }
+  const catL=(c)=>catLabel(c||'');
+  const sal=(d.salidas||[]).map(x=>({
+    'Producto':x.descr||x.codigo, 'Categoría':catL(x.cat), 'Unidades vendidas':x.uds,
+    'Precio venta $':Number(x.precio||0), 'Costo $':Number(x.costo||0),
+    'Venta $':Number(x.monto||0), 'Reinversión $':Number(x.reinv||0),
+    'Utilidad $':Number(((x.monto||0)-(x.reinv||0)).toFixed(2))
+  }));
+  const ent=(d.entradas||[]).map(x=>({
+    'Producto':x.descr||x.codigo, 'Categoría':catL(x.cat), 'Unidades que entraron':x.uds
+  }));
+  const resumen=[
+    {'Concepto':'Desde','Valor':d.desde? new Date(d.desde).toLocaleString('es-VE'):''},
+    {'Concepto':'Hasta','Valor':d.hasta? new Date(d.hasta).toLocaleString('es-VE'):''},
+    {'Concepto':'Unidades que entraron','Valor':d.tot_ent_uds||0},
+    {'Concepto':'Unidades vendidas','Valor':d.tot_sal_uds||0},
+    {'Concepto':'Venta total $','Valor':Number(d.tot_venta||0)},
+    {'Concepto':'Reinversión $','Valor':Number(d.tot_reinv||0)},
+    {'Concepto':'Utilidad $','Valor':Number(((d.tot_venta||0)-(d.tot_reinv||0)).toFixed(2))}
+  ];
+  try{
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen), 'Resumen');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sal.length?sal:[{'Producto':'(sin ventas)'}]), 'Salidas (vendido)');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ent.length?ent:[{'Producto':'(sin entradas)'}]), 'Entradas (reposición)');
+    const hoy=new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, 'Analisis_Semana_Claret_'+hoy+'.xlsx');
+    toast('Excel generado');
+  }catch(e){ toast('No se pudo generar el Excel'); }
+}
+
+/* ---------- Cierre diario ---------- */
+let cieModo='cerrado';
+function setCierre(m){
+  cieModo=m;
+  const a=$('#cieCerr'), b=$('#cieCurso');
+  a.classList.toggle('sec',m!=='cerrado'); b.classList.toggle('sec',m!=='curso');
+  loadCierre();
+}
+function fmtCarDT(iso){
+  const d=new Date(iso); const c=new Date(d.getTime()-4*3600e3);
+  const wd=['dom','lun','mar','mié','jue','vie','sáb'][c.getUTCDay()];
+  const p=n=>String(n).padStart(2,'0');
+  return `${wd} ${p(c.getUTCDate())}/${p(c.getUTCMonth()+1)} ${p(c.getUTCHours())}:${p(c.getUTCMinutes())}`;
+}
+async function loadCierre(){
+  const rango=$('#cieRango');
+  rango.textContent='cargando…';
+  try{
+    const d=await api('cierre',{modo:cieModo});
+    if($('#cieMonto')) $('#cieMonto').textContent=money2(d.total_monto||0);
+    $('#cieTotal').textContent=(d.total_unid||0);
+    rango.textContent=fmtCarDT(d.desde)+' → '+fmtCarDT(d.hasta);
+    const cats=d.por_cat||[];
+    if($('#cieCats')) $('#cieCats').innerHTML = cats.map(cc=>`<div class="kpi"><div class="l">${catLabel(cc.cat)}</div><div class="v">${money2(cc.monto)}</div><div class="mini">${cc.unid} uds</div></div>`).join('');
+    // Reinversión y Utilidad
+    const reinv=Number(d.total_reinv)||0, util=Number(d.total_util)||0;
+    if($('#cieUtil')) $('#cieUtil').innerHTML =
+        `<div class="kpi"><div class="l">Reinversión</div><div class="v">${money2(reinv)}</div><div class="mini">reponer lo vendido</div></div>`
+      + `<div class="kpi"><div class="l">Utilidad</div><div class="v">${money2(util)}</div><div class="mini">venta − costo</div></div>`;
+    // Reparto con Mayra (% sobre la venta total)
+    let rep='';
+    if(d.mayra_pct!=null){
+      rep = `<div class="note"><b>Reparto</b>`
+        + `<div class="mini">Venta ${money2(d.total_monto)} − Reinversión ${money2(reinv)} = Utilidad ${money2(util)}</div>`
+        + `<div class="mini">Mayra (${d.mayra_pct}% de la venta): <b>${money2(d.total_mayra)}</b></div>`
+        + `<div class="mini">Para nosotros (utilidad − Mayra): <b>${money2(d.total_nuestro)}</b></div>`
+        + `</div>`;
+    }
+    if($('#cieReparto')) $('#cieReparto').innerHTML = rep;
+    // Notas + avisos
+    let nota = (cieModo==='cerrado'
+      ? (d.cubre_finde ? 'Corte del lunes: cubre el fin de semana (viernes → lunes).' : 'Corte del día, ventana 9am a 9am.')
+      : 'Ventas de hoy, desde el último corte de las 9am hasta ahorita (en vivo).');
+    if(d.mayra_pct==null && Number(d.total_monto)>0) nota += `<div class="mini" style="color:#c58a00;margin-top:6px">⚠ Falta poner el % de Mayra en Ajustes para ver su parte.</div>`;
+    if(Number(d.venta_sin_costo)>0) nota += `<div class="mini" style="color:#c58a00;margin-top:4px">⚠ ${d.n_sin_costo} producto(s) sin costo cargado (${money2(d.venta_sin_costo)} en ventas) — no se cuentan en la utilidad todavía.</div>`;
+    $('#cieNota').innerHTML = nota;
+    const P=d.productos||[];
+    $('#cieLista').innerHTML = P.length
+      ? P.map(p=>`<div class="prod"><div><div class="nm">${p.nombre}</div><div class="mt"><span class="tag ${catClass(p.cat)}">${catLabel(p.cat)}</span> · ${p.vendido} uds</div></div><div class="rt"><b>${money2(p.monto)}</b><span class="mini">${p.vendido}×${money2(p.precio)}</span></div></div>`).join('')
+      : '<div class="note">Sin ventas de nuestros productos en esta ventana.</div>';
+    const N=d.nuevos||[];
+    $('#cieNuevos').innerHTML = N.length
+      ? N.map(n=>`<div class="prod"><div><div class="nm">${n.descripcion||n.codigo}</div></div><div class="rt"><b>${n.stock_inicial}</b> uds</div></div>`).join('')
+      : '<div class="note">Ninguno nuevo en esta ventana.</div>';
+    const T=d.top_general||[];
+    $('#cieTop').innerHTML = T.length
+      ? T.map((t,i)=>`<div class="prod"><div><div class="nm">${i+1}. ${t.descripcion||t.codigo}</div></div><div class="rt"><b>${t.vendido}</b> uds</div></div>`).join('')
+      : '<div class="note">Sin datos en esta ventana.</div>';
+  }catch(e){ rango.textContent='No se pudo cargar el cierre.'; }
+}
+
+/* ---------- Libro de cuentas con Mayra ---------- */
+let mayra={movs:[],saldo_usd:0,cargos_usd:0,abonos_usd:0,saldo_bs:0};
+let curMovTipo='pago';
+async function loadMayra(){
+  try{ const d=await api('mayra_estado'); mayra=d||mayra; renderMayra(); }
+  catch(e){ /* silencioso */ }
+}
+function renderMayra(){
+  if(!$('#myrSaldo')) return;
+  $('#myrSaldo').textContent=money(mayra.saldo_usd);
+  $('#myrSaldoBs').textContent=bs(mayra.saldo_bs);
+  $('#myrCargos').textContent=money(mayra.cargos_usd);
+  $('#myrAbonos').textContent=money(mayra.abonos_usd);
+  const box=$('#myrLista'); if(!box) return; box.innerHTML='';
+  const movs=mayra.movs||[];
+  if(!movs.length){ box.innerHTML='<div class="note">Aún no hay movimientos. Registra un pago o corte, o se irán agregando solos con cada corte diario.</div>'; return; }
+  movs.forEach(m=>{
+    const esPago=m.tipo==='pago';
+    const div=document.createElement('div'); div.className='prod'; div.style.cursor='pointer'; div.onclick=()=>delMov(m);
+    const et=esPago?'Pago':(m.tipo==='ajuste'?'Ajuste':'Corte');
+    div.innerHTML=`<div><div class="nm">${esc(m.concepto||et)}</div>
+      <div class="mt"><span class="pill ${esPago?'ok':'warn'}" style="font-size:9.5px">${et}</span> ${m.fecha||''}${m.ref?(' · '+esc(m.ref)):''}</div></div>
+      <div class="rt"><b style="color:${esPago?'var(--ok)':'var(--ink)'}">${esPago?'−':'+'}${money(m.usd)}</b><span class="mini">${bs(m.bs)}</span></div>`;
+    box.appendChild(div);
+  });
+}
+function openCobro(){
+  const cortes=(mayra.movs||[]).filter(m=>m.tipo!=='pago'&&m.tipo!=='ajuste');
+  const box=$('#cobroLista');
+  if(!cortes.length){ box.innerHTML='<div class="note">No hay cortes registrados todavía.</div>'; }
+  else{
+    box.innerHTML=cortes.map(m=>`<label class="prod" style="cursor:pointer">
+      <div><div class="nm">${esc(m.concepto||'Corte')}</div><div class="mt">${m.fecha||''}${m.ref?(' · '+esc(m.ref)):''}</div></div>
+      <div class="rt" style="display:flex;align-items:center;gap:10px"><b>${money2(m.usd)}</b>
+      <input type="checkbox" class="cobroChk" data-usd="${Number(m.usd)||0}" onchange="calcCobro()" style="width:20px;height:20px"></div></label>`).join('');
+  }
+  calcCobro();
+  $('#dlgCobro').showModal();
+}
+function calcCobro(){
+  let t=0,n=0;
+  $$('.cobroChk').forEach(c=>{ if(c.checked){ t+=Number(c.dataset.usd)||0; n++; } });
+  const tasa=Number(state.bcv)||0;
+  S('#cobroTot',money2(t)); S('#cobroN',n); S('#cobroTotBs',bs(t*tasa));
+  window._cobroTot=t; window._cobroN=n;
+}
+function enviarCobro(){
+  const t=window._cobroTot||0, n=window._cobroN||0;
+  if(n===0){ toast('Marca al menos un corte'); return; }
+  const tasa=Number(state.bcv)||0;
+  const num=(state.cfg.waMayra||'').replace(/\D/g,'');
+  const cortes=(mayra.movs||[]).filter(m=>m.tipo!=='pago'&&m.tipo!=='ajuste');
+  const chks=$$('.cobroChk'); const sel=[];
+  chks.forEach((c,i)=>{ if(c.checked && cortes[i]) sel.push(cortes[i]); });
+  const lineas=sel.map(m=>`• ${m.fecha||''}: ${money2(m.usd)}`).join('\n');
+  const msg=`Hola Mayra, estos son los cortes que te cobro:\n${lineas}\nTotal: ${money2(t)} (${bs(t*tasa)} a tasa BCV ${tasa}). ¿Me confirmas el pago? ¡Gracias!`;
+  window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
+}
+function openMov(tipo){
+  setMovTipo(tipo||'pago');
+  $('#movFecha').value=hoyStr(); $('#movConcepto').value=''; $('#movUsd').value=''; $('#movBs').value='';
+  $('#dlgMov').showModal();
+}
+function setMovTipo(t){ curMovTipo=t;
+  $('#segPago').classList.toggle('on',t==='pago');
+  $('#segCorte').classList.toggle('on',t==='corte');
+  $('#segAjuste').classList.toggle('on',t==='ajuste');
+  $('#dlgMovT').textContent=t==='pago'?'Registrar pago':(t==='corte'?'Registrar corte':'Registrar ajuste');
+}
+function tasaMov(){ return state.bcv||0; }
+function movCalc(){ const u=parseFloat($('#movUsd').value)||0, t=tasaMov(); if(t>0) $('#movBs').value=u>0?Math.round(u*t):''; }
+function movCalcBs(){ const b=parseFloat($('#movBs').value)||0, t=tasaMov(); if(t>0) $('#movUsd').value=b>0?(b/t).toFixed(2):''; }
+async function saveMov(){
+  const mov={tipo:curMovTipo, fecha:$('#movFecha').value||hoyStr(), concepto:$('#movConcepto').value.trim(),
+    usd:parseFloat($('#movUsd').value)||0, bs:parseFloat($('#movBs').value)||0, tasa:tasaMov()};
+  if(mov.usd<=0 && mov.bs<=0){ toast('Pon el monto'); return; }
+  $('#movGuardar').disabled=true;
+  try{ await api('mayra_add',{mov}); closeDlg('dlgMov'); await loadMayra(); toast('Movimiento guardado'); }
+  catch(e){ toast('No se pudo guardar'); }
+  finally{ $('#movGuardar').disabled=false; }
+}
+async function delMov(m){
+  if(!confirm('¿Eliminar este movimiento?\n'+(m.concepto||m.tipo)+' · '+money(m.usd))) return;
+  try{ await api('mayra_del',{id:m.id}); await loadMayra(); toast('Eliminado'); }
+  catch(e){ toast('No se pudo eliminar'); }
+}
+
+/* ---------- Cambio de dólares (dos tasas Binance) ---------- */
+let cambio={movs:[],comprado_usd:0,vendido_usd:0,reunido_usd:0};
+let cbTipo='compra';
+async function loadCambio(){
+  try{ const d=await api('cambio_list'); cambio=d||cambio; renderCambio(); }
+  catch(e){ /* silencioso */ }
+}
+function renderCambio(){
+  const c=state.cfg;
+  const tVenta=Number(c.binanceVenta)||0, tComp=Number(c.binance)||0;
+  S('#cbReunido',money2(cambio.reunido_usd));
+  S('#cbComp',money2(cambio.comprado_usd));
+  S('#cbVend',money2(cambio.vendido_usd));
+  S('#cbReunidoBs', tVenta>0 ? bs(cambio.reunido_usd*tVenta) : 'Bs — (pon tasa venta)');
+  // nota de spread
+  let nota='';
+  if(tComp>0 && tVenta>0){
+    const sp=((tVenta/tComp-1)*100);
+    nota=`Compra a <b>Bs ${fmt(tComp)}</b> · Vende a <b>Bs ${fmt(tVenta)}</b> · spread <b>${sp.toFixed(1)}%</b> a tu favor por cada dólar que rota.`;
+  } else {
+    nota='Pon las dos tasas de Binance en <b>Ajustes</b> (compra y venta) para ver tu spread.';
+  }
+  S('#cbSpreadNota',''); const sn=$('#cbSpreadNota'); if(sn) sn.innerHTML=nota;
+  // lista
+  const box=$('#cbLista'); if(!box) return;
+  const movs=cambio.movs||[];
+  if(!movs.length){ box.innerHTML='<div class="mini">Sin movimientos todavía.</div>'; return; }
+  box.innerHTML=movs.map(m=>{
+    const comp=m.tipo==='compra';
+    const ic=comp?'🟢':'🔴', lbl=comp?'Compré':'Vendí';
+    const tasa=m.tasa?(' · Bs '+fmt(m.tasa)):'';
+    const nb=m.bs?('<span class="mini">'+bs(m.bs)+'</span>'):'';
+    return `<label class="prod"><div><div class="nm">${ic} ${lbl} ${money2(m.usd)}</div>`
+      +`<div class="mt">${m.fecha||''}${tasa}${m.nota?(' · '+m.nota):''}</div></div>`
+      +`<div class="rt">${nb}<button class="btn sec" style="padding:4px 10px" onclick="delCambio(${m.id})">🗑</button></div></label>`;
+  }).join('');
+}
+function openCambio(tipo){
+  cbTipo=(tipo==='venta')?'venta':'compra';
+  const c=state.cfg;
+  const tasaDef = cbTipo==='venta' ? (c.binanceVenta||'') : (c.binance||'');
+  $('#dlgCambioT').textContent = cbTipo==='venta' ? '🔴 Vendí dólares' : '🟢 Compré dólares';
+  $('#cbUsd').value=''; $('#cbTasa').value=tasaDef; $('#cbNotaIn').value='';
+  cbPrev();
+  $('#dlgCambio').showModal();
+}
+function cbPrev(){
+  const u=parseFloat($('#cbUsd').value)||0, t=parseFloat($('#cbTasa').value)||0;
+  const box=$('#cbPrevBox');
+  if(box) box.innerHTML = (u>0&&t>0) ? `= <b>${bs(Math.round(u*t))}</b> en bolívares` : '<span class="mini">Escribe dólares y tasa.</span>';
+}
+async function saveCambio(){
+  const usd=parseFloat($('#cbUsd').value)||0;
+  const tasa=parseFloat($('#cbTasa').value)||0;
+  if(usd<=0){ toast('Pon cuántos dólares'); return; }
+  const mov={tipo:cbTipo, usd, tasa:tasa||null, bs: tasa>0?Math.round(usd*tasa):null, nota:$('#cbNotaIn').value.trim()||null};
+  $('#cbGuardar').disabled=true;
+  try{ await api('cambio_add',{mov}); closeDlg('dlgCambio'); await loadCambio(); toast('Movimiento guardado'); }
+  catch(e){ toast('No se pudo guardar'); }
+  finally{ $('#cbGuardar').disabled=false; }
+}
+async function delCambio(id){
+  if(!confirm('¿Eliminar este movimiento de cambio?')) return;
+  try{ await api('cambio_del',{id}); await loadCambio(); toast('Eliminado'); }
+  catch(e){ toast('No se pudo eliminar'); }
+}
+
+/* ---------- Facturas / órdenes como imagen (generar y compartir) ---------- */
+function _clip(ctx,txt,max){ txt=String(txt||''); if(ctx.measureText(txt).width<=max) return txt;
+  while(txt.length>1 && ctx.measureText(txt+'…').width>max) txt=txt.slice(0,-1); return txt+'…'; }
+async function _shareCanvas(cv,name){
+  return new Promise(res=>{
+    cv.toBlob(async(blob)=>{
+      if(!blob){ toast('No se pudo generar la imagen'); res(false); return; }
+      const file=new File([blob],name+'.png',{type:'image/png'});
+      try{ if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:name}); res(true); return; } }
+      catch(e){ res(true); return; } // usuario canceló el compartir
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name+'.png';
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+      toast('Imagen descargada'); res(true);
+    },'image/png');
+  });
+}
+// rows: {sec:'TÍTULO'}  ó  {izq, sub, der, der2}
+function _drawFactura({titulo, fecha, rows, totales, pie, name}){
+  const W=700, pad=30, itemH=52, secH=40;
+  let bodyH=0; rows.forEach(r=> bodyH += r.sec? secH : itemH);
+  const totH = totales? (totales.reduce((a,t)=>a+(t.big?54:38),0)+24) : 0;
+  const H = 100 + 66 + bodyH + 16 + totH + (pie?86:34);
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const x=cv.getContext('2d'); x.textBaseline='alphabetic';
+  x.fillStyle='#fff'; x.fillRect(0,0,W,H);
+  x.fillStyle='#0a7d3b'; x.fillRect(0,0,W,100);
+  x.fillStyle='#fff'; x.font='bold 32px system-ui,Arial'; x.fillText('FARMACIA CLARET',pad,50);
+  x.font='16px system-ui,Arial'; x.fillText('Operación Reinversión · Zulia',pad,80);
+  let y=142; x.fillStyle='#111'; x.font='bold 25px system-ui,Arial'; x.fillText(titulo,pad,y);
+  x.font='15px system-ui,Arial'; x.fillStyle='#666'; x.fillText(fecha,pad,y+24); y+=62;
+  rows.forEach((r,i)=>{
+    if(r.sec){ x.fillStyle='#0a7d3b'; x.font='bold 17px system-ui,Arial'; x.fillText(r.sec.toUpperCase(),pad,y+8);
+      x.strokeStyle='#cfe3d6'; x.lineWidth=1; x.beginPath(); x.moveTo(pad,y+18); x.lineTo(W-pad,y+18); x.stroke(); y+=secH; return; }
+    x.fillStyle='#111'; x.font='bold 19px system-ui,Arial';
+    x.fillText(_clip(x,r.izq,W-2*pad-160),pad,y+6);
+    if(r.sub){ x.fillStyle='#888'; x.font='13px system-ui,Arial'; x.fillText(r.sub,pad,y+26); }
+    x.textAlign='right'; x.fillStyle='#111'; x.font='bold 19px system-ui,Arial'; x.fillText(r.der||'',W-pad,y+6);
+    if(r.der2){ x.fillStyle='#888'; x.font='13px system-ui,Arial'; x.fillText(r.der2,W-pad,y+26); }
+    x.textAlign='left'; y+=itemH;
+  });
+  y+=16;
+  if(totales){ x.strokeStyle='#111'; x.lineWidth=2; x.beginPath(); x.moveTo(pad,y-4); x.lineTo(W-pad,y-4); x.stroke(); y+=10;
+    totales.forEach(t=>{ const big=!!t.big;
+      x.fillStyle=big?'#0a7d3b':'#333'; x.font=(big?'bold 22px':'16px')+' system-ui,Arial'; x.fillText(t.l,pad,y+ (big?10:6));
+      x.textAlign='right'; x.font=(big?'bold 26px':'bold 16px')+' system-ui,Arial'; x.fillText(t.v,W-pad,y+(big?10:6)); x.textAlign='left';
+      y+= big?54:38; });
+  }
+  if(pie){ y+=6; x.fillStyle='#666'; x.font='14px system-ui,Arial';
+    String(pie).split('\n').forEach(l=>{ x.fillText(_clip(x,l,W-2*pad),pad,y+16); y+=22; }); }
+  return _shareCanvas(cv, name);
+}
+async function facturaMayra(){
+  toast('Generando factura…');
+  let d; try{ d=await api('cierre',{modo:'curso'}); }catch(e){ toast('No se pudo leer el corte'); return; }
+  const P=(d.productos||[]).slice().sort((a,b)=>Number(b.monto)-Number(a.monto));
+  if(!P.length){ toast('Aún no hay ventas hoy'); return; }
+  const total=Number(d.total_monto)||0, tasa=Number(state.bcv)||0;
+  const rows=P.map(p=>({izq:p.nombre, sub:`${p.vendido} × ${money2(p.precio)}`, der:money2(p.monto)}));
+  const fecha=new Date().toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const totales=[{l:'Total a pagar (USD)', v:money2(total), big:true},
+    {l:`En bolívares · BCV ${fmt(tasa)}`, v: tasa>0?bs(Math.round(total*tasa)):'—'}];
+  await _drawFactura({titulo:'Corte para Mayra', fecha, rows, totales,
+    pie:'Pago en bolívares a la tasa BCV del día.\n¡Gracias!', name:'Factura_Mayra_'+hoyStr()});
+}
+async function ordenCompraEdilso(){
+  toast('Generando orden…');
+  let d; try{ d=await api('reporte_semana_data'); }catch(e){ toast('No se pudo leer la semana'); return; }
+  const sal=(d.salidas||[]).filter(s=>Number(s.uds)>0);
+  if(!sal.length){ toast('No hay ventas esta semana todavía'); return; }
+  const orden=['pepsi','coca','chuche','medicina'];
+  const cats={}; sal.forEach(s=>{ const c=s.cat||'otros'; (cats[c]=cats[c]||[]).push(s); });
+  const rows=[]; let totUds=0;
+  Object.keys(cats).sort((a,b)=>{ const ia=orden.indexOf(a),ib=orden.indexOf(b); return (ia<0?9:ia)-(ib<0?9:ib); })
+    .forEach(c=>{ rows.push({sec:catLabel(c)||c});
+      cats[c].sort((a,b)=>Number(b.uds)-Number(a.uds)).forEach(s=>{ totUds+=Number(s.uds)||0;
+        rows.push({izq:s.descr||s.codigo, sub:'vendidas: '+(Number(s.uds)||0), der:(Number(s.uds)||0)+' uds'}); }); });
+  const fecha='Semana '+new Date().toLocaleDateString('es-VE',{day:'numeric',month:'short'})+' · reponer lo vendido';
+  await _drawFactura({titulo:'Orden de compra — Edilso', fecha, rows,
+    totales:[{l:'Total de unidades a reponer', v:totUds+' uds', big:false}],
+    pie:'Cantidades sugeridas = lo vendido esta semana.\nAjusta lo que haga falta antes de comprar.', name:'Orden_Compra_'+hoyStr()});
+}
+
+/* ---------- cálculos ---------- */
+function margenNom(p){return p.costo>0?(p.precio-p.costo)/p.costo:0}
+function margenReal(p){return p.costo>0?(p.precio*factor()-p.costo)/p.costo:0}
+function precioSugerido(costo){ const f=factor(); return f>0? costo*(1+(state.cfg.margenObj/100))/f : 0; }
+
+/* ---------- historial de ventas ---------- */
+// Semana de ahorro JUEVES -> JUEVES. Clave = fecha del jueves que inicia la semana.
+function weekKey(dateStr){
+  const t=new Date(dateStr+'T00:00:00');
+  const off=(t.getDay()-4+7)%7; // dias desde el ultimo jueves (jueves=4)
+  t.setDate(t.getDate()-off);
+  return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+}
+function hoyStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function semanasProducto(pid){
+  const m={};
+  state.registros.forEach(r=>{ if(r.p===pid){ const k=weekKey(r.f); m[k]=(m[k]||0)+r.q; } });
+  return m;
+}
+function vendidoHoy(pid){
+  const h=hoyStr(); let s=0;
+  state.registros.forEach(r=>{ if(r.p===pid && r.f===h) s+=r.q; });
+  return s;
+}
+function demandaSemanal(p){
+  const m=semanasProducto(p.id); const wkNow=weekKey(hoyStr());
+  const keys=Object.keys(m).filter(k=>k!==wkNow).sort().slice(-(state.cfg.semanasDemanda||4));
+  if(keys.length===0){ return m[wkNow]!=null ? m[wkNow] : (p.venta||0); }
+  return Math.max(...keys.map(k=>m[k]));
+}
+function semanasGlobal(){
+  const m={};
+  state.registros.forEach(r=>{
+    const k=weekKey(r.f); const p=state.productos.find(x=>x.id===r.p); if(!p) return;
+    if(!m[k]) m[k]={uds:0,gan:0};
+    m[k].uds += r.q;
+    m[k].gan += ((p.precio||0)*factor()-(p.costo||0))*r.q;
+  });
+  return m;
+}
+
+function totals(){
+  let compra=0, ganReal=0, ganNom=0, mSum=0, n=0, bajo=0;
+  const f=factor();
+  state.productos.forEach(p=>{
+    const dem=demandaSemanal(p);
+    compra += (p.costo||0)*dem;
+    ganNom += ((p.precio||0)-(p.costo||0))*dem;
+    ganReal += ((p.precio||0)*f-(p.costo||0))*dem;
+    mSum += margenReal(p); n++;
+    if(stockDe(p) < dem) bajo++;
+  });
+  return {compra,ganReal,ganNom,merma:ganNom-ganReal,margenProm:n?mSum/n:0,n,bajo};
+}
+
+/* ---------- render ---------- */
+function S(sel,v){ var e=$(sel); if(e) e.textContent=v; }
+function render(){
+  const c=state.cfg;
+  const spread = state.bcv>0 && c.binance>0 ? (c.binance/state.bcv-1)*100 : 0;
+  S('#hdrTasa',`BCV ${fmt(state.bcv)} · Binance ${fmt(c.binance)} · spread ${spread.toFixed(0)}%`);
+  // HOY (encabezado)
+  const hf=$('#hoyFecha'); if(hf) hf.textContent=new Date().toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'short'});
+  S('#hoyCaja',money(state.caja.usd));
+  // PRODUCTOS
+  renderProductos();
+  // ANÁLISIS (spread real)
+  S('#anBcv','Bs '+fmt(state.bcv));
+  S('#anBinance','Bs '+fmt(c.binance));
+  S('#anSpread',spread.toFixed(0)+'%');
+  renderA2Info();
+}
+/* ---------- HOY: venta y corte reales (desde A2 vía 'cierre') ---------- */
+let corteHoy=0;
+async function loadHoyReal(){
+  try{
+    const d=await api('cierre',{modo:'curso'});
+    corteHoy=Number(d.total_monto)||0;
+    S('#hoyMonto',money2(corteHoy));
+    S('#hoyUnid',(d.total_unid||0));
+    S('#mCorte',money2(corteHoy));
+    const tasa=Number(state.bcv)||0;
+    S('#mCorteBs',bs(corteHoy*tasa));
+    const num=(state.cfg.waMayra||'').replace(/\D/g,'');
+    const msg=`Hola Mayra, el corte de hoy es ${money2(corteHoy)} (${bs(corteHoy*tasa)} a tasa BCV ${tasa}). Por favor transfiéreme para comprar los dólares. ¡Gracias!`;
+    const wa=$('#waMayra'); if(wa) wa.href='https://wa.me/'+num+'?text='+encodeURIComponent(msg);
+  }catch(e){ /* silencioso */ }
+}
+async function sumarCajaCorte(){
+  const tasa=Number(state.cfg.binance)||0;
+  const d=corteHoy>0?corteHoy:0;
+  if(d<=0){toast('Aún no hay corte de hoy');return;}
+  try{ const r=await api('sumar_caja',{usd:d}); state.caja.usd=Number(r.usd)||0; render(); toast('+'+money(d)+' a la caja'); }
+  catch(e){ toast('No se pudo guardar'); }
+}
+function renderSemanas(){
+  const box=$('#anSemanas'); const m=semanasGlobal();
+  const keys=Object.keys(m).sort().slice(-6).reverse();
+  if(keys.length===0){ box.innerHTML='<div class="note">Aún no hay historial. Registra ventas en la pestaña Hoy y aquí verás cuánto se vende cada semana.</div>'; return; }
+  const wkNow=weekKey(hoyStr());
+  box.innerHTML='';
+  keys.forEach(k=>{
+    const row=document.createElement('div'); row.className='prod';
+    const dj=new Date(k+'T00:00:00'); const dj2=new Date(dj); dj2.setDate(dj2.getDate()+6);
+    const ff=(x)=>String(x.getDate()).padStart(2,'0')+'/'+String(x.getMonth()+1).padStart(2,'0');
+    const label=k===wkNow?'Esta semana':('Semana '+ff(dj));
+    row.innerHTML=`<div><div class="nm">${label}</div><div class="mt">jueves ${ff(dj)} → ${ff(dj2)}${k===wkNow?' · en curso':''}</div></div>
+      <div class="rt"><b>${m[k].uds} uds</b><span class="mini">${money(m[k].gan)} real</span></div>`;
+    box.appendChild(row);
+  });
+}
+function fmt(n){return (n||0).toLocaleString('es-VE')}
+function setBar(sel,frac){
+  frac=Math.max(0,Math.min(1,frac||0));
+  const el=$(sel); el.querySelector('i').style.width=(frac*100).toFixed(0)+'%';
+  el.classList.toggle('ok',frac>=1); el.classList.toggle('warn',frac<1&&frac>=.5);
+}
+function renderProductos(){
+  const box=$('#listaProd'); if(!box) return; box.innerHTML='';
+  if(state.productos.length===0){box.innerHTML='<div class="note">Aún no hay productos. Toca "Agregar producto" para empezar.</div>';const tg0=$('#prodToggle');if(tg0)tg0.innerHTML='';return;}
+  const showAll=window.prodShowAll||false;
+  let ocultos=0;
+  const vis=state.productos.filter(p=>{
+    const desc=existenciaDesconocida(p); const st=stockDe(p);
+    const enCero = !!p.codigo && !desc && st<=0;
+    if(enCero && !showAll){ ocultos++; return false; }
+    return true;
+  });
+  if(!vis.length){ box.innerHTML='<div class="note">Todos los productos están en 0 ahorita. Toca "Ver todos" para mostrarlos.</div>'; }
+  vis.forEach(p=>{
+    const st=stockDe(p);
+    const mr=Math.round(margenReal(p)*100);
+    const desc=existenciaDesconocida(p);
+    const div=document.createElement('div'); div.className='prod'; div.style.cursor='pointer'; div.onclick=()=>openProd(p.id);
+    div.innerHTML=`<div><div class="nm">${esc(p.nombre)}</div>
+      <div class="mt"><span class="chip ${catClass(p.cat)}">${catLabel(p.cat)}</span>
+      ${p.codigo?(desc?'<span class="pill bad" style="font-size:9.5px">A2 sin datos</span>':'<span class="pill ok" style="font-size:9.5px">A2 en vivo</span>'):'<span class="pill" style="font-size:9.5px">manual</span>'}
+      &nbsp;${money(p.costo)}→${money(p.precio)} · real ${mr}%</div></div>
+      <div class="rt"><b>${desc?'—':st} uds</b><span class="mini">existencia A2</span></div>`;
+    box.appendChild(div);
+  });
+  const tg=$('#prodToggle');
+  if(tg){
+    tg.innerHTML = (ocultos>0 || showAll)
+      ? `<button class="btn sec" style="font-size:12px" onclick="window.prodShowAll=!window.prodShowAll;renderProductos()">${showAll?'Ocultar los que están en 0':('Ver todos ('+ocultos+' en 0 ocultos)')}</button>`
+      : '';
+  }
+}
+function renderVentasHoy(){
+  const box=$('#ventasHoy'); box.innerHTML='';
+  if(state.productos.length===0){box.innerHTML='<div class="note">Agrega productos primero.</div>';return;}
+  state.productos.forEach(p=>{
+    const yh=vendidoHoy(p.id); const st=stockDe(p); const desc=existenciaDesconocida(p);
+    const row=document.createElement('div'); row.className='prod';
+    row.innerHTML=`<div><div class="nm">${esc(p.nombre)}</div><div class="mt">stock: ${desc?'—':st} uds${yh?` · hoy: ${yh} uds`:''}</div></div>
+      <div class="rt" style="min-width:78px"><input data-v="${p.id}" data-cod="${esc(p.codigo)}" type="number" inputmode="numeric" placeholder="0" style="width:74px;text-align:center"></div>`;
+    box.appendChild(row);
+  });
+}
+function renderOrden(){
+  const box=$('#ordenCompra'); box.innerHTML=''; let any=false;
+  state.productos.forEach(p=>{
+    const falta=Math.max(0,demandaSemanal(p)-stockDe(p));
+    if(falta<=0) return; any=true;
+    const div=document.createElement('div'); div.className='prod';
+    div.innerHTML=`<div><div class="nm">${esc(p.nombre)}</div><div class="mt">${money((p.costo||0)*falta)} · ${falta} uds</div></div>
+      <div class="rt"><b>${falta} uds</b></div>`;
+    box.appendChild(div);
+  });
+  if(!any) box.innerHTML='<div class="note">Todo con stock suficiente para la semana. Nada que reponer.</div>';
+}
+function esc(s){return (s||'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ---------- Info A2 ---------- */
+function renderA2Info(){
+  const el=$('#a2SyncInfo'); if(!el) return;
+  const con=state.productos.filter(p=>p.codigo).length;
+  if(con===0){ el.innerHTML='Ningún producto está enlazado a A2 todavía. Al agregar/editar un producto usa "Enlazar con A2" y la existencia se traerá sola del sistema.'; return; }
+  el.innerHTML=con+' producto(s) enlazados a A2 · datos al '+(lastSync||'—');
+}
+let _a2t=null;
+function a2BuscarDeb(q){ clearTimeout(_a2t); _a2t=setTimeout(()=>a2Buscar(q),350); }
+function a2Buscar(q){
+  q=(q||'').trim(); const box=$('#pA2res'); if(!box) return;
+  if(q.length<2){ box.innerHTML=''; return; }
+  box.innerHTML='<div class="mini" style="padding:6px 2px">Buscando en A2…</div>';
+  fetch(SUPA_FN+'/buscar_med',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ANON},body:JSON.stringify({token:TK_CAJA,q:q})})
+    .then(r=>r.json()).then(d=>{
+      const items=(d&&d.items)||[];
+      if(!items.length){ box.innerHTML='<div class="mini" style="padding:6px 2px">Sin resultados en A2.</div>'; return; }
+      box.innerHTML=items.slice(0,20).map(it=>{
+        const nm=(it.descripcion||'').replace(/'/g,"\\'");
+        return '<div class="prod" style="cursor:pointer" onclick="a2Pick(\''+it.codigo+'\',\''+nm+'\','+(Number(it.existencia_actual)||0)+')">'+
+          '<div><div class="nm" style="font-size:13px">'+esc(it.descripcion||'')+'</div>'+
+          '<div class="mt">cód: '+esc(String(it.codigo))+(it.marca?(' · '+esc(it.marca)):'')+'</div></div>'+
+          '<div class="rt"><b>'+(Number(it.existencia_actual)||0)+' uds</b></div></div>';
+      }).join('');
+    }).catch(()=>{ box.innerHTML='<div class="mini" style="padding:6px 2px;color:var(--bad)">No se pudo consultar A2 (revisa internet).</div>'; });
+}
+function a2Pick(cod,nombre,exist){
+  $('#pCodigo').value=cod;
+  if(!$('#pNombre').value.trim()) $('#pNombre').value=nombre;
+  $('#pStock').value=exist;
+  $('#pBuscarA2').value=''; $('#pA2res').innerHTML='';
+  onCodigoChange();
+  toast('Enlazado a A2 · '+exist+' uds');
+  previewMargen();
+}
+function onCodigoChange(){
+  const linked=($('#pCodigo').value||'').trim().length>0;
+  $('#pStockLbl').innerHTML = linked ? 'Existencia (viene de A2)' : 'Stock actual (uds)';
+  $('#pStock').readOnly = linked;
+}
+
+/* ---------- Mayra ---------- */
+function onMTasa(){
+  const v=parseFloat($('#mTasa').value);
+  if(!isNaN(v)){ state.cfg.binance=v; api('guardar_config',{config:{binance:v}}).catch(()=>{}); render(); }
+}
+function calcMayra(){
+  const d=parseFloat($('#mDolares').value)||0, tasa=parseFloat($('#mTasa').value)||0;
+  const total=d*tasa; $('#mBs').textContent=bs(total);
+  const msg=`Hola Mayra, por favor transfiéreme ${bs(total)} para comprar $${d.toLocaleString('es-VE')} hoy a tasa Binance ${tasa} Bs/$. ¡Gracias!`;
+  const num=(state.cfg.waMayra||'').replace(/\D/g,'');
+  $('#waMayra').href='https://wa.me/'+num+'?text='+encodeURIComponent(msg);
+}
+
+/* ---------- caja ---------- */
+async function sumarCaja(){
+  const d=parseFloat($('#mDolares').value)||0;
+  if(d<=0){toast('Pon los dólares que compraste');return;}
+  try{ const r=await api('sumar_caja',{usd:d}); state.caja.usd=Number(r.usd)||0; render(); toast('+'+money(d)+' a la caja'); }
+  catch(e){ toast('No se pudo guardar'); }
+}
+async function cerrarSemana(){
+  if((state.caja.usd||0)<=0){toast('La caja está en cero');return;}
+  if(confirm(`¿Entregar ${money(state.caja.usd)} (${bs(state.caja.usd*(state.cfg.binance||0))}) a Edilso y cerrar la semana?`)){
+    try{ await api('cerrar_semana'); state.caja.usd=0; render(); toast('Semana cerrada. Caja en cero.'); }
+    catch(e){ toast('No se pudo cerrar'); }
+  }
+}
+
+/* ---------- ventas ---------- */
+async function descontarStock(){
+  const ventas=[]; const h=hoyStr();
+  $$('#ventasHoy input[data-v]').forEach(inp=>{
+    const q=parseInt(inp.value)||0;
+    if(q>0){ ventas.push({op_producto_id:inp.dataset.v, codigo:inp.dataset.cod||'', qty:q}); }
+  });
+  if(!ventas.length){ toast('Escribe alguna cantidad'); return; }
+  try{
+    await api('registrar_ventas',{ventas});
+    // reflejar en memoria y recargar existencias
+    ventas.forEach(v=>{ state.registros.push({f:h,p:v.op_producto_id,cod:v.codigo,q:v.qty}); });
+    $$('#ventasHoy input[data-v]').forEach(i=>i.value='');
+    await refrescar(false);
+    toast('Ventas de hoy guardadas');
+  }catch(e){ toast('No se pudo guardar'); }
+}
+
+/* ---------- orden Edilso ---------- */
+function enviarOrden(){
+  let lines=['*Orden de compra — Operación Reinversión*','']; let total=0;
+  state.productos.forEach(p=>{
+    const falta=Math.max(0,demandaSemanal(p)-stockDe(p));
+    if(falta>0){lines.push(`• ${p.nombre}: ${falta} uds (${money((p.costo||0)*falta)})`); total+=(p.costo||0)*falta;}
+  });
+  lines.push('', `Total aprox: ${money(total)}`, 'Gracias Edilso 🙏');
+  const num=(state.cfg.waEdilso||'').replace(/\D/g,'');
+  return 'https://wa.me/'+num+'?text='+encodeURIComponent(lines.join('\n'));
+}
+
+/* ---------- dialogs producto ---------- */
+let editId=null, curCat='pepsi';
+function openProd(pid){
+  editId=(typeof pid==='string')?pid:null;
+  const p=editId?state.productos.find(x=>x.id===editId):null;
+  $('#dlgProdT').textContent=p?'Editar producto':'Nuevo producto';
+  setCat(p?p.cat:'pepsi');
+  $('#pNombre').value=p?p.nombre:''; $('#pCosto').value=p&&p.costo?p.costo:''; $('#pPrecio').value=p&&p.precio?p.precio:'';
+  $('#pVenta').value=p&&p.venta?p.venta:'';
+  $('#pCodigo').value=p&&p.codigo?p.codigo:''; $('#pBuscarA2').value=''; $('#pA2res').innerHTML='';
+  // stock: enlazado -> existencia (read-only); manual -> stock_manual
+  if(p && p.codigo){ $('#pStock').value=(p.existencia==null?'':p.existencia); }
+  else { $('#pStock').value=(p?p.stock_manual:''); }
+  onCodigoChange();
+  $('#pDel').classList.toggle('hide',!p); previewMargen();
+  const hist=$('#pHist');
+  if(p && p.codigo){
+    hist.innerHTML='Cargando existencia y ventas…';
+    api('producto_stats',{codigo:p.codigo}).then(s=>{
+      hist.innerHTML=`📦 En existencia: <b>${s.existencia==null?'—':s.existencia}</b> uds`+
+        ` · 🛒 Vendido hoy: <b>${s.vendido_hoy||0}</b> uds`+
+        ` · Vendido esta semana: <b>${s.vendido_sem||0}</b> uds`;
+    }).catch(()=>{ hist.innerHTML='No se pudo cargar el detalle de ventas.'; });
+  } else if(p){
+    hist.innerHTML=`Existencia (manual): <b>${p.stock_manual||0}</b> uds. Enlázalo con A2 para ver lo vendido automático.`;
+  } else { hist.innerHTML='En "Venta semanal" pon un estimado inicial; luego la app lo reemplaza por lo que se venda de verdad.'; }
+  $('#dlgProd').showModal();
+}
+function setCat(c){curCat=c;$('#segPepsi').classList.toggle('on',c==='pepsi');$('#segCoca').classList.toggle('on',c==='coca');$('#segChu').classList.toggle('on',c==='chuche');$('#segMed').classList.toggle('on',c==='medicina');}
+function catLabel(c){return c==='pepsi'?'Pepsi':(c==='coca'?'Coca-Cola':(c==='chuche'?'Chuchería':'Medicina'));}
+function catClass(c){return c==='pepsi'?'pepsi':(c==='coca'?'coca':(c==='chuche'?'chuche':'med'));}
+function previewMargen(){
+  const co=parseFloat($('#pCosto').value)||0, pr=parseFloat($('#pPrecio').value)||0, f=factor();
+  if(co<=0){$('#pSug').innerHTML='Ingresa el costo para ver el margen real y el precio sugerido.';return;}
+  const mNom=Math.round(((pr-co)/co)*100), mReal=Math.round(((pr*f-co)/co)*100);
+  const sug=precioSugerido(co);
+  $('#pSug').innerHTML=`Margen nominal <b>${mNom}%</b> · margen real <b>${mReal}%</b> (tras spread).<br>
+    Precio sugerido para ${state.cfg.margenObj}% real: <b>${money(sug)}</b> <span class="mini">— <a href="#" onclick="event.preventDefault();document.querySelector('#pPrecio').value='${sug.toFixed(2)}';previewMargen();">usar</a></span>`;
+}
+async function saveProd(){
+  const codigo=($('#pCodigo').value||'').trim();
+  const prod={
+    nombre:$('#pNombre').value.trim()||'Sin nombre', cat:curCat, codigo,
+    costo:parseFloat($('#pCosto').value)||0, precio:parseFloat($('#pPrecio').value)||0,
+    venta_estim:parseInt($('#pVenta').value)||0, activo:true
+  };
+  // stock_manual solo aplica a NO enlazados
+  if(!codigo){ prod.stock_manual=parseInt($('#pStock').value)||0; }
+  if(editId) prod.id=editId;
+  $('#pGuardar').disabled=true;
+  try{
+    await api('guardar_producto',{producto:prod});
+    closeDlg('dlgProd');
+    await refrescar(false);
+    toast('Producto guardado');
+  }catch(e){ toast('No se pudo guardar'); }
+  finally{ $('#pGuardar').disabled=false; }
+}
+async function delProd(){
+  if(!editId) return;
+  if(!confirm('¿Eliminar este producto de la operación?')) return;
+  try{ await api('borrar_producto',{id:editId}); closeDlg('dlgProd'); await refrescar(false); toast('Producto eliminado'); }
+  catch(e){ toast('No se pudo eliminar'); }
+}
+
+/* ---------- ajustes ---------- */
+function openAjustes(){
+  const c=state.cfg;
+  $('#aMeta').value=c.meta;$('#aTope').value=c.tope;$('#aRetiro').value=c.retiro;$('#aMargenObj').value=c.margenObj;
+  $('#aBCV').value=state.bcv||''; $('#aBinance').value=c.binance||'';
+  $('#aWaMayra').value=c.waMayra||'';$('#aWaEdilso').value=c.waEdilso||'';
+  $('#aMayraPct').value=(c.mayraPct==null?'':c.mayraPct);
+  $('#aBinanceV').value=(c.binanceVenta==null?'':c.binanceVenta);
+  showSpread(); $('#dlgAjustes').showModal();
+  $('#aBinance').oninput=showSpread;
+}
+function showSpread(){
+  const b=state.bcv||0, bi=parseFloat($('#aBinance').value)||0;
+  const sp=b>0?(bi/b-1)*100:0;
+  $('#aSpread').textContent=`Spread actual: ${sp.toFixed(1)}% — es lo que el cambio te resta del margen nominal.`;
+}
+function _pn(v){const x=parseFloat(v); return isNaN(x)?null:x;}
+async function saveAjustes(){
+  const cfg={
+    meta:parseFloat($('#aMeta').value)||1500, tope:parseFloat($('#aTope').value)||5000,
+    retiro:parseFloat($('#aRetiro').value)||200, margenObj:parseFloat($('#aMargenObj').value)||30,
+    binance:parseFloat($('#aBinance').value)||0,
+    waMayra:$('#aWaMayra').value.trim(), waEdilso:$('#aWaEdilso').value.trim(),
+    mayraPct:_pn($('#aMayraPct').value), binanceVenta:_pn($('#aBinanceV').value)
+  };
+  $('#aGuardar').disabled=true;
+  try{
+    await api('guardar_config',{config:cfg});
+    Object.assign(state.cfg,cfg);
+    closeDlg('dlgAjustes'); render(); loadHoyReal(); if(typeof loadCierre==='function') loadCierre(); toast('Ajustes guardados');
+  }catch(e){ toast('No se pudo guardar'); }
+  finally{ $('#aGuardar').disabled=false; }
+}
+
+function closeDlg(id){$('#'+id).close();}
+function toast(m){const d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:#0f1720;color:#fff;padding:10px 16px;border-radius:99px;font-size:13px;z-index:120;box-shadow:0 6px 20px rgba(0,0,0,.3)';document.body.appendChild(d);setTimeout(()=>d.remove(),1600);}
+
+boot();
+</script>
+</body>
+</html>

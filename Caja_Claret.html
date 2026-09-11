@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caja · Claret</title>
+<style>
+  :root{--acc:#1E38A6;--acc2:#2f52d0;--bg:#eef1f7;--sur:#fff;--bd:#e2e8f0;--tx:#1f2937;--mut:#6b7280;--grn:#16a34a;--red:#dc2626;--amb:#d97706}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+  .wrap{max-width:640px;margin:0 auto;padding:14px}
+  .card{background:var(--sur);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:12px}
+  input,select{font:inherit;padding:13px 14px;border:1.5px solid var(--bd);border-radius:11px;background:var(--sur);color:var(--tx);font-size:16px;width:100%}
+  input:focus,select:focus{outline:none;border-color:var(--acc)}
+  .btn{border:0;border-radius:12px;padding:13px 16px;font-weight:800;font-size:16px;cursor:pointer}
+  .btn-acc{background:var(--acc);color:#fff}
+  .btn-grn{background:var(--grn);color:#fff}
+  .btn-gh{background:var(--sur);border:1.5px solid var(--bd);color:var(--tx)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .ov{position:fixed;inset:0;background:linear-gradient(160deg,#0b1220,#1c2b63);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .ov .card{max-width:400px;width:100%}
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:flex-end;justify-content:center;z-index:60}
+  .sheet{background:var(--bg);width:100%;max-width:640px;border-radius:22px 22px 0 0;max-height:92vh;overflow:auto;padding:18px 16px 26px}
+  .pill{font-size:12px;font-weight:800;padding:4px 12px;border-radius:999px}
+  .p-abierto{background:#fef3c7;color:#92400e}.p-porc{background:#dbeafe;color:#1e40af}.p-cerr{background:#dcfce7;color:#166534}
+  .muted{color:var(--mut);font-size:13px}
+  .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mbtn{background:var(--sur);border:1.5px solid var(--bd);border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;font-weight:700;font-size:14px}
+  .mbtn .em{font-size:30px;display:block;margin-bottom:5px}
+  label.fl{font-size:12px;color:var(--mut);font-weight:700;display:block;margin:10px 0 4px}
+</style>
+</head>
+<body>
+<div id="ov" class="ov">
+  <div class="card">
+    <div style="text-align:center;margin-bottom:14px"><div style="width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:inline-grid;place-items:center;color:#fff;font-size:26px">🧾</div><div style="font-weight:800;font-size:20px;margin-top:8px">Caja · Claret</div><div class="muted">Cierre de caja</div></div>
+    <label class="fl">¿Qué caja te tocó?</label>
+    <select id="e-caja"><option>Caja 1</option><option>Caja 2</option><option>Caja 3</option><option>Caja 4</option><option>Caja 5</option><option>Caja 6</option></select>
+    <label class="fl">Tu nombre</label>
+    <input id="e-nombre" placeholder="Escribe tu nombre" onkeydown="if(event.key==='Enter')entrar()">
+    <button class="btn btn-acc" style="width:100%;margin-top:16px" onclick="entrar()">Entrar</button>
+    <div id="e-err" style="color:var(--red);font-size:13px;margin-top:10px;min-height:16px;text-align:center"></div>
+  </div>
+</div>
+<div id="sync-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:70;padding:9px 12px;font-size:12.5px;font-weight:700;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.18)"></div>
+<div class="wrap" id="app" style="display:none"></div>
+
+<script>
+var SUPA_URL='https://unuumkcapdtqmbwefbfg.supabase.co';
+var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVudXVta2NhcGR0cW1id2VmYmZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTgxMDUsImV4cCI6MjA5NTk5NDEwNX0.TMQ_YgWlNXrBboJcg5YfS6359Fhw6zv_N10K5m_xtrE';
+var TOKEN='caja_7k2m9x4p1q8w';
+var DENOM=[5,10,20,50,100,200,500];
+var METODOS=[
+ {k:'dolares',ic:'💲',n:'Dólares efectivo',mon:'$',firma:true,campos:[{k:'monto',t:'Monto en $',num:true,ph:'0'},{k:'fact',t:'Nº Factura (opcional)'}]},
+ {k:'zelle',ic:'📧',n:'Zelle',mon:'$',firma:true,campos:[{k:'titular',t:'Titular del Zelle'},{k:'monto',t:'Monto en $',num:true,ph:'0'}]},
+ {k:'transfer',ic:'🏦',n:'Pago móvil / Transferencia',mon:'Bs',firma:true,campos:[{k:'banco',t:'Banco'},{k:'ref',t:'Referencia'},{k:'monto',t:'Monto en Bs',num:true,ph:'0'}]},
+ {k:'debito',ic:'💳',n:'Tarjeta de débito',mon:'Bs',firma:false,campos:[{k:'ref',t:'Ref / Lote (opcional)'},{k:'monto',t:'Monto en Bs',num:true,ph:'0'}]},
+ {k:'credito',ic:'💳',n:'Tarjeta de crédito',mon:'Bs',firma:false,campos:[{k:'ref',t:'Ref / Lote (opcional)'},{k:'monto',t:'Monto en Bs',num:true,ph:'0'}]},
+ {k:'gastos',ic:'🧾',n:'Gasto / salida',mon:'Bs',firma:false,campos:[{k:'concepto',t:'Concepto'},{k:'monto',t:'Monto en Bs',num:true,ph:'0'}]}
+];
+var C=null, FIRMAS=[], _saveT=null, _ver=0, _pollT=null, _saving=false, _dirty=false, _lastSaveOk=true;
+
+function HOY(){ return new Date(Date.now()-4*3600*1000).toISOString().slice(0,10); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function num(v){ v=parseFloat((''+(v==null?'':v)).replace(/[^0-9.\-]/g,'')); return isNaN(v)?0:v; }
+function fmt(n){ return (Number(n)||0).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ return (''+(s==null?'':s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function meta(k){ return METODOS.filter(function(m){return m.k===k;})[0]; }
+function toast(t){ var d=document.createElement('div'); d.textContent=t; d.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.3)'; document.body.appendChild(d); setTimeout(function(){d.style.opacity='0';d.style.transition='opacity .4s';setTimeout(function(){try{d.remove();}catch(e){}},400);},2200); }
+window.showToast=toast;
+
+function API(action,payload){ var body=Object.assign({action:action,token:TOKEN},payload||{}); return fetch(SUPA_URL+'/functions/v1/caja',{method:'POST',headers:{'Authorization':'Bearer '+ANON,'apikey':ANON,'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}); }
+function defData(){ return {tasa:0,efectivo:{},dolares:[],zelle:[],transfer:[],debito:[],credito:[],gastos:[]}; }
+function norm(c){ if(!c.data||typeof c.data!=='object')c.data=defData(); var d=c.data; if(!d.efectivo)d.efectivo={}; ['dolares','zelle','transfer','debito','credito','gastos'].forEach(function(k){ if(!Array.isArray(d[k]))d[k]=[]; }); return c; }
+
+function entrar(){
+  var caja=document.getElementById('e-caja').value;
+  var nombre=(document.getElementById('e-nombre').value||'').trim();
+  var err=document.getElementById('e-err');
+  if(!nombre){ err.textContent='Escribe tu nombre'; return; }
+  err.textContent='Entrando…';
+  API('dia',{fecha:HOY(),empresa:'farmacia'}).then(function(res){
+    if(res.error){ err.textContent='Error: '+res.error; return; }
+    var mia=(res.cierres||[]).filter(function(c){ return c.caja===caja && (''+c.cajero).toLowerCase()===nombre.toLowerCase(); })[0];
+    if(mia){ C=norm(mia); _ver=C.ver||0; if(res.tasa!=null)C.data.tasa=res.tasa; FIRMAS=(res.firmas||[]).filter(function(f){return f.cierre_id===C.id;}); _restoreBk(); afterEnter(); }
+    else { API('nuevo',{fecha:HOY(),caja:caja,cajero:nombre,empresa:'farmacia',data:defData()}).then(function(r2){ if(r2.error){ err.textContent='Error: '+r2.error; return; } C=norm(r2.cierre); _ver=C.ver||1; if(r2.tasa!=null)C.data.tasa=r2.tasa; else if(res.tasa!=null)C.data.tasa=res.tasa; FIRMAS=[]; afterEnter(); }); }
+  }).catch(function(){ err.textContent='Sin conexión. Reintenta.'; });
+}
+function afterEnter(){ document.getElementById('ov').style.display='none'; document.getElementById('app').style.display='block'; render(); if(_pollT)clearInterval(_pollT); _pollT=setInterval(poll,5000); }
+function poll(){ if(!C)return; API('dia',{fecha:C.fecha,empresa:'farmacia'}).then(function(res){ if(!res||res.error)return; var srv=(res.cierres||[]).filter(function(x){return x.id===C.id;})[0]; if(!srv)return; var ch=false; if(res.tasa!=null && num(res.tasa)!==num(C.data.tasa)){ C.data.tasa=res.tasa; ch=true; } if(srv.estado!==C.estado){ C.estado=srv.estado; ch=true; } var nf=(res.firmas||[]).filter(function(f){return f.cierre_id===C.id;}); if(nf.length!==FIRMAS.length)ch=true; FIRMAS=nf; if((srv.ver||0)>_ver && !_saving && !_dirty){ C.data=norm(srv).data; _ver=srv.ver; ch=true; } if(_dirty&&!_saving)flushSave(); if(ch && !document.getElementById('modal'))render(); }).catch(function(){}); }
+function firmada(id){ return FIRMAS.some(function(f){return f.linea_id===id;}); }
+function firmaDe(id){ return FIRMAS.filter(function(f){return f.linea_id===id;})[0]||null; }
+
+function tot(){ var d=C.data, tasa=num(d.tasa); var efBs=0; DENOM.forEach(function(dn){ efBs+=dn*num((d.efectivo||{})[dn]); });
+  var dolUsd=(d.dolares||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var zelUsd=(d.zelle||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var transBs=(d.transfer||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var debBs=(d.debito||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var credBs=(d.credito||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var gastosBs=(d.gastos||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var total=efBs+dolUsd*tasa+zelUsd*tasa+transBs+debBs+credBs;
+  return {efBs:efBs,total:total,gastosBs:gastosBs}; }
+function pendientes(){ var d=C.data,n=0; ['zelle','transfer','dolares'].forEach(function(k){ (d[k]||[]).forEach(function(x){ if(num(x.monto)>0 && !firmada(x.id))n++; }); }); return n; }
+function ind(txt,col){ var e=document.getElementById('save-ind'); if(e){ e.textContent=txt; e.style.color=col||'var(--mut)'; } }
+
+function render(){
+  var app=document.getElementById('app'); if(!C)return;
+  var t=tot(); var cerr=(C.estado==='cerrado'); var esp=(C.estado==='por_confirmar');
+  var pill=cerr?'<span class="pill p-cerr">✓ Cerrada</span>':(esp?'<span class="pill p-porc">Esperando visto bueno</span>':'<span class="pill p-abierto">Abierta</span>');
+  var items=[];
+  ['dolares','zelle','transfer','debito','credito','gastos'].forEach(function(k){ (C.data[k]||[]).forEach(function(x,i){ items.push({k:k,i:i,x:x}); }); });
+  items.reverse();
+  var lista=items.map(function(it){ var m=meta(it.k); var x=it.x; var det=x.titular||x.banco||x.concepto||x.fact||''; var fdo=(m.firma&&firmada(x.id));
+    var right = m.firma ? (fdo?'<span style="color:var(--grn);font-weight:800;font-size:12px">✓ Firmado</span>':(x.solic?'<span style="color:var(--amb);font-weight:700;font-size:12px">🔔 Esperando firma</span>':'<span style="color:var(--mut);font-size:12px">sin firmar</span>')) : '';
+    return '<div style="display:flex;align-items:center;gap:11px;padding:11px 4px;border-top:1px solid var(--bd)">'+
+      '<span style="font-size:22px">'+m.ic+'</span>'+
+      '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">'+m.mon+' '+fmt(x.monto)+(it.k==='gastos'?' (gasto)':'')+'</div>'+(det?'<div class="muted" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(det)+'</div>':'')+'</div>'+
+      right+(cerr?'':'<button onclick="delPago(\''+it.k+'\','+it.i+')" style="border:0;background:none;color:var(--red);font-size:20px;cursor:pointer;margin-left:4px">×</button>')+
+    '</div>';
+  }).join('') || '<div class="muted" style="text-align:center;padding:20px">Aún no has registrado pagos.</div>';
+
+  var acc='';
+  if(cerr){ acc='<div class="card" style="text-align:center;color:var(--grn);font-weight:800">✓ Caja cerrada y confirmada.</div>'; }
+  else if(esp){ acc='<div class="card" style="text-align:center"><div style="font-weight:800;color:var(--acc)">⏳ Esperando el visto bueno del supervisor</div><div class="muted" style="margin-top:4px">Cuando confirme, la caja queda cerrada.</div></div>'; }
+  else { acc='<button class="btn btn-grn" style="width:100%;padding:15px;font-size:17px" onclick="abrirCierre()">🔒 Cerrar caja</button>'; }
+
+  app.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><div style="font-weight:800;font-size:19px">'+esc(C.caja)+' · '+esc(C.cajero)+'</div><div style="text-align:right">'+pill+'<div id="save-ind" class="muted" style="font-size:11px;margin-top:4px"></div></div></div>'+
+    '<div class="card" style="text-align:center;background:linear-gradient(135deg,#1E38A6,#2f52d0);color:#fff;border:0"><div style="font-size:13px;opacity:.9;font-weight:600">TOTAL DEL DÍA</div><div style="font-size:34px;font-weight:900;line-height:1.1">Bs '+fmt(t.total)+'</div>'+(t.gastosBs?('<div style="font-size:12px;opacity:.85">(−) gastos: Bs '+fmt(t.gastosBs)+'</div>'):'')+'<div style="font-size:11px;opacity:.8;margin-top:4px">Tasa del día: Bs '+(num(C.data.tasa)?fmt(C.data.tasa):'—')+' / $ · desde Central</div></div>'+
+    (cerr||esp?'':'<button class="btn btn-acc" style="width:100%;padding:16px;font-size:18px;margin-bottom:12px" onclick="abrirAgregar()">➕ Registrar pago</button>')+
+    '<div class="card"><div style="font-weight:800;font-size:14px;margin-bottom:2px">Pagos de hoy</div>'+lista+'</div>'+
+    acc;
+}
+function delPago(k,i){ if(!C)return; var arr=C.data[k]; var real=arr[i]; if(!real)return; if(real.solic&&firmada(real.id)){ toast('Ya está firmado, no se puede borrar.'); return; } if(!confirm('¿Borrar este pago?'))return; arr.splice(i,1); saveNow(); render(); }
+
+function cerrarModal(){ var m=document.getElementById('modal'); if(m)m.remove(); }
+function abrirAgregar(){
+  var m=document.createElement('div'); m.id='modal'; m.className='modal'; m.onclick=function(e){ if(e.target===m)cerrarModal(); };
+  var grid=METODOS.map(function(mt){ return '<div class="mbtn" onclick="formPago(\''+mt.k+'\')"><span class="em">'+mt.ic+'</span>'+mt.n+'</div>'; }).join('')+'<div class="mbtn" onclick="formEfectivo()"><span class="em">💵</span>Efectivo (Bs)</div>';
+  m.innerHTML='<div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:800;font-size:18px">¿Qué recibiste?</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div><div class="mgrid">'+grid+'</div></div>';
+  document.body.appendChild(m);
+}
+function formPago(k){
+  var mt=meta(k); var m=document.getElementById('modal'); if(!m)return;
+  var campos=mt.campos.map(function(c){ return '<label class="fl">'+c.t+'</label><input id="f-'+c.k+'" type="'+(c.num?'number':'text')+'" '+(c.num?'inputmode="decimal" ':'')+'placeholder="'+(c.ph||'')+'">'; }).join('');
+  m.querySelector('.sheet').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-weight:800;font-size:18px">'+mt.ic+' '+mt.n+'</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div>'+campos+(mt.firma?'<div class="muted" style="margin-top:8px">Al guardar, se le pide la firma al supervisor.</div>':'')+'<button class="btn btn-grn" style="width:100%;margin-top:16px;padding:15px" onclick="guardarPago(\''+k+'\')">Guardar</button>';
+  setTimeout(function(){ var f=document.getElementById('f-'+mt.campos[0].k); if(f)f.focus(); },80);
+}
+function guardarPago(k){
+  var mt=meta(k); var rec={id:uid()};
+  mt.campos.forEach(function(c){ var el=document.getElementById('f-'+c.k); rec[c.k]=el?el.value.trim():''; });
+  if(num(rec.monto)<=0){ toast('Escribe el monto'); return; }
+  if(mt.firma){ rec.solic=true; rec.solic_at=new Date().toISOString(); }
+  C.data[k].push(rec); saveNow();
+  if(mt.firma){ try{ API('pedir_firma',{caja:C.caja,cajero:C.cajero,tipo:k,monto:num(rec.monto),detalle:(rec.titular||rec.banco||'')}); }catch(e){} }
+  cerrarModal(); render(); toast(mt.firma?'Guardado · firma solicitada':'Pago guardado');
+}
+function formEfectivo(){
+  var m=document.getElementById('modal'); if(!m)return; var d=C.data;
+  var rows=DENOM.map(function(dn){ var c=num((d.efectivo||{})[dn]); return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:70px;font-weight:700">Bs '+dn+'</span><input type="number" inputmode="numeric" id="ef-'+dn+'" value="'+(c||'')+'" placeholder="0" style="flex:1" oninput="efLive()"><span id="eft-'+dn+'" style="width:90px;text-align:right;font-weight:600" class="muted">'+fmt(dn*c)+'</span></div>'; }).join('');
+  m.querySelector('.sheet').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-weight:800;font-size:18px">💵 Contar efectivo (Bs)</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div><div class="muted" style="margin-bottom:10px">¿Cuántos billetes de cada uno?</div>'+rows+'<div style="text-align:right;font-weight:800;font-size:16px;margin-top:6px;color:var(--grn)">Total: Bs <span id="ef-total">'+fmt(tot().efBs)+'</span></div><button class="btn btn-grn" style="width:100%;margin-top:14px;padding:15px" onclick="guardarEfectivo()">Guardar conteo</button>';
+}
+function efLive(){ var s=0; DENOM.forEach(function(dn){ var v=num((document.getElementById('ef-'+dn)||{}).value); var c=document.getElementById('eft-'+dn); if(c)c.textContent=fmt(dn*v); s+=dn*v; }); var tt=document.getElementById('ef-total'); if(tt)tt.textContent=fmt(s); }
+function guardarEfectivo(){ if(!C)return; DENOM.forEach(function(dn){ var v=num((document.getElementById('ef-'+dn)||{}).value); if(v>0)C.data.efectivo[dn]=v; else delete C.data.efectivo[dn]; }); saveNow(); cerrarModal(); render(); toast('Efectivo guardado'); }
+
+function abrirCierre(){
+  var m=document.createElement('div'); m.id='modal'; m.className='modal'; m.onclick=function(e){ if(e.target===m)cerrarModal(); };
+  var t=tot(); var pend=pendientes();
+  m.innerHTML='<div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-weight:800;font-size:18px">🔒 Cerrar caja</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div>'+
+    '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between"><span>Total del día</span><b>Bs '+fmt(t.total)+'</b></div><div style="display:flex;justify-content:space-between"><span class="muted">Efectivo contado</span><span class="muted">Bs '+fmt(t.efBs)+'</span></div></div>'+
+    (t.efBs<=0?'<button class="btn btn-gh" style="width:100%;margin-bottom:10px" onclick="formEfectivo()">💵 Falta contar el efectivo</button>':'')+
+    (pend>0?('<div style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412;border-radius:12px;padding:12px;font-weight:700;margin-bottom:12px">Faltan '+pend+' pago(s) por firmar. El supervisor debe firmarlos antes de cerrar.</div>'):'<div style="background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:12px;padding:12px;font-weight:700;margin-bottom:12px">✓ Todo firmado.</div>')+
+    '<button class="btn btn-grn" style="width:100%;padding:15px" '+(pend>0?'disabled':'')+' onclick="pedirCierre()">Pedir cierre al supervisor</button>'+
+    '<div class="muted" style="text-align:center;margin-top:8px">El supervisor dará el visto bueno final.</div></div>';
+  document.body.appendChild(m);
+}
+function pedirCierre(){ if(!C)return; if(pendientes()>0){ toast('Faltan firmas'); return; } scheduleSave(); (function espera(n){ if(_dirty||_saving){ if(n<=0){ toast('Guardando… intenta de nuevo en un momento'); return; } setTimeout(function(){espera(n-1);},500); return; } API('pedir_cierre',{id:C.id,por:C.cajero}).then(function(r){ if(r.error==='faltan_firmas'){ toast('Faltan '+(r.pend||'')+' firmas'); return; } if(r.error){ toast('Error: '+r.error); return; } C.estado='por_confirmar'; cerrarModal(); render(); }).catch(function(){ toast('Sin conexión. Reintenta.'); }); })(12); }
+
+function _bk(){ return 'caja_bk_'+((C&&C.id)||'x'); }
+function _writeBk(dirty){ if(!C)return; try{ localStorage.setItem(_bk(), JSON.stringify({data:C.data,ver:_ver,dirty:!!dirty,ts:Date.now()})); }catch(e){} }
+function _restoreBk(){ try{ if(!C)return; var raw=localStorage.getItem(_bk()); if(!raw)return; var bk=JSON.parse(raw); if(bk&&bk.dirty&&bk.data&&(Number(bk.ver)||0)>=_ver){ C.data=norm({id:C.id,data:bk.data}).data; _ver=Math.max(_ver,Number(bk.ver)||0); _dirty=true; if(typeof toast==='function')toast('Recuperé cambios sin guardar'); setTimeout(flushSave,400); } }catch(e){} }
+function _syncUI(){ var b=document.getElementById('sync-banner'); if(!b)return; if(_saving||_dirty){ b.style.display='block'; if(_lastSaveOk){ b.textContent='Guardando cambios…'; b.style.background='#fef9c3'; b.style.color='#854d0e'; } else { b.textContent='⚠ Sin conexión. Tus datos están guardados en este equipo y se enviarán solos al volver la señal. No cierres la caja.'; b.style.background='#fee2e2'; b.style.color='#991b1b'; } } else { b.style.display='none'; } }
+function scheduleSave(){ if(!C)return; _dirty=true; _writeBk(true); _syncUI(); if(!_saving)flushSave(); }
+function flushSave(){ if(!C||_saving||!_dirty)return; _saving=true; _dirty=false; var ver=_ver+1; var snap=JSON.parse(JSON.stringify(C.data)); ind('Guardando…'); API('guardar',{id:C.id,data:snap,ver:ver}).then(function(r){ _saving=false; if(r&&r.ok){ _ver=r.ver||ver; _lastSaveOk=true; try{ localStorage.setItem(_bk(),JSON.stringify({data:snap,ver:_ver,dirty:false,ts:Date.now()})); }catch(e){} ind('✓ Guardado','var(--grn)'); _syncUI(); if(_dirty)flushSave(); } else { _dirty=true; _lastSaveOk=false; ind('⚠ reintentando…','var(--red)'); _syncUI(); setTimeout(flushSave,2000); } }).catch(function(){ _saving=false; _dirty=true; _lastSaveOk=false; ind('⚠ sin conexión','var(--red)'); _syncUI(); setTimeout(flushSave,3000); }); }
+function saveNow(){ scheduleSave(); }
+window.addEventListener('beforeunload',function(){ if(_dirty||_saving)_writeBk(true); });
+window.addEventListener('online',function(){ if(_dirty&&!_saving)flushSave(); if(typeof toast==='function')toast('Conexión restablecida'); });
+</script>
+</body>
+</html>

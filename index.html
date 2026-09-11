@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmacia Claret — Central</title>
+  <meta name="theme-color" content="#1E38A6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Farmacia Claret">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1160 1160'><rect width='1160' height='1160' rx='160' fill='%2379C820'/><g transform='translate(44.5,1160) scale(0.1,-0.1)' fill='%231E38A6' fill-rule='evenodd' stroke='none'><path d='M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z'/></g></svg>">
+  <link rel="manifest" id="pwa-manifest">
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--surface3:#eef0f3;
+  --border:#e2e5ea;--border2:#d0d4db;--border3:#c8cdd6;
+  /* ── Paleta Claret × Pequiven ── */
+  --primary:#1E38A6;--primary-dark:#162D8A;--primary-light:#EEF2FF;
+  --lime:#79C820;--lime-dark:#5EA018;--lime-light:#F0FBE4;
+  --accent:#1E38A6;--accent-light:#EEF2FF;--accent2:#2945C4;
+  --green:#059669;--green-light:#d1fae5;
+  --red:#dc2626;--red-light:#fee2e2;
+  --amber:#d97706;--amber-light:#fef3c7;
+  --blue:#2563eb;--blue-light:#dbeafe;
+  --purple:#7c3aed;--purple-light:#ede9fe;
+  --text:#111827;--text2:#374151;--muted:#6b7280;--faint:#9ca3af;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,0.08);--shadow-md:0 4px 6px -1px rgba(0,0,0,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+/* ── LAYOUT ──────────────────────────────────────────────────── */
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;font-size:14px;display:flex;}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--primary);border-right:none;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0;z-index:50;}
+.sidebar-brand{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.12);}
+.sidebar-icon{width:40px;height:40px;background:rgba(255,255,255,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px;}
+.sidebar-title{font-size:13px;font-weight:700;color:#fff;line-height:1.2;}
+.sidebar-sub{font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px;letter-spacing:.3px;}
+
+.sidebar-nav{flex:1;padding:8px 0;}
+.sidebar-section{font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 4px;}
+.nav-sym{font-size:11px;opacity:.7;flex-shrink:0;}
+.nav-tab{display:flex;align-items:center;gap:9px;padding:8px 16px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.65);cursor:pointer;border-radius:0;transition:all .12s;white-space:nowrap;border-left:3px solid transparent;position:relative;}
+.nav-tab:hover{color:#fff;background:rgba(255,255,255,0.10);}
+.nav-tab.active{color:#fff;background:rgba(255,255,255,0.15);border-left-color:var(--lime);font-weight:600;}
+.tab-badge{background:rgba(255,255,255,.22);color:#fff;font-size:9px;font-weight:700;border-radius:999px;padding:1px 5px;min-width:16px;text-align:center;display:none;margin-left:auto;}
+.tab-badge.show{display:inline-block;}
+
+.sidebar-bottom{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;gap:8px;}
+.tasa-display{display:flex;align-items:center;gap:6px;background:rgba(121,200,32,0.18);border:1px solid rgba(121,200,32,0.5);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;color:var(--lime);font-family:var(--mono);font-weight:700;cursor:pointer;transition:background .15s;white-space:nowrap;}
+.tasa-display:hover{background:#fde68a;}
+.tasa-display .tasa-label{font-family:var(--sans);font-weight:500;font-size:11px;color:var(--amber);}
+.sidebar-user{display:flex;align-items:center;justify-content:space-between;gap:8px;color:rgba(255,255,255,0.85);}
+
+/* CONTENT */
+.app-content{flex:1;min-width:0;overflow-y:auto;min-height:100vh;}
+.main{padding:20px 24px;max-width:1200px;margin:0 auto;}
+.page{display:none;}
+.page.active{display:block;}
+.section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;margin-top:0;}
+
+/* SUMMARY CARDS */
+.summary-grid{display:grid;gap:12px;margin-bottom:20px;}
+.sg-6{grid-template-columns:repeat(6,1fr);}
+.sg-4{grid-template-columns:repeat(4,1fr);}
+.sg-3{grid-template-columns:repeat(3,1fr);}
+@media(max-width:1100px){.sg-6{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:800px){.sg-6,.sg-4{grid-template-columns:repeat(2,1fr);}}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.05);transition:box-shadow .15s;}
+.scard:hover{box-shadow:0 3px 10px rgba(0,0,0,0.08);}
+.scard-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-bottom:10px;}
+.scard.red   .scard-icon{background:var(--red-light);color:var(--red);}.scard.red   .scard-val{color:var(--red);}
+.scard.amber .scard-icon{background:var(--amber-light);color:var(--amber);}.scard.amber .scard-val{color:var(--amber);}
+.scard.green .scard-icon{background:var(--green-light);color:var(--green);}.scard.green .scard-val{color:var(--green);}
+.scard.blue  .scard-icon{background:var(--primary-light);color:var(--primary);}.scard.blue  .scard-val{color:var(--primary);}
+.scard.accent .scard-icon{background:var(--accent-light);color:var(--accent);}.scard.accent .scard-val{color:var(--accent);}
+.scard.purple .scard-icon{background:var(--purple-light);color:var(--purple);}.scard.purple .scard-val{color:var(--purple);}
+.scard-label{font-size:11px;font-weight:500;color:var(--muted);margin-bottom:5px;}
+.scard-val{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--text);line-height:1.1;}
+.scard-sub{font-size:11px;color:var(--faint);margin-top:4px;line-height:1.4;}
+
+/* TABLE BOX */
+.tbox{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow);}
+.tbox-hd{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:var(--surface2);}
+.tbox-title{font-size:13px;font-weight:600;}
+.tbox-meta{font-size:11px;color:var(--muted);}
+.twrap{overflow-x:auto;max-height:480px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{background:var(--surface3);padding:8px 11px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1;cursor:pointer;user-select:none;}
+thead th:hover{background:#e4e7ec;color:var(--text);}
+thead th.r{text-align:right;}
+thead th.c{text-align:center;}
+thead th.sorted{color:var(--accent);}
+tbody tr{border-bottom:1px solid var(--border);transition:background .08s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--surface2);}
+tbody tr.row-vencida{background:#fff7f7;}
+tbody tr.row-pronto{background:#fffdf4;}
+td{padding:8px 11px;color:var(--text2);vertical-align:middle;}
+td.mono{font-family:var(--mono);text-align:right;}
+td.c{text-align:center;}
+tfoot td{background:var(--surface3);font-weight:600;border-top:2px solid var(--border);padding:9px 11px;}
+tfoot td.mono{font-family:var(--mono);text-align:right;}
+.empty-state{padding:48px;text-align:center;color:var(--muted);}
+.empty-icon{font-size:34px;opacity:.3;margin-bottom:8px;}
+
+/* FILTER BAR */
+.filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-bar input[type=text],.filter-bar select{font-size:12px;font-family:var(--sans);padding:7px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;transition:border .15s;}
+.filter-bar input[type=text]:focus,.filter-bar select:focus{border-color:var(--accent);}
+.filter-bar input[type=text]{min-width:200px;}
+.filter-bar.filter-bar-v{flex-direction:column;align-items:stretch;}
+.fchips{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;}
+.fchips::-webkit-scrollbar{display:none;}
+.fchip{flex-shrink:0;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;font-weight:500;padding:3px 9px;border-radius:99px;cursor:pointer;transition:background .12s,border-color .12s,color .12s;white-space:nowrap;}
+.fchip:hover{border-color:var(--accent);}
+.fchip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.filter-row2{display:flex;gap:8px;}
+.filter-row2 select{flex:1;min-width:0;}
+.filter-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.filter-count{font-size:12px;color:var(--muted);font-weight:600;}
+#ia-fab{position:fixed;right:16px;bottom:82px;z-index:140;width:56px;height:56px;border-radius:50%;background:#fff;border:none;padding:0;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.28);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#ia-fab:active{transform:scale(.94);}
+@media(min-width:769px){#ia-fab{bottom:24px;}}
+.ia-msg{max-width:86%;padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;}
+.ia-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:3px;}
+.ia-msg.bot{align-self:flex-start;background:var(--surface2);color:var(--text);border-bottom-left-radius:3px;}
+.spacer{flex:1;}
+
+/* BUTTONS */
+.btn{border:none;border-radius:var(--radius-sm);padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;font-family:var(--sans);white-space:nowrap;}
+.btn:hover:not(:disabled){transform:translateY(-1px);}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;}
+.btn-accent{background:var(--primary);color:#fff;}
+.btn-accent:hover:not(:disabled){background:var(--primary-dark);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover:not(:disabled){background:#047857;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover:not(:disabled){background:#b91c1c;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover:not(:disabled){background:var(--surface2);color:var(--text);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover:not(:disabled){background:#1d4ed8;}
+.btn-amber{background:var(--amber);color:#fff;}
+.btn-amber:hover:not(:disabled){background:#b45309;}
+.btn-sm{padding:5px 10px;font-size:11px;}
+.btn-icon{padding:5px 8px;font-size:13px;line-height:1;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;}
+.b-red{background:var(--red-light);color:var(--red);}
+.b-amber{background:var(--amber-light);color:var(--amber);}
+.b-green{background:var(--green-light);color:var(--green);}
+.b-blue{background:var(--blue-light);color:var(--blue);}
+.b-purple{background:var(--purple-light);color:var(--purple);}
+.b-gray{background:var(--surface3);color:var(--muted);}
+.b-accent{background:var(--accent-light);color:var(--accent);}
+
+/* DIAS */
+.dias-v{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--red);}
+.dias-p{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--amber);}
+.dias-o{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--green);}
+
+/* OVERLAY/MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:12px;width:100%;max-width:580px;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:92vh;display:flex;flex-direction:column;}
+.modal.wide{max-width:880px;}
+.modal.narrow{max-width:420px;}
+#tab-panel,#bn-panel{display:none!important}
+.modal-hd{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title{font-size:14px;font-weight:600;}
+.modal-x{background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);padding:3px 6px;border-radius:4px;line-height:1;}
+.modal-x:hover{background:var(--surface2);color:var(--text);}
+.modal-body{padding:18px 22px;overflow-y:auto;flex:1;}
+.modal-ft{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-group.span2{grid-column:span 2;}
+.form-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.form-input{padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:var(--sans);color:var(--text);background:var(--surface);outline:none;transition:border .15s;}
+.form-input:focus{border-color:var(--accent);}
+.form-input[type=number]{font-family:var(--mono);}
+.form-hint{font-size:10px;color:var(--muted);}
+hr.form-div{grid-column:span 2;border:none;border-top:1px solid var(--border);margin:2px 0;}
+
+/* ALERT BOXES */
+.alert-box{border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px;}
+.alert-red{background:var(--red-light);border:1px solid #fca5a5;}
+.alert-amber{background:var(--amber-light);border:1px solid #fcd34d;}
+.alert-green{background:var(--green-light);border:1px solid #6ee7b7;}
+.alert-icon{font-size:18px;flex-shrink:0;margin-top:2px;}
+.alert-text{flex:1;}
+.alert-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.alert-sub{font-size:12px;color:var(--text2);}
+
+/* PANEL GRID */
+.panel-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+@media(max-width:960px){.panel-2col{grid-template-columns:1fr;}}
+
+
+
+/* BACKUP BAR */
+.backup-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.06);}
+.backup-bar strong{color:var(--text);}
+
+/* ENTITY PILL */
+.pill-fcia{background:#ede9fe;color:#5b21b6;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.pill-drog{background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
+
+/* ─── LOAN CARDS ─── */
+.prog-wrap{background:var(--surface-2,#eef2f7);border-radius:99px;height:8px;overflow:hidden;min-width:80px}
+.prog-fill{height:100%;border-radius:99px;transition:width .3s}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.loan-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.loan-card.overdue{border-left:5px solid var(--red)}
+.loan-card.due-soon{border-left:5px solid var(--amber)}
+.loan-card.ok{border-left:5px solid var(--green)}
+.loan-card-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.loan-card-title{font-weight:600;font-size:13px;flex:1}
+.loan-card-body{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+@media(min-width:700px){.loan-card-body{grid-template-columns:repeat(4,1fr)}}
+.loan-stat{background:var(--surface);border-radius:6px;padding:8px 10px}
+.loan-stat-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
+.loan-stat-val{font-size:13px;font-weight:700;font-family:var(--mono)}
+.loan-stat-sub{font-size:10px;color:var(--muted)}
+.loan-footer{display:flex;align-items:center;gap:8px}
+.pay-list{display:flex;flex-direction:column;gap:8px;padding:10px}
+.pay-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-left:5px solid var(--amber);border-radius:10px;cursor:pointer;background:var(--surface);transition:background .12s}
+.pay-item:hover{background:var(--surface2)}
+.pay-item.pay-venc{border-left-color:var(--red)}
+.pay-item.pay-pronto{border-left-color:var(--amber)}
+.pay-num{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.pay-main{flex:1;min-width:0}
+.pay-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pay-sub{font-size:11px;color:var(--muted);margin:1px 0 3px}
+.pay-amt{text-align:right;flex-shrink:0}
+.pay-bs{font-weight:700;font-size:13px;font-family:var(--mono)}
+.pay-usd{font-size:11px;color:var(--muted)}
+.pay-go{color:var(--muted);flex-shrink:0}
+.section-hd{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.section-hd h3{font-size:14px;font-weight:700}
+/* ─── EXTRA BADGES ─── */
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-purple{background:#ede9fe;color:#7c3aed}
+.badge-red{background:#fee2e2;color:#dc2626}
+.badge-amber{background:#fef3c7;color:#d97706}
+.badge-green{background:#dcfce7;color:#16a34a}
+.badge-gray{background:#f3f4f6;color:#6b7280}
+.badge-orange{background:#ffedd5;color:#ea580c}
+/* ─── PLAN DE PAGOS compact ─── */
+.pago-table{width:100%;border-collapse:collapse;font-size:12px;}
+.pago-table th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 10px;border-bottom:1px solid var(--border);text-align:left;background:var(--surface2);}
+.pago-table th.r{text-align:right;}
+.pago-table td{padding:6px 10px;border-bottom:1px solid var(--border3,#e8eaed);vertical-align:middle;}
+.pago-table td.r{text-align:right;}
+.pago-row-ok td{background:#f0fdf4;}
+.pago-row-warn td{background:#fffbeb;}
+.pago-row-no td{background:#fff5f5;opacity:.8;}
+.pago-row-ok td:first-child{border-left:3px solid var(--green);}
+.pago-row-warn td:first-child{border-left:3px solid var(--amber);}
+.pago-row-no td:first-child{border-left:3px solid var(--red);}
+.pago-tag{display:inline-block;font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;text-transform:uppercase;letter-spacing:.04em;}
+.pago-tag.venc{background:#fee2e2;color:#b91c1c;}
+.pago-tag.sem{background:#ffedd5;color:#c2410c;}
+.pago-tag.prox{background:#fef9c3;color:#92400e;}
+.pago-tag.fvenc{background:#fee2e2;color:#b91c1c;}
+.pago-tag.fpv{background:#fef3c7;color:#b45309;}
+.pago-balance{display:flex;gap:10px;margin-top:10px;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:12px;}
+.pago-balance-item{flex:1;text-align:center;}
+.pago-balance-label{font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.05em;}
+.pago-balance-val{font-size:15px;font-weight:700;font-family:var(--mono);margin-top:2px;}
+
+
+/* ── Login ─────────────────────────────────────────────────────────────── */
+#ov-login input:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 25%, transparent); }
+#ov-login button:active { opacity:.7 !important; }
+
+/* ── Permisos por rol ───────────────────────────────────────────────────── */
+body[data-role="grismar"] .grismar-hide    { display: none !important; }
+body[data-role="ines"]    .ines-hide       { display: none !important; }
+body[data-role="gerente"] .write-only      { display: none !important; }
+body[data-role="gerente"] .fact-write-only { display: none !important; }
+body[data-role="gerente"] .mayra-only      { display: none !important; }
+body[data-role="grismar"] .mayra-only      { display: none !important; }
+body[data-role="mayra"]   .gerente-admin-only { display: none !important; }
+body[data-role="grismar"] .gerente-admin-only { display: none !important; }
+body[data-role="ines"]    .gerente-admin-only { display: none !important; }
+body[data-role="mayra"]   .admin-only { display: none !important; }
+body[data-role="grismar"] .admin-only { display: none !important; }
+body[data-role="ines"]    .admin-only { display: none !important; }
+body[data-role="gerente"] .admin-only { display: none !important; }
+body[data-role="ines"]    .mayra-only      { display: none !important; }
+body[data-role="mayra"]   .fact-write-only { display: none !important; }
+/* Sidebar collapse */
+.sidebar { transition: width .2s ease, min-width .2s ease; }
+body.sb-collapsed .sidebar { width:0!important; min-width:0!important; overflow:hidden!important; }
+@media print {
+  .sidebar, .sb-expand, #tasa-banner, #inactivity-banner,
+  .btn, .filter-bar, .modal, .overlay, .nav-tab { display:none!important; }
+  .app { display:block!important; }
+  .app-content { margin:0!important; padding:0!important; }
+  .page { display:block!important; }
+  body { background:#fff!important; color:#000!important; }
+  .tbl, table { border-collapse:collapse!important; }
+  .tbl th, .tbl td, table th, table td { border:1px solid #ccc!important; padding:4px 8px!important; font-size:11px!important; }
+  .print-hide { display:none!important; }
+  .print-show { display:block!important; }
+}
+.sb-expand { display:none; position:fixed; left:0; top:50%; transform:translateY(-50%); z-index:200; background:var(--primary); color:#fff; border:none; border-radius:0 8px 8px 0; padding:14px 8px; cursor:pointer; font-size:16px; line-height:1; box-shadow:3px 0 12px rgba(0,0,0,.2); }
+body.sb-collapsed .sb-expand { display:flex; align-items:center; }
+
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE — bottom nav + sidebar overlay + responsive layout
+   ═══════════════════════════════════════════════════════════ */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 150;
+  padding: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+}
+.bottom-nav-inner {
+  display: flex;
+  align-items: stretch;
+  height: 56px;
+}
+.bn-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 6px 4px;
+  position: relative;
+  transition: color .12s;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  -webkit-tap-highlight-color: transparent;
+}
+.bn-tab .bn-icon { font-size: 20px; line-height: 1; }
+.bn-tab.active { color: var(--accent); }
+.bn-tab .bn-badge {
+  position: absolute;
+  top: 6px; right: calc(50% - 16px);
+  background: var(--red); color: #fff;
+  font-size: 9px; font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 4px;
+  min-width: 15px;
+  text-align: center;
+  display: none;
+}
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 149;
+}
+.mobile-topbar{display:none}
+@media(max-width:768px) {
+  /* Show bottom nav */
+  .bottom-nav { display: none; }
+  /* Topbar móvil fijo con color */
+  .mobile-topbar { display:flex !important; align-items:center; gap:10px; position:sticky; top:0; z-index:60; background:var(--primary); color:#fff; padding:10px 14px; box-shadow:0 2px 8px rgba(0,0,0,.15); }
+  .mobile-topbar .mtb-menu { background:none; border:none; color:#fff; padding:0; cursor:pointer; display:flex; align-items:center; }
+  .mobile-topbar .mtb-logo { width:28px; height:28px; border-radius:50%; flex-shrink:0; display:block; }
+  .mobile-topbar .mtb-title { font-weight:700; font-size:15px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mobile-topbar .mtb-tasa { display:flex; align-items:center; gap:5px; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.4); color:#fff; font-size:12px; font-weight:700; padding:5px 10px; border-radius:8px; cursor:pointer; white-space:nowrap; }
+  /* Full-height sidebar overlay on mobile */
+  .sidebar {
+    position: fixed !important;
+    left: -240px !important;
+    top: 0;
+    height: 100vh !important;
+    height: 100dvh !important;
+    z-index: 200 !important;
+    transition: left .25s cubic-bezier(.4,0,.2,1) !important;
+    width: 220px !important;
+    min-width: 220px !important;
+    overflow: hidden auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-shadow: none;
+  }
+  body.sb-mobile-open .sidebar {
+    left: 0 !important;
+    box-shadow: 6px 0 24px rgba(0,0,0,0.18) !important;
+  }
+  body.sb-mobile-open .mobile-overlay { display: block; }
+  body.sb-mobile-open { overflow: hidden !important; }
+  body.sb-mobile-open .app-content { overflow: hidden !important; }
+  .sidebar-nav { flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; overscroll-behavior: contain !important; }
+  /* Desktop collapse not relevant on mobile */
+  body.sb-collapsed .sidebar { width:220px !important; min-width:220px !important; }
+  body.sb-collapsed .sb-expand { display:none !important; }
+  /* Content: full width + bottom padding for nav bar */
+  .app-content { padding-bottom: 16px !important; overflow-x: hidden !important; }
+  /* Desktop expand button: hide on mobile */
+  .sb-expand { display: none !important; }
+  /* Main content padding */
+  .main { padding: 12px 14px !important; }
+  /* Summary cards: 2 col max */
+  .sg-6, .sg-4, .sg-3 { grid-template-columns: repeat(2,1fr) !important; }
+  /* Modales: caben en pantalla, sin scroll horizontal */
+  .overlay { padding:8px !important; align-items:flex-start !important; }
+  .modal, .modal.narrow, .modal.wide { max-width:100% !important; width:100% !important; margin-top:8px; }
+  .modal-hd, .modal-ft { padding-left:14px !important; padding-right:14px !important; }
+  .modal-body { padding-left:14px !important; padding-right:14px !important; overflow-x:hidden !important; }
+  .modal-body * { min-width:0 !important; }
+  /* Tables: horizontal scroll */
+  .twrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tbl { min-width: 520px; }
+  /* Loan cards: single column */
+  .loan-card-body { grid-template-columns: 1fr 1fr !important; }
+  .loan-card-hd { flex-wrap:wrap; row-gap:6px; }
+  .loan-footer { flex-wrap:wrap; gap:6px; }
+  .loan-footer .prog-wrap { order:-1; flex:1 1 100%; max-width:none !important; min-width:0 !important; height:11px; margin:0 0 8px !important; }
+  /* Panels */
+  .panel-2col { grid-template-columns: 1fr !important; }
+  /* Móvil práctico: ocultar tarjetas de información general */
+  .summary-grid { display: none !important; }
+  .panel-2col   { display: none !important; }
+  /* ── Listas como tarjetas en móvil (sin scroll lateral, con color) ── */
+  .tbl-cards, .tbl-cards tbody { display:block !important; width:100% !important; min-width:0 !important; }
+  .tbl-cards thead, .tbl-cards tfoot { display:none !important; }
+  .tbl-cards tr { display:block; background:var(--surface); border:1px solid var(--border); border-left:5px solid var(--green); border-radius:12px; padding:10px 14px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,.07); }
+  .tbl-cards tr.row-vencida { border-left-color:var(--red); }
+  .tbl-cards tr.row-pronto  { border-left-color:var(--amber); }
+  .tbl-cards td { display:flex !important; justify-content:space-between; align-items:center; gap:12px; padding:5px 0 !important; border:none !important; max-width:none !important; white-space:normal !important; text-align:right; font-size:13px; }
+  .tbl-cards td::before { content:attr(data-label); color:var(--muted); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; text-align:left; flex-shrink:0; }
+  .tbl-cards td[data-label="Proveedor"] { font-size:15px; font-weight:600; padding-bottom:2px !important; }
+  .tbl-cards td[data-label="Factura"], .tbl-cards td[data-label="Fecha"], .tbl-cards td[data-label="Días"], .tbl-cards td[data-label="Detalle"], .tbl-cards td[data-label="Bs"], .tbl-cards td[data-label="Empresa"], .tbl-cards td[data-label="Venció"], .tbl-cards td[data-label="Nota"], .tbl-cards td[data-label="ID"] { display:none !important; }
+  .tbl-cards td.acciones-cell { justify-content:flex-end; gap:6px; padding-top:10px !important; border-top:1px solid var(--border) !important; margin-top:6px; }
+  .tbl-cards td.acciones-cell::before { display:none; }
+  .tbl-cards td.acciones-cell .btn-icon { width:auto; min-width:44px; height:40px; }
+  .tbl-cards td.acciones-cell .btn-icon[title="Abonar"] { flex:1; background:#16a34a; border-color:#16a34a; color:#fff !important; gap:5px; font-weight:700; }
+  .tbl-cards td.acciones-cell .btn-icon[title="Abonar"]::after { content:"Abonar"; font-size:13px; }
+  /* ── Barra de filtros práctica y fija arriba ── */
+  .filter-bar { position:sticky; top:48px; z-index:30; gap:8px; margin:0 -14px 12px; padding:10px 14px; background:var(--surface); border-bottom:1px solid var(--border); }
+  .filter-bar input[type=text] { flex:1 1 100%; width:100%; min-width:0; font-size:14px; padding:11px 12px; }
+  .filter-bar select { flex:1 1 calc(50% - 4px); min-width:0; font-size:13px; padding:10px; }
+  .filter-bar .spacer { display:none !important; }
+  .filter-bar .btn.btn-accent { flex:1 1 100%; justify-content:center; padding:12px; font-size:14px; }
+  .filter-bar .btn:not(.btn-accent) { flex:1 1 auto; justify-content:center; }
+  /* Bancos grid: 1 col */
+  .bancos-grid { grid-template-columns: 1fr !important; }
+  /* Formularios: una sola columna en móvil (bien cuadrado) */
+  .form-grid { grid-template-columns: 1fr !important; }
+  .form-grid .span2 { grid-column: span 1 !important; }
+  .form-row { grid-template-columns: 1fr !important; }
+  /* Tasa header: compact */
+  .tasa-display { font-size: 11px !important; }
+  /* Section title spacing */
+  .section-title { margin-top: 4px !important; }
+  /* gerencia charts: stack */
+  #gerencia-content > div[style*="grid-template-columns:1fr 1fr"] {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+  /* Tbox full width */
+  .tbox { overflow: hidden; }
+}
+@media(max-width:480px) {
+  .sg-6, .sg-4, .sg-3, .sg-2 { grid-template-columns: 1fr !important; }
+  .scard { padding: 12px 14px !important; }
+  .main { padding: 10px 12px !important; }
+}
+
+</style>
+<style id="emp-css">
+body[data-empresa="farmacia"] .nav-tab:not([data-emp~="farm"]){display:none!important}
+body[data-empresa="drogueria"] .nav-tab:not([data-emp~="drog"]){display:none!important}
+body[data-empresa="consolidado"] .nav-tab:not([data-emp~="cons"]){display:none!important}
+body[data-empresa="farmacia"] .sidebar-section:not([data-emp~="farm"]){display:none!important}
+body[data-empresa="drogueria"] .sidebar-section:not([data-emp~="drog"]){display:none!important}
+body[data-empresa="consolidado"] .sidebar-section:not([data-emp~="cons"]){display:none!important}
+body[data-empresa="drogueria"]{ --primary:#5B8FD4; --primary-dark:#4374b8; --primary-light:#eef4fc; --accent:#5B8FD4; --accent-light:#eef4fc; --accent2:#4374b8; }
+.logo-drog,.logo-both{display:none}
+body[data-empresa="farmacia"] .logo-farm{display:block!important} body[data-empresa="farmacia"] .logo-drog,body[data-empresa="farmacia"] .logo-both{display:none!important}
+body[data-empresa="drogueria"] .logo-farm{display:none!important} body[data-empresa="drogueria"] .logo-drog{display:block!important} body[data-empresa="drogueria"] .logo-both{display:none!important}
+body[data-empresa="consolidado"] .logo-farm{display:none!important} body[data-empresa="consolidado"] .logo-drog{display:none!important} body[data-empresa="consolidado"] .logo-both{display:inline-flex!important}
+body[data-empresa="consolidado"]{ --primary:#4F46E5; --primary-dark:#4338CA; --primary-light:#EEF0FF; --accent:#4F46E5; --accent-light:#EEF0FF; --accent2:#6366F1; }
+.empresa-sel{display:flex;gap:5px;padding:10px 12px 4px}
+.emp-btn{flex:1;padding:6px 4px;font-size:11px;font-weight:700;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--muted);cursor:pointer;text-align:center;line-height:1.2}
+body[data-empresa="farmacia"] .emp-btn[data-emp="farmacia"],body[data-empresa="drogueria"] .emp-btn[data-emp="drogueria"],body[data-empresa="consolidado"] .emp-btn[data-emp="consolidado"]{background:var(--primary);color:#fff;border-color:var(--primary)}
+</style>
+<style id="login-css">
+#ov-login{ --lac:#1E38A6; --lac2:#79C820; background:#070b1c; overflow:hidden; }
+#ov-login[data-theme="drogueria"]{ --lac:#5B8FD4; --lac2:#9cc4f0; }
+#ov-login[data-theme="consolidado"]{ --lac:#4F46E5; --lac2:#6366F1; }
+.lg-orb{position:absolute;border-radius:50%;filter:blur(72px);opacity:.55;pointer-events:none;transition:background 1s ease}
+.lg-orb1{width:520px;height:520px;background:var(--lac);top:-170px;left:-150px;animation:lgF1 15s ease-in-out infinite}
+.lg-orb2{width:450px;height:450px;background:var(--lac2);bottom:-170px;right:-130px;animation:lgF2 17s ease-in-out infinite}
+.lg-orb3{width:300px;height:300px;background:var(--lac);top:42%;right:16%;opacity:.22;animation:lgF1 20s ease-in-out infinite reverse}
+@keyframes lgF1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(42px,32px) scale(1.08)}}
+@keyframes lgF2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-38px,-26px) scale(1.1)}}
+.lg-grid{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);background-size:26px 26px;-webkit-mask-image:radial-gradient(circle at 50% 38%,#000,transparent 72%);mask-image:radial-gradient(circle at 50% 38%,#000,transparent 72%);pointer-events:none}
+.lg-card{position:relative;width:380px;max-width:92vw;padding:40px 42px;border-radius:24px;background:rgba(255,255,255,.06);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 90px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.12);animation:lgUp .7s cubic-bezier(.2,.7,.2,1) both}
+@keyframes lgUp{from{opacity:0;transform:translateY(22px) scale(.98)}to{opacity:1;transform:none}}
+.lg-logo{margin:0 auto 6px;width:max-content;filter:drop-shadow(0 14px 30px color-mix(in srgb, var(--lac) 60%, transparent));transition:filter 1s ease}
+.lg-title{font-size:23px;font-weight:800;color:#fff;letter-spacing:-.4px;text-align:center}
+.lg-sub{font-size:10px;color:rgba(255,255,255,.5);margin-top:6px;letter-spacing:2.5px;text-transform:uppercase;text-align:center}
+.lg-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.5);display:block;margin-bottom:7px;text-transform:uppercase;letter-spacing:1px}
+.lg-input{width:100%;box-sizing:border-box;padding:13px 15px;border-radius:13px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;font-size:14.5px;outline:none;transition:.18s;font-family:var(--sans)}
+.lg-input:focus{border-color:color-mix(in srgb,var(--lac) 80%,#fff);box-shadow:0 0 0 4px color-mix(in srgb,var(--lac) 28%,transparent);background:rgba(255,255,255,.09)}
+.lg-input::placeholder{color:rgba(255,255,255,.3)}
+.lg-emp{display:flex;gap:7px}
+.lg-emp button{flex:1;padding:10px 4px;border-radius:11px;font-size:11px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.55);transition:.18s;font-family:var(--sans)}
+.lg-emp button:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85)}
+#ov-login[data-theme="farmacia"] .lg-emp button[data-emp="farmacia"],#ov-login[data-theme="consolidado"] .lg-emp button[data-emp="consolidado"],#ov-login[data-theme="drogueria"] .lg-emp button[data-emp="drogueria"]{background:linear-gradient(135deg,var(--lac),var(--lac2));color:#fff;border-color:transparent;box-shadow:0 6px 18px color-mix(in srgb,var(--lac) 45%,transparent)}
+.lg-btn{position:relative;overflow:hidden;width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--lac),var(--lac2));color:#fff;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.3px;box-shadow:0 12px 30px color-mix(in srgb,var(--lac) 50%,transparent);transition:transform .12s,box-shadow .2s;font-family:var(--sans)}
+.lg-btn:hover{transform:translateY(-2px);box-shadow:0 16px 42px color-mix(in srgb,var(--lac) 62%,transparent)}
+.lg-btn:active{transform:translateY(0)}
+.lg-btn::after{content:"";position:absolute;top:0;left:-130%;width:55%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:lgShine 3.6s ease-in-out infinite}
+@keyframes lgShine{0%,62%{left:-130%}82%,100%{left:150%}}
+</style>
+<style id="premium-css">
+.sidebar,.mobile-topbar,.nav-tab,.btn,.scard,.tbox,.tbox-hd,.fchip,.badge,.form-input,#ia-fab,.emp-switch,.emp-switch button{transition:background-color .45s cubic-bezier(.4,0,.2,1),border-color .45s ease,color .3s ease,box-shadow .25s ease,transform .15s ease}
+.tbox{box-shadow:0 1px 2px rgba(15,23,42,.04),0 10px 28px rgba(15,23,42,.05);border-radius:14px}
+.scard{box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 20px rgba(15,23,42,.05)}
+.scard:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(15,23,42,.10)}
+.btn-accent{box-shadow:0 4px 14px color-mix(in srgb,var(--primary) 30%,transparent)}
+.btn-green{box-shadow:0 4px 14px color-mix(in srgb,var(--green) 32%,transparent)}
+.btn-accent:hover,.btn-green:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.btn-accent:hover{box-shadow:0 9px 24px color-mix(in srgb,var(--primary) 42%,transparent)}
+.btn-green:hover{box-shadow:0 9px 24px color-mix(in srgb,var(--green) 44%,transparent)}
+.btn:active{transform:translateY(0) scale(.985)}
+.modal{box-shadow:0 30px 90px rgba(15,23,42,.45)}
+.form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
+.fchip:hover{border-color:color-mix(in srgb,var(--primary) 45%,var(--border));color:var(--text)}
+.fchip.active{background:var(--primary)!important;color:#fff!important;border-color:var(--primary)!important;box-shadow:0 3px 10px color-mix(in srgb,var(--primary) 30%,transparent)}
+#ia-fab{box-shadow:0 10px 30px color-mix(in srgb,var(--primary) 45%,transparent)}
+#ia-fab:hover{transform:translateY(-2px) scale(1.04)}
+body[data-empresa="drogueria"]{--lime:#bcd9f5}
+body[data-empresa="consolidado"]{--lime:#c7c9f5}
+.emp-switch{display:flex;gap:3px;margin:10px 12px 2px;padding:3px;background:rgba(255,255,255,.1);border-radius:12px}
+.emp-switch button{flex:1;padding:7px 3px;border:none;border-radius:9px;background:transparent;color:rgba(255,255,255,.72);font-size:10.5px;font-weight:700;cursor:pointer;font-family:var(--sans);letter-spacing:.2px}
+.emp-switch button:hover{color:#fff;background:rgba(255,255,255,.08)}
+body[data-empresa="farmacia"] .emp-switch button[data-emp="farmacia"],body[data-empresa="drogueria"] .emp-switch button[data-emp="drogueria"],body[data-empresa="consolidado"] .emp-switch button[data-emp="consolidado"]{background:#fff;color:var(--primary);box-shadow:0 2px 9px rgba(0,0,0,.22)}
+</style>
+<style id="drog-logo-fix">
+.logo-drog g,.logo-drog path{fill:#fff!important}
+.logo-both svg:nth-of-type(2) g,.logo-both svg:nth-of-type(2) path{fill:#fff!important}
+</style>
+<style>body[data-emplock] .emp-switch{display:none!important}</style>
+<style id="claret-premium">
+/* ═══ CAPA PREMIUM · profundidad, brillo y calma visual ═══ */
+:root{
+  --bg:#F6F7F9; --surface:#ffffff; --surface2:#FAFBFC; --surface3:#F3F4F6;
+  --border:#E7E9ED; --border2:#DDE0E6;
+  --text:#0B0D12; --text2:#333842; --muted:#858B96; --faint:#A9AEB8;
+  --radius:12px; --radius-sm:8px;
+  --sh-1:0 1px 2px rgba(16,24,40,.05);
+  --sh-2:0 1px 2px rgba(16,24,40,.05),0 6px 16px -6px rgba(16,24,40,.10);
+  --sh-3:0 1px 2px rgba(16,24,40,.05),0 12px 28px -8px rgba(16,24,40,.14);
+  --gloss:inset 0 1px 0 rgba(255,255,255,.9);
+}
+body{background:linear-gradient(180deg,#FBFBFC 0%,#F4F5F8 100%);background-attachment:fixed;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+
+/* Sidebar con profundidad */
+.sidebar{background:linear-gradient(180deg,#131C33 0%,#0B1220 100%)!important;box-shadow:1px 0 0 rgba(255,255,255,.05),4px 0 24px -8px rgba(11,18,32,.5)}
+.sidebar-icon{background:linear-gradient(145deg,#3B57D4,#1E38A6)!important;box-shadow:0 3px 10px rgba(30,56,166,.45),inset 0 1px 0 rgba(255,255,255,.22)}
+.nav-tab{color:#93A0B8!important;border-left:0!important;border-radius:8px;margin:1px 8px;padding:8px 11px!important;transition:background .14s,color .14s}
+.nav-tab:hover{color:#E6EAF2!important;background:rgba(255,255,255,.055)!important}
+.nav-tab.active{color:#fff!important;background:linear-gradient(135deg,rgba(59,87,212,.95),rgba(30,56,166,.9))!important;box-shadow:0 4px 14px -2px rgba(30,56,166,.5),inset 0 1px 0 rgba(255,255,255,.15);font-weight:500!important}
+.nav-tab.active::before{content:"";position:absolute;left:0;top:24%;bottom:24%;width:2.5px;border-radius:0 3px 3px 0;background:#93B4FF;box-shadow:0 0 8px rgba(147,180,255,.85)}
+.nav-section{color:#4A5568!important;letter-spacing:.8px}
+
+/* Tarjetas con material */
+.tbox,.scard{background:linear-gradient(160deg,#fff,#FCFCFD)!important;border:1px solid rgba(16,24,40,.07)!important;border-radius:14px!important;box-shadow:var(--sh-2),var(--gloss)!important}
+.tbox:hover,.scard:hover{box-shadow:var(--sh-3),var(--gloss)!important}
+.tbox-hd{background:linear-gradient(180deg,#FCFCFD,#F8F9FB)!important;border-bottom:1px solid rgba(16,24,40,.06)!important}
+.scard-val{font-variant-numeric:tabular-nums;letter-spacing:-.5px;font-weight:600}
+.scard-label{text-transform:uppercase;letter-spacing:.4px;font-size:10.5px;color:var(--muted)}
+
+/* Botones con relieve */
+.btn{border-radius:8px!important;font-weight:500!important;letter-spacing:.1px;transition:transform .12s,box-shadow .16s,filter .16s}
+.btn-ghost{background:linear-gradient(180deg,#fff,#FAFBFC)!important;border:1px solid #E7E9ED!important;color:#414651!important;box-shadow:var(--sh-1)!important}
+.btn-ghost:hover:not(:disabled){background:linear-gradient(180deg,#fff,#F5F6F8)!important;border-color:#D8DBE1!important}
+.btn-accent{background:linear-gradient(180deg,#2B47C4,#1E38A6)!important;box-shadow:0 3px 10px rgba(30,56,166,.34),inset 0 1px 0 rgba(255,255,255,.2)!important}
+.btn-green{background:linear-gradient(180deg,#0AA55F,#079455)!important;box-shadow:0 3px 10px rgba(7,148,85,.32),inset 0 1px 0 rgba(255,255,255,.2)!important}
+.btn-red,.btn-danger{background:linear-gradient(180deg,#C9382C,#B42318)!important;box-shadow:0 3px 10px rgba(180,35,24,.32),inset 0 1px 0 rgba(255,255,255,.2)!important}
+
+/* Tipografía y números */
+.section-title{font-weight:600!important;font-size:17px!important;letter-spacing:-.3px;color:var(--text);margin-bottom:14px!important;display:flex;align-items:center;gap:7px}
+.section-title svg{width:17px;height:17px;opacity:.75;color:var(--primary)}
+.tbox-title{font-weight:600!important;letter-spacing:-.1px}
+.summary-grid{gap:11px!important}
+.scard-sub{color:var(--muted);font-size:11px}
+table thead th{font-size:10.5px!important;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)!important;font-weight:600!important;background:linear-gradient(180deg,#FCFCFD,#F8F9FB)}
+table tbody tr:hover{background:#FBFBFC}
+.twrap{border-radius:12px}
+.badge{border-radius:999px!important;font-weight:600!important;letter-spacing:.2px}
+table{font-variant-numeric:tabular-nums}
+.mono{font-variant-numeric:tabular-nums}
+
+/* Campos */
+.form-input,input,select,textarea{border-radius:9px!important;border-color:#E3E5EA!important;box-shadow:inset 0 1px 2px rgba(16,24,40,.035)}
+.form-input:focus,input:focus,select:focus{box-shadow:0 0 0 3.5px rgba(30,56,166,.13),inset 0 1px 2px rgba(16,24,40,.03)!important}
+
+/* Chips */
+.fchip{border-radius:999px!important;background:linear-gradient(180deg,#fff,#FAFBFC)!important;box-shadow:var(--sh-1)}
+.fchip.active{background:linear-gradient(180deg,#2B47C4,#1E38A6)!important;box-shadow:0 3px 10px rgba(30,56,166,.32),inset 0 1px 0 rgba(255,255,255,.18)!important}
+
+/* Cubículos de caja — brillo por estado */
+.cc-cube{border-radius:14px!important;background:linear-gradient(160deg,#fff,#FCFCFD)!important;border:1px solid rgba(16,24,40,.07)!important;box-shadow:var(--sh-2),var(--gloss)!important;transition:transform .14s,box-shadow .18s}
+.cc-cube:hover{transform:translateY(-2px);box-shadow:var(--sh-3),var(--gloss)!important}
+.cc-cube-tot{font-variant-numeric:tabular-nums;letter-spacing:-.4px;font-weight:600}
+.cc-cube.cc-pend{background:linear-gradient(150deg,#C9382C,#A81F14)!important;border-color:rgba(180,35,24,.5)!important;box-shadow:0 2px 4px rgba(180,35,24,.2),0 14px 32px -10px rgba(180,35,24,.55),inset 0 1px 0 rgba(255,255,255,.16)!important}
+.cc-cube.cc-cerr{background:linear-gradient(160deg,#fff,#F7FDF9)!important;border-color:rgba(7,148,85,.2)!important}
+.cc-cube.cc-cierre{background:linear-gradient(160deg,#fff,#F7FAFF)!important;border-color:rgba(30,56,166,.2)!important}
+.cc-cube.cc-relevo{background:linear-gradient(160deg,#fff,#FBF9FF)!important;border-color:rgba(124,58,237,.2)!important}
+.cc-cube.cc-libre{background:repeating-linear-gradient(135deg,#FAFAFB,#FAFAFB 8px,#F6F7F8 8px,#F6F7F8 16px)!important;border:1px dashed #DFE2E7!important;box-shadow:none!important}
+.cc-chip{border-radius:999px!important;font-weight:600!important;letter-spacing:.2px}
+.cc-chip-ok{background:#E9F7F0!important;color:#05603A!important;box-shadow:inset 0 0 0 1px rgba(7,148,85,.16)}
+.cc-chip-cerr{background:linear-gradient(180deg,#0AA55F,#079455)!important;box-shadow:0 2px 7px rgba(7,148,85,.35)}
+.cc-chip-cierre{background:linear-gradient(180deg,#2B47C4,#1E38A6)!important;box-shadow:0 2px 7px rgba(30,56,166,.35)}
+.cc-chip-relevo{background:linear-gradient(180deg,#8B5CF6,#7C3AED)!important;box-shadow:0 2px 7px rgba(124,58,237,.35)}
+
+/* Modales y overlays */
+.modal,.tbox.modal{border-radius:16px!important;box-shadow:0 32px 80px -16px rgba(11,18,32,.45),0 0 0 1px rgba(16,24,40,.05)!important}
+</style>
+<style id="num-neutral">
+.scard-val{color:var(--text)!important}
+.pay-num{background:#e2e8f0!important;color:#334155!important}
+</style>
+</head>
+<body>
+
+<div id="ver-badge" style="position:fixed;bottom:3px;right:6px;font-size:9px;color:#94a3b8;z-index:5;pointer-events:none;font-family:system-ui">v414</div>
+<div id="boot-splash" style="position:fixed;inset:0;z-index:100000;background:#070b1c;display:flex;align-items:center;justify-content:center;transition:opacity .35s;font-family:system-ui,sans-serif">
+  <div style="text-align:center;color:#fff">
+    <div style="width:62px;height:62px;border-radius:16px;background:linear-gradient(135deg,#1E38A6,#79C820);display:inline-grid;place-items:center;font-size:30px;box-shadow:0 10px 30px rgba(30,56,166,.5)">🏥</div>
+    <div style="margin-top:14px;font-weight:800;font-size:18px;letter-spacing:.5px">Claret</div>
+    <div style="margin-top:6px;font-size:12px;opacity:.65">Cargando…</div>
+  </div>
+</div>
+
+<!-- ════ LOGIN OVERLAY ════ -->
+<div id="ov-login" data-theme="consolidado" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:var(--sans)">
+  <div class="lg-orb lg-orb1"></div>
+  <div class="lg-orb lg-orb2"></div>
+  <div class="lg-orb lg-orb3"></div>
+  <div class="lg-grid"></div>
+  <div class="lg-card">
+    <div style="text-align:center;margin-bottom:26px">
+      <div class="lg-logo"><div id="login-logo"><svg class="llogo-farm" width="64" height="64" viewBox="0 0 1160 1160" style="border-radius:16px;display:block;margin:0 auto 16px;box-shadow:0 8px 24px rgba(26,59,174,.4)" xmlns="http://www.w3.org/2000/svg"><rect width="1160" height="1160" fill="#79C820"/><g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none"><path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/></g></svg><div class="llogo-drog" style="display:none;width:64px;height:64px;border-radius:16px;background:#fff;margin:0 auto 16px;box-shadow:0 8px 24px rgba(91,143,212,.45);align-items:center;justify-content:center"><svg width="50" height="36" viewBox="0 0 161 116" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0.000000,116.000000) scale(0.100000,-0.100000)" fill="#5B8FD4" stroke="none"> <path d="M195 1065 c-5 -2 -26 -6 -46 -9 -32 -6 -38 -11 -43 -39 -9 -47 18 -128 54 -162 30 -29 35 -30 125 -30 117 0 123 5 106 79 -14 65 -45 114 -86 137 -30 17 -91 30 -110 24z"/> <path d="M534 998 c-39 -52 -42 -58 -15 -33 39 36 75 84 68 91 -3 3 -26 -23 -53 -58z"/> <path d="M469 913 c-13 -16 -12 -17 4 -4 16 13 21 21 13 21 -2 0 -10 -8 -17 -17z"/> <path d="M610 774 c-66 -7 -185 -25 -202 -30 -47 -14 -65 -232 -28 -339 19 -56 73 -139 96 -149 10 -4 24 62 54 254 30 191 35 210 53 216 10 3 69 6 130 6 94 1 119 -2 157 -20 56 -25 97 -65 116 -111 l14 -34 31 46 c18 28 55 62 89 84 l57 37 -66 19 c-51 14 -111 19 -266 22 -110 2 -216 1 -235 -1z"/> <path d="M1225 621 c-77 -35 -115 -102 -115 -199 0 -45 5 -66 21 -86 41 -52 109 -69 189 -46 41 12 50 3 50 -57 0 -37 -3 -42 -31 -52 -18 -6 -70 -11 -116 -11 -69 0 -92 4 -132 24 -51 27 -94 74 -105 119 l-7 28 -36 -48 c-20 -26 -46 -55 -57 -63 -40 -29 -122 -58 -185 -65 -76 -9 -69 -15 54 -46 80 -20 115 -22 310 -23 163 0 250 5 337 18 136 21 132 17 131 136 -2 143 -45 258 -131 345 -40 41 -48 45 -90 45 -26 0 -65 -9 -87 -19z"/> <path d="M667 549 c-38 -204 -47 -255 -47 -266 0 -21 95 -16 140 7 79 40 127 162 99 249 -18 57 -54 83 -122 89 l-54 4 -16 -83z"/> <path d="M282 505 c-26 -140 -11 -255 49 -364 33 -59 34 -60 52 -42 18 17 18 19 -7 55 -59 87 -92 230 -81 349 3 37 5 67 3 67 -2 0 -9 -29 -16 -65z"/> </g></svg></div><div class="llogo-both" style="display:none;align-items:center;justify-content:center;gap:10px;margin:0 auto 16px"><svg width="50" height="50" viewBox="0 0 1160 1160" style="border-radius:13px;display:block"><rect width="1160" height="1160" fill="#79C820"/><g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none"><path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/></g></svg><div style="width:50px;height:50px;border-radius:13px;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="38" height="27" viewBox="0 0 161 116"><g transform="translate(0.000000,116.000000) scale(0.100000,-0.100000)" fill="#5B8FD4" stroke="none"> <path d="M195 1065 c-5 -2 -26 -6 -46 -9 -32 -6 -38 -11 -43 -39 -9 -47 18 -128 54 -162 30 -29 35 -30 125 -30 117 0 123 5 106 79 -14 65 -45 114 -86 137 -30 17 -91 30 -110 24z"/> <path d="M534 998 c-39 -52 -42 -58 -15 -33 39 36 75 84 68 91 -3 3 -26 -23 -53 -58z"/> <path d="M469 913 c-13 -16 -12 -17 4 -4 16 13 21 21 13 21 -2 0 -10 -8 -17 -17z"/> <path d="M610 774 c-66 -7 -185 -25 -202 -30 -47 -14 -65 -232 -28 -339 19 -56 73 -139 96 -149 10 -4 24 62 54 254 30 191 35 210 53 216 10 3 69 6 130 6 94 1 119 -2 157 -20 56 -25 97 -65 116 -111 l14 -34 31 46 c18 28 55 62 89 84 l57 37 -66 19 c-51 14 -111 19 -266 22 -110 2 -216 1 -235 -1z"/> <path d="M1225 621 c-77 -35 -115 -102 -115 -199 0 -45 5 -66 21 -86 41 -52 109 -69 189 -46 41 12 50 3 50 -57 0 -37 -3 -42 -31 -52 -18 -6 -70 -11 -116 -11 -69 0 -92 4 -132 24 -51 27 -94 74 -105 119 l-7 28 -36 -48 c-20 -26 -46 -55 -57 -63 -40 -29 -122 -58 -185 -65 -76 -9 -69 -15 54 -46 80 -20 115 -22 310 -23 163 0 250 5 337 18 136 21 132 17 131 136 -2 143 -45 258 -131 345 -40 41 -48 45 -90 45 -26 0 -65 -9 -87 -19z"/> <path d="M667 549 c-38 -204 -47 -255 -47 -266 0 -21 95 -16 140 7 79 40 127 162 99 249 -18 57 -54 83 -122 89 l-54 4 -16 -83z"/> <path d="M282 505 c-26 -140 -11 -255 49 -364 33 -59 34 -60 52 -42 18 17 18 19 -7 55 -59 87 -92 230 -81 349 3 37 5 67 3 67 -2 0 -9 -29 -16 -65z"/> </g></svg></div></div></div></div>
+      <div id="login-title" class="lg-title">Claret · Consolidado</div>
+      <div id="login-sub" class="lg-sub">Vista general</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label class="lg-label">Usuario</label>
+      <input id="login-user" class="lg-input" type="text" placeholder="Tu usuario" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    </div>
+    <div style="margin-bottom:18px">
+      <label class="lg-label">Contraseña</label>
+      <div style="position:relative">
+        <input id="login-pass" class="lg-input" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px" onkeydown="if(event.key==='Enter')doLogin()">
+        <button type="button" id="login-pass-eye" onclick="_toggleLoginPass()" title="Mostrar/ocultar contraseña" aria-label="Mostrar u ocultar contraseña" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;color:var(--muted);display:flex;align-items:center"><svg id="login-pass-eye-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <div style="margin-bottom:22px">
+      <label class="lg-label">Empresa</label>
+      <div id="login-emp" class="lg-emp">
+        <button type="button" data-emp="farmacia" onclick="_setLoginEmp('farmacia')">Farmacia</button>
+        <button type="button" data-emp="drogueria" onclick="_setLoginEmp('drogueria')">Droguería</button>
+        <button type="button" data-emp="consolidado" onclick="_setLoginEmp('consolidado')">Consolidado</button>
+      </div>
+    </div>
+    <button id="login-btn" class="lg-btn" onclick="doLogin()">Ingresar →</button>
+    <div id="login-error" style="color:#fca5a5;font-size:12px;text-align:center;margin-top:14px;min-height:16px"></div>
+    <div style="text-align:center;margin-top:18px;font-size:10px;color:rgba(255,255,255,.28);letter-spacing:.5px">Claret · Acceso seguro</div>
+  </div>
+</div>
+
+
+<!-- ════ SIDEBAR ════ -->
+<!-- TASA ALERT BANNER -->
+<div id="tasa-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#b45309,#d97706);color:#fff;font-size:13px;font-weight:600;padding:7px 16px;display:none;align-items:center;justify-content:space-between;gap:12px">
+  <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> La tasa BCV no ha sido actualizada hoy — los montos en Bs pueden estar desactualizados.</span>
+  <button onclick="abrirTasa()" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.5);color:#fff;border-radius:6px;padding:3px 12px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0">Actualizar ahora</button>
+</div>
+<!-- INACTIVIDAD BANNER -->
+<div id="inactivity-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9998;background:linear-gradient(90deg,#7c3aed,#a855f7);color:#fff;font-size:13px;font-weight:600;padding:7px 16px;align-items:center;justify-content:space-between;gap:12px">
+  <span>⏱ Tu sesión cerrará en 2 minutos por inactividad.</span>
+  <button onclick="extendSession()" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.5);color:#fff;border-radius:6px;padding:3px 12px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0">Seguir conectado</button>
+</div>
+<button class="sb-expand" onclick="toggleSidebar()" title="Mostrar menú">▶</button>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+<svg width="46" height="46" viewBox="0 0 1160 1160" class="logo-farm" style="border-radius:50%;flex-shrink:0;display:block" xmlns="http://www.w3.org/2000/svg">
+          <!-- Lime green background — shows through plant-shaped holes as the logo -->
+          <rect width="1160" height="1160" fill="#79C820"/>
+          <!-- Blue rectangle with evenodd cutouts = lime plant visible on blue field -->
+          <g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none">
+            <path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/>
+          </g>
+        </svg>
+        <svg class="logo-drog" width="54" height="39" viewBox="0 0 161 116" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><g transform="translate(0.000000,116.000000) scale(0.100000,-0.100000)" fill="#5B8FD4" stroke="none"> <path d="M195 1065 c-5 -2 -26 -6 -46 -9 -32 -6 -38 -11 -43 -39 -9 -47 18 -128 54 -162 30 -29 35 -30 125 -30 117 0 123 5 106 79 -14 65 -45 114 -86 137 -30 17 -91 30 -110 24z"/> <path d="M534 998 c-39 -52 -42 -58 -15 -33 39 36 75 84 68 91 -3 3 -26 -23 -53 -58z"/> <path d="M469 913 c-13 -16 -12 -17 4 -4 16 13 21 21 13 21 -2 0 -10 -8 -17 -17z"/> <path d="M610 774 c-66 -7 -185 -25 -202 -30 -47 -14 -65 -232 -28 -339 19 -56 73 -139 96 -149 10 -4 24 62 54 254 30 191 35 210 53 216 10 3 69 6 130 6 94 1 119 -2 157 -20 56 -25 97 -65 116 -111 l14 -34 31 46 c18 28 55 62 89 84 l57 37 -66 19 c-51 14 -111 19 -266 22 -110 2 -216 1 -235 -1z"/> <path d="M1225 621 c-77 -35 -115 -102 -115 -199 0 -45 5 -66 21 -86 41 -52 109 -69 189 -46 41 12 50 3 50 -57 0 -37 -3 -42 -31 -52 -18 -6 -70 -11 -116 -11 -69 0 -92 4 -132 24 -51 27 -94 74 -105 119 l-7 28 -36 -48 c-20 -26 -46 -55 -57 -63 -40 -29 -122 -58 -185 -65 -76 -9 -69 -15 54 -46 80 -20 115 -22 310 -23 163 0 250 5 337 18 136 21 132 17 131 136 -2 143 -45 258 -131 345 -40 41 -48 45 -90 45 -26 0 -65 -9 -87 -19z"/> <path d="M667 549 c-38 -204 -47 -255 -47 -266 0 -21 95 -16 140 7 79 40 127 162 99 249 -18 57 -54 83 -122 89 l-54 4 -16 -83z"/> <path d="M282 505 c-26 -140 -11 -255 49 -364 33 -59 34 -60 52 -42 18 17 18 19 -7 55 -59 87 -92 230 -81 349 3 37 5 67 3 67 -2 0 -9 -29 -16 -65z"/> </g></svg>
+        <span class="logo-both" style="display:none;align-items:center;gap:7px;margin:0 auto 14px;justify-content:center"><svg width="38" height="38" viewBox="0 0 1160 1160" style="border-radius:9px;display:block"><rect width="1160" height="1160" fill="#79C820"/><g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none"><path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/></g></svg><svg width="46" height="33" viewBox="0 0 161 116"><g transform="translate(0.000000,116.000000) scale(0.100000,-0.100000)" fill="#5B8FD4" stroke="none"> <path d="M195 1065 c-5 -2 -26 -6 -46 -9 -32 -6 -38 -11 -43 -39 -9 -47 18 -128 54 -162 30 -29 35 -30 125 -30 117 0 123 5 106 79 -14 65 -45 114 -86 137 -30 17 -91 30 -110 24z"/> <path d="M534 998 c-39 -52 -42 -58 -15 -33 39 36 75 84 68 91 -3 3 -26 -23 -53 -58z"/> <path d="M469 913 c-13 -16 -12 -17 4 -4 16 13 21 21 13 21 -2 0 -10 -8 -17 -17z"/> <path d="M610 774 c-66 -7 -185 -25 -202 -30 -47 -14 -65 -232 -28 -339 19 -56 73 -139 96 -149 10 -4 24 62 54 254 30 191 35 210 53 216 10 3 69 6 130 6 94 1 119 -2 157 -20 56 -25 97 -65 116 -111 l14 -34 31 46 c18 28 55 62 89 84 l57 37 -66 19 c-51 14 -111 19 -266 22 -110 2 -216 1 -235 -1z"/> <path d="M1225 621 c-77 -35 -115 -102 -115 -199 0 -45 5 -66 21 -86 41 -52 109 -69 189 -46 41 12 50 3 50 -57 0 -37 -3 -42 -31 -52 -18 -6 -70 -11 -116 -11 -69 0 -92 4 -132 24 -51 27 -94 74 -105 119 l-7 28 -36 -48 c-20 -26 -46 -55 -57 -63 -40 -29 -122 -58 -185 -65 -76 -9 -69 -15 54 -46 80 -20 115 -22 310 -23 163 0 250 5 337 18 136 21 132 17 131 136 -2 143 -45 258 -131 345 -40 41 -48 45 -90 45 -26 0 -65 -9 -87 -19z"/> <path d="M667 549 c-38 -204 -47 -255 -47 -266 0 -21 95 -16 140 7 79 40 127 162 99 249 -18 57 -54 83 -122 89 l-54 4 -16 -83z"/> <path d="M282 505 c-26 -140 -11 -255 49 -364 33 -59 34 -60 52 -42 18 17 18 19 -7 55 -59 87 -92 230 -81 349 3 37 5 67 3 67 -2 0 -9 -29 -16 -65z"/> </g></svg></span>
+        <div class="sidebar-title">Farmacia Claret</div>
+        <div class="sidebar-sub">Sistema Central</div>
+      </div>
+      <button onclick="toggleSidebar()" title="Ocultar menú" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;padding:2px 4px;border-radius:4px;line-height:1;flex-shrink:0;margin-top:2px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">◀</button>
+    </div>
+  </div>
+
+  <div class="emp-switch"><button data-emp="farmacia" onclick="setEmpresa('farmacia')">Farmacia</button><button data-emp="drogueria" onclick="setEmpresa('drogueria')">Droguería</button><button data-emp="consolidado" onclick="setEmpresa('consolidado')">Todo</button></div>
+  <nav class="sidebar-nav">
+    <div class="nav-tab" onclick="showTab('inicio')" id="tab-inicio" data-emp="farm drog cons"><span class="nav-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2.1 5-5 2.1 2.1-5z"/></svg></span> Inicio</div>
+    <div class="sidebar-section ines-hide" id="sec-modulos" data-emp="farm drog cons">Módulos</div>
+    <div class="nav-tab ines-hide" onclick="showTab('bancos')" id="tab-panel" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg></span> Panel</div>
+    <div class="nav-tab active ines-hide" onclick="showTab('bancos')" id="tab-bancos" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></span> Bancos &amp; Pagos</div>
+    <div class="nav-tab ines-hide" onclick="showTab('bancos-hist')" id="tab-bancos-hist" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span> Historial Bancario</div>
+    <div class="nav-tab ines-hide" onclick="showTab('bancos-concil')" id="tab-bancos-concil" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span> Conciliaciones</div>
+    <div class="sidebar-section ines-hide" id="sec-caja" data-emp="farm drog cons">Caja</div>
+    <div class="nav-tab ines-hide" onclick="showTab('cierre')" id="tab-cierre" data-emp="farm drog cons"><span class="nav-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span> Cierre de Caja</div>
+    <div class="nav-tab" onclick="showTab('concil-cajas')" id="tab-concil-cajas" data-emp="farm drog cons"><span class="nav-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 18h16M6 18V9M10 18V9M14 18V9M18 18V9M3 9l9-6 9 6"/></svg></span> Conciliación Cajas</div>
+    <div class="sidebar-section ines-hide" id="sec-prestamos" data-emp="farm drog cons">Préstamos</div>
+    <div class="nav-tab ines-hide" onclick="showTab('prestamos')" id="tab-prestamos" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg></span> Préstamos <span class="tab-badge" id="badge-prestamos"></span></div>
+    <div class="nav-tab ines-hide" onclick="showTab('prest-resumen')" id="tab-prest-resumen" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg></span> Próximos Pagos</div>
+    <div class="sidebar-section ines-hide" id="sec-facturas" data-emp="farm drog cons">Facturas</div>
+    <div class="nav-tab ines-hide" onclick="showTab('facturas')" id="tab-facturas" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg></span> Facturas <span class="tab-badge" id="badge-facturas"></span></div>
+    <div class="sidebar-section ines-hide" id="sec-registros" data-emp="farm drog cons">Registros</div>
+    <div class="nav-tab ines-hide" onclick="showTab('historial')" id="tab-historial" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></span> Historial</div>
+    <div class="nav-tab" onclick="showTab('verif-ines')" id="tab-verif-ines" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></span> Ing. Administrativo</div>
+    <div class="sidebar-section" id="sec-compras" data-emp="farm drog cons">Compras</div>
+    <div class="nav-tab" onclick="showTab('compras')" id="tab-compras" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 2.3c-.6.6-.2 1.7.7 1.7H17"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></span> Compras</div>
+    <div class="nav-tab" onclick="showTab('almacen')" id="tab-almacen" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M3 21V8l9-5 9 5v13"/><path d="M3 21h18M9 21v-6h6v6M6 12h.01M18 12h.01"/></svg></span> Almacén</div>
+    <div class="sidebar-section" id="sec-ventas" data-emp="farm drog cons">Ventas</div>
+    <div class="nav-tab" onclick="showTab('reto')" id="tab-reto" data-emp="farm drog cons"><span class="nav-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z"/></svg></span> Reto de Ventas</div>
+    <div class="nav-tab" onclick="showTab('vencimientos')" id="tab-vencimientos" data-emp="farm drog cons"><span class="nav-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Vencimientos</div>
+    <div class="nav-tab" onclick="showTab('mensajes')" id="tab-mensajes" data-emp="drog cons"><span class="nav-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></span> Seguimiento</div>
+    <div class="sidebar-section" id="sec-pagosprov" data-emp="farm drog cons">Pagos</div>
+    <div class="nav-tab" onclick="showTab('cal-pagos')" id="tab-cal-pagos" data-emp="farm drog cons"><span class="nav-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Calendario de Pagos</div>
+    <div class="nav-tab" onclick="showTab('cxp-prov')" id="tab-cxp-prov" data-emp="farm drog cons"><span class="nav-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span> Plan Proveedores</div>
+    <div class="nav-tab" onclick="showTab('reparto')" id="tab-reparto" data-emp="farm drog cons"><span class="nav-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span> Repartidor de Caja</div>
+    <div class="sidebar-section" id="sec-cobranzas" data-emp="drog cons">Cobranzas</div>
+    <div class="nav-tab" onclick="showTab('cxc')" id="tab-cxc" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg></span> Cuentas por Cobrar</div>
+    <div class="sidebar-section" id="section-gerencia-admin" data-emp="cons">Análisis</div>
+    <div class="sidebar-section" id="sec-conta" data-emp="farm drog cons">Contabilidad</div>
+
+    <div class="sidebar-section" id="sec-personal" data-emp="farm drog cons">Personal</div>
+    <div class="nav-tab" onclick="showTab('turnos')" id="tab-turnos" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M8 14h.01"/><path d="M16 14h.01"/><path d="M12 18h.01"/></svg></span> Turnos</div>
+    <div class="nav-tab" onclick="showTab('vales')" id="tab-vales" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M4 3h16a1 1 0 0 1 1 1v16l-3-2-3 2-3-2-3 2-3-2-3 2V4a1 1 0 0 1 1-1z"/><line x1="8" x2="16" y1="8" y2="8"/><line x1="8" x2="16" y1="12" y2="12"/></svg></span> Vales</div>
+    <div class="nav-tab" onclick="showTab('rrhh')" id="tab-rrhh" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> RRHH · Relación</div>
+    <div class="nav-tab" onclick="showTab('yapague')" id="tab-yapague" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg></span> Ya Pagué</div>
+    <div class="nav-tab" onclick="showTab('anomalias')" id="tab-anomalias" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span> Anomalías</div>
+    <div class="nav-tab" onclick="showTab('consumo')" id="tab-consumo" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M5 11h14l-1.2 8.2A2 2 0 0 1 15.8 21H8.2a2 2 0 0 1-2-1.8L5 11z"/><path d="M9 11V7a3 3 0 0 1 6 0v4"/></svg></span> Consumo Familia <span id="cf-badge" style="display:none;margin-left:auto;background:#dc2626;color:#fff;border-radius:999px;min-width:18px;height:18px;font-size:11px;font-weight:800;align-items:center;justify-content:center;padding:0 5px"></span></div>
+    <div class="nav-tab" onclick="showTab('desempeno')" id="tab-desempeno" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span> Desempeño</div>
+    <div class="nav-tab" onclick="showTab('vacaciones')" id="tab-vacaciones" data-emp="farm drog cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 3 21 3s-3 .5-4.5 2L13 8.5 4.8 6.7c-.4-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3-2 .5.5 1.5 4-1 3-2 3.4 5.3c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.7.5-1.1z"/></svg></span> Vacaciones</div>
+
+    <div class="nav-tab gerente-admin-only" onclick="showTab('gerencia')" id="tab-gerencia" data-emp="cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span> Gerencia</div>
+    <div class="nav-tab admin-only" onclick="showTab('admin-panel')" id="tab-admin-panel" data-emp="cons"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span> Admin Panel</div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="tasa-display" onclick="abrirTasa()" title="Clic para actualizar la tasa del día">
+      <span class="tasa-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></span>
+      <span id="tasa-valor">—</span>
+    </div>
+    <div class="sidebar-user">
+      <span id="user-indicator" style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <button onclick="doLogout()" title="Cerrar sesión" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;flex-shrink:0" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ════ CONTENT ════ -->
+<div class="app-content">
+<div class="mobile-topbar"><button class="mtb-menu" onclick="toggleMobileSidebar()" aria-label="Menú"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button><svg class="mtb-logo logo-farm" viewBox="0 0 1160 1160" xmlns="http://www.w3.org/2000/svg"><rect width="1160" height="1160" fill="#79C820"/><g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none"><path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/></g></svg><span class="mtb-title">Farmacia Claret</span><button class="mtb-tasa" onclick="abrirTasa()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg><span id="tasa-valor-mobile">—</span></button></div>
+<main class="main">
+  <div id="page-inicio" class="page"><div id="inicio-content" style="padding:0 4px"></div></div>
+  <div id="page-vencimientos" class="page"><div id="vencimientos-content" style="padding:0 4px"></div></div>
+  <div id="page-mensajes" class="page"><div id="mensajes-content" style="padding:0 4px"></div></div>
+  <div id="page-cierre" class="page"><div id="cierre-content" style="padding:0 4px"></div></div>
+  <div id="page-concil-cajas" class="page"><div id="concil-cajas-content" style="padding:0 4px"></div></div>
+
+  <!-- ════ PANEL ════ -->
+  <div id="page-panel" class="page">
+    <p class="section-title">Panel General</p>
+    <div id="panel-cards"></div>
+    <div id="panel-alerts" style="margin-top:16px"></div>
+    <div id="panel-resumen" style="margin-top:16px"></div>
+  </div>
+
+  <!-- ════ BANCOS ════ -->
+  <div id="page-bancos-hist" class="page"><div id="bancos-hist-content" style="padding:0 4px"></div></div>
+  <div id="page-bancos-concil" class="page"><div style="padding:0 4px"><p class="section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Conciliaciones Bancarias</p><div id="bancos-verif-content"></div></div></div>
+  <div id="page-bancos" class="page active">
+    <div id="bancos-content"></div>
+  </div>
+
+  <!-- ════ PRÉSTAMOS (unificado) ════ -->
+  <div id="page-prestamos" class="page"><div style="padding:0 4px"><div id="prest-scope-chips"></div><div id="prestamos-todo-content"></div><div id="prestamos-farmacia-content"></div><div id="prestamos-drogueria-content"></div></div></div>
+  <div id="page-prest-resumen" class="page"><div id="prest-resumen-content" style="padding:0 4px"></div></div>
+
+  <!-- ════ FACTURAS (unificado) ════ -->
+  <div id="page-facturas" class="page"><div style="padding:0 4px"><div id="fact-scope-chips"></div><div id="facturas-todo-content"></div><div id="farmacia-content"></div><div id="drogueria-content"></div></div></div>
+
+  <!-- ════ INES VERIFICACIÓN ════ -->
+  <div id="page-verif-ines" class="page">
+    <div id="verif-ines-content"></div>
+  </div>
+
+  <!-- ════ HISTORIAL ════ -->
+  <div id="page-compras" class="page"><div id="compras-content" style="padding:0 4px"></div></div>
+  <div id="page-almacen" class="page"><div id="almacen-content" style="padding:0 4px"></div></div>
+  <div id="page-reparto" class="page"><div id="reparto-content" style="padding:0 4px"></div></div>
+  <div id="page-cxc" class="page"><div id="cxc-content" style="padding:0 4px"></div></div>
+  <div id="page-reto" class="page"><div id="reto-content" style="padding:0 4px"></div></div>
+  <div id="page-cxp-prov" class="page"><div id="cxpprov-content" style="padding:0 4px"></div></div>
+  <div id="page-cal-pagos" class="page"><div id="calpagos-content" style="padding:0 4px"></div></div>
+
+  <div id="page-historial" class="page">
+    <div id="historial-content">
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn btn-accent btn-sm grismar-hide" data-ht="prestamos" onclick="histTab=this.dataset.ht;renderHistorial()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg> Préstamos</button>
+        <button class="btn btn-ghost btn-sm" data-ht="facturas" onclick="histTab=this.dataset.ht;renderHistorial()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg> Facturas</button>
+      </div>
+      <div id="historial-inner"></div>
+    </div>
+  </div>
+
+  <!-- ════ CONTABILIDAD ════ -->
+  
+
+  <!-- ════ PAGOS & FLUJO (Cuentas por Pagar) ════ -->
+  
+
+  <!-- ════ TURNOS ════ -->
+  <div id="page-turnos" class="page"><div id="turnos-content" style="padding:0 4px"></div></div>
+  <div id="page-vales" class="page"><div id="vales-content" style="padding:0 4px"></div></div>
+  <div id="page-yapague" class="page"><div id="yapague-content" style="padding:0 4px"></div></div>
+  <div id="page-anomalias" class="page"><div id="anomalias-content" style="padding:0 4px"></div></div>
+  <div id="page-consumo" class="page"><div id="consumo-content" style="padding:0 4px"></div></div>
+  <div id="page-desempeno" class="page"><div id="desempeno-content" style="padding:0 4px"></div></div>
+  <div id="page-vacaciones" class="page"><div id="vacaciones-content" style="padding:0 4px"></div></div>
+  <div id="page-rrhh" class="page"><div id="rrhh-content" style="padding:0 4px"></div></div>
+  
+
+  <!-- ════ GERENCIA ════ -->
+  <div id="page-gerencia" class="page">
+    <div id="gerencia-content"></div>
+  </div>
+
+  <!-- ════ ADMIN PANEL ════ -->
+  <div id="page-admin-panel" class="page">
+    <div id="admin-panel-content"></div>
+  </div>
+
+</main>
+<!-- ════ MODAL NUEVO PRÉSTAMO ════ -->
+<div class="overlay" id="ov-prestamo">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="ov-prestamo-title">Nuevo Préstamo</span>
+      <button class="modal-x" onclick="closeOverlay('ov-prestamo')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-prestamo" onsubmit="guardarNuevoPrestamo(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Entidad *</label>
+            <select class="form-input" id="np-entidad" required>
+              <option value="FARMACIA">Farmacia</option>
+              <option value="DROGUERIA">Droguería</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Banco *</label>
+            <select class="form-input" id="np-banco" required>
+              <option value="">Seleccionar...</option>
+              <option>BANESCO</option><option>BDV</option><option>BNC</option>
+              <option>CARIBE</option><option>MERCANTIL</option><option>PROVINCIAL</option><option>TESORO</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nº Crédito / ID</label>
+            <input class="form-input" id="np-numero" placeholder="Ej: 9600123456 (opcional)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de Inicio *</label>
+            <input class="form-input" type="date" id="np-fecha-inicio" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto del préstamo (Bs) *</label>
+            <input class="form-input" type="number" step="0.01" id="np-monto-bs" placeholder="0.00" oninput="_npCalcCapital()" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tasa BCV al desembolso *</label>
+            <input class="form-input" type="number" step="0.01" id="np-tasa-bcv" placeholder="Bs/$" oninput="_npCalcCapital()" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Capital (USD)</label>
+            <input class="form-input" id="np-capital-usd" readonly style="background:var(--surface2)" placeholder="se calcula solo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Plazo (meses) *</label>
+            <input class="form-input" type="number" id="np-plazo" placeholder="12" value="12" min="1" oninput="_npCalcCapital()" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Interés mensual (%) *</label>
+            <input class="form-input" type="number" step="0.01" id="np-interes" placeholder="1.33" value="1.33" oninput="_npCalcCapital()" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cuotas ya pagadas</label>
+            <input class="form-input" type="number" id="np-cuotas-hechas" placeholder="0" value="0" min="0">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="form-label">Cuota estimada (Capital/plazo + interés 1ᵉʳ mes)</label>
+            <input class="form-input" id="np-cuota-prev" readonly style="background:var(--surface2)" placeholder="se calcula solo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:9px 0"><input type="checkbox" id="np-activo" checked> Préstamo activo (en pago)</label>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;border-top:1px dashed var(--border);padding-top:8px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="np-interes-solo" onchange="_npToggleInteres()"> Préstamo personal por comisión (% mensual sobre el capital; baja al abonar a capital). Pon el % en "Interés mensual".</label>
+            <div id="np-interes-extra" style="display:none;margin-top:8px"><label class="form-label">Día de pago de la comisión (1–28)</label><input class="form-input" type="number" id="np-dia-interes" min="1" max="28" placeholder="día del mes"></div>
+          </div>
+        </div>
+        <input type="hidden" id="np-edit-id">
+        <div id="np-error" style="color:var(--red);font-size:12px;margin-top:8px;min-height:16px"></div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" onclick="closeOverlay('ov-prestamo')">Cancelar</button>
+          <button type="submit" class="btn btn-accent"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg> Guardar Préstamo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-factura">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="ov-factura-title">Nueva Factura</span>
+      <button class="modal-x" onclick="closeOverlay('ov-factura')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-factura" onsubmit="guardarFactura(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Empresa *</label>
+            <select class="form-input" id="f-empresa" required>
+              <option value="farmacia">Farmacia</option>
+              <option value="drogueria">Droguería</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Proveedor *</label>
+            <input class="form-input" id="f-proveedor" list="list-proveedores" autocomplete="off" required placeholder="Nombre del proveedor">
+            <datalist id="list-proveedores"></datalist>
+          </div>
+          <div class="form-group">
+            <label class="form-label"># Factura *</label>
+            <input class="form-input" id="f-factura" required placeholder="Ej: 3630">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado</label>
+            <select class="form-input" id="f-estado_base">
+              <option value="VIGENTE">Vigente</option>
+              <option value="VENCIDA">Vencida</option>
+              <option value="CONSIGNACION">Consignación</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha Factura</label>
+            <input class="form-input" type="date" id="f-fecha">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha Vencimiento</label>
+            <input class="form-input" type="date" id="f-vence">
+          </div>
+          <hr class="form-div">
+          <div class="form-group span2" id="f-tasa-aviso" style="display:none;">
+            <div style="background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--amber);display:flex;align-items:center;gap:8px;">
+              <span>Bs/$</span>
+              <span id="f-tasa-texto">Tasa del día: —</span>
+              <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto;font-size:11px" onclick="abrirTasa()">Actualizar</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto Bs (original)</label>
+            <input class="form-input" type="number" step="0.01" id="f-monto_bs" placeholder="0.00" oninput="onMontoBsInput()">
+            <span class="form-hint" id="hint-bs-to-usd"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto $ (USD)</label>
+            <input class="form-input" type="number" step="0.01" id="f-monto_usd" placeholder="0.00" oninput="onMontoUsdInput()">
+            <span class="form-hint" id="hint-usd-to-bs"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Abonado $ (total)</label>
+            <input class="form-input" type="number" step="0.01" id="f-abonos_usd" placeholder="0.00" readonly style="background:var(--surface2);color:var(--muted)">
+            <span class="form-hint">Se registra con el botón "Abonar" en cada factura</span>
+          </div>
+          <div class="form-group" id="fg-nc">
+            <label class="form-label">Nota de Crédito (Bs)</label>
+            <input class="form-input" type="number" step="0.01" id="f-nc" placeholder="0.00" oninput="calcMontoBsPagar()">
+          </div>
+          <div class="form-group" id="fg-ret">
+            <label class="form-label">Retención (Bs)</label>
+            <input class="form-input" type="number" step="0.01" id="f-ret" placeholder="0.00" oninput="calcMontoBsPagar()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto Bs a Pagar</label>
+            <input class="form-input" type="number" step="0.01" id="f-monto_bs_pagar" placeholder="Auto-calculado">
+            <span class="form-hint">Se calcula: Monto Bs − N/C − Retención</span>
+          </div>
+          <div class="form-group span2" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:2px">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="toggleRetPanel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Retención</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="toggleNcPanel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Nota de crédito</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-fact-manual" onclick="toggleFactManual()" style="font-size:11px;color:var(--muted)">Mostrar campos manuales</button>
+            <span class="form-hint" id="f-tasa-ingreso-lbl" style="margin-left:auto"></span>
+          </div>
+          <div class="form-group span2" id="ret-panel" style="display:none"></div>
+          <div class="form-group span2" id="nc-panel" style="display:none"></div>
+          <div class="form-group span2">
+            <label class="form-label">Detalle / Notas</label>
+            <textarea class="form-input" id="f-detalle" rows="2" placeholder="Observaciones, estado de pago, etc."></textarea>
+          </div>
+        </div>
+        <input type="hidden" id="f-id">
+        <input type="hidden" id="f-tasa_ingreso">
+        <button type="submit" style="display:none"></button>
+      </form>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-factura')">Cancelar</button>
+      <button class="btn btn-accent" onclick="document.getElementById('form-factura').requestSubmit()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg> Guardar</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ov-pagar">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg> Marcar como Pagada</span>
+      <button class="modal-x" onclick="closeOverlay('ov-pagar')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="ov-pagar-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px;"></div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">Fecha de Pago</label>
+        <input class="form-input" type="date" id="pagar-fecha">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nota (opcional)</label>
+        <textarea class="form-input" id="pagar-nota" rows="2" placeholder="Ej: Transferencia BDV, ref #123456"></textarea>
+      </div>
+      <input type="hidden" id="pagar-id">
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-pagar')">Cancelar</button>
+      <button class="btn btn-green" onclick="confirmarPago()">Confirmar Pago</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ov-abonar">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg> Abonar a Factura</span>
+      <button class="modal-x" onclick="closeOverlay('ov-abonar')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto">
+      <div id="abonar-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;font-size:13px;"></div>
+      <div class="fact-write-only">
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Monto de este abono</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="form-input" id="abonar-moneda" style="max-width:96px" onchange="onAbonarInput()">
+            <option value="USD">$ USD</option>
+            <option value="BS">Bs</option>
+          </select>
+          <input class="form-input" type="number" step="0.01" id="abonar-monto" placeholder="0.00" oninput="onAbonarInput()" style="flex:1;font-family:var(--mono);font-size:16px">
+        </div>
+        <span class="form-hint" id="abonar-conv"></span>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <div class="form-group" style="flex:1;margin:0">
+          <label class="form-label">Fecha</label>
+          <input class="form-input" type="date" id="abonar-fecha">
+        </div>
+        <div class="form-group" style="flex:2;margin:0">
+          <label class="form-label">Nota / referencia</label>
+          <input class="form-input" id="abonar-nota" placeholder="Ej: Transf. BDV #123456">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Tasa para calcular Bs</label>
+        <select class="form-input" id="abonar-tasa-modo" onchange="onAbonarInput();renderAbonarInfo()">
+          <option value="dia">Tasa del día</option>
+          <option value="ingreso">Tasa de ingreso de la factura</option>
+        </select>
+        <span class="form-hint" id="abonar-tasa-hint"></span>
+      </div>
+      <div class="form-group" style="margin-bottom:14px"><label class="form-label">Banco de salida (opcional)</label><select class="form-input" id="abonar-banco"><option value="">(no descontar de banco)</option><option value="BANESCO">BANESCO</option><option value="BDV">BDV</option><option value="BNC">BNC</option><option value="CARIBE">CARIBE</option><option value="MERCANTIL">MERCANTIL</option><option value="PROVINCIAL">PROVINCIAL</option><option value="TESORO">TESORO</option></select></div>
+      <button class="btn btn-accent" style="width:100%" onclick="registrarAbono()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Registrar abono</button>
+      </div>
+      <div id="abonar-historial" style="margin-top:16px"></div>
+      <div id="abonar-plan" style="margin-top:16px"></div>
+      <input type="hidden" id="abonar-id">
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-abonar')">Cerrar</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ov-cxc-det">
+  <div class="modal narrow">
+    <div class="modal-hd"><span class="modal-title">Detalle de cobro</span><button class="modal-x" onclick="closeOverlay('ov-cxc-det')">×</button></div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto"><div id="cxc-det-body"></div></div>
+    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeOverlay('ov-cxc-det')">Cerrar</button></div>
+  </div>
+</div>
+<div class="overlay" id="ov-cxc-nueva">
+  <div class="modal narrow">
+    <div class="modal-hd"><span class="modal-title">Nueva deuda por cobrar</span><button class="modal-x" onclick="closeOverlay('ov-cxc-nueva')">×</button></div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto">
+      <div class="form-group"><label class="form-label">Cliente *</label><input class="form-input" id="ncx-nombre" placeholder="Nombre del cliente"></div>
+      <div class="form-group"><label class="form-label">Teléfono (WhatsApp)</label><input class="form-input" id="ncx-tel" placeholder="0414-1234567"></div>
+      <div style="display:flex;gap:8px"><div class="form-group" style="flex:1"><label class="form-label">N° Factura</label><input class="form-input" id="ncx-num" placeholder="Opcional"></div><div class="form-group" style="flex:1"><label class="form-label">Monto adeudado ($) *</label><input class="form-input" type="number" step="0.01" id="ncx-monto" placeholder="0.00" style="font-family:var(--mono)"></div></div>
+      <div style="display:flex;gap:8px"><div class="form-group" style="flex:1"><label class="form-label">Emisión</label><input class="form-input" type="date" id="ncx-emision"></div><div class="form-group" style="flex:1"><label class="form-label">Vencimiento</label><input class="form-input" type="date" id="ncx-vence"></div></div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeOverlay('ov-cxc-nueva')">Cancelar</button><button class="btn btn-green" onclick="guardarNuevaCxC()">Guardar</button></div>
+  </div>
+</div>
+<button id="ia-fab" class="gerente-admin-only" onclick="abrirAsistente()" aria-label="Asistente" title="Asistente"><svg width="56" height="56" viewBox="0 0 1160 1160" style="display:block;border-radius:50%;"><rect width="1160" height="1160" fill="#79C820"/><g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none"><path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/></g></svg></button>
+<div class="overlay" id="ov-asistente">
+  <div class="modal narrow" style="height:82vh;max-height:82vh">
+    <div class="modal-hd">
+      <span class="modal-title"><span style="display:inline-block;vertical-align:-4px;margin-right:6px"><svg width="18" height="18" viewBox="0 0 1160 1160" style="display:block;border-radius:50%;"><rect width="1160" height="1160" fill="#79C820"/><g transform="translate(44.5,1160) scale(0.1,-0.1)" fill="#1E38A6" fill-rule="evenodd" stroke="none"><path d="M0 5800 l0 -5800 5355 0 5355 0 0 5800 0 5800 -5355 0 -5355 0 0 -5800z m6058 2113 c5 -21 28 -104 50 -184 72 -257 119 -495 148 -749 21 -188 15 -621 -11 -780 -64 -399 -243 -772 -459 -959 -105 -91 -215 -75 -285 41 -21 36 -26 55 -26 113 1 87 15 116 104 210 150 159 247 374 297 661 25 140 30 468 10 654 -19 185 -56 400 -69 400 -13 0 -42 -36 -112 -141 -255 -382 -414 -967 -480 -1769 -8 -96 -15 -195 -15 -220 l0 -45 116 -57 c229 -113 524 -307 684 -450 176 -158 375 -375 474 -517 191 -272 341 -577 430 -874 46 -150 51 -183 36 -237 -34 -131 -152 -195 -259 -141 -33 17 -91 86 -91 109 0 16 -79 252 -114 342 -187 471 -542 895 -1001 1191 -391 254 -831 423 -1435 553 -369 79 -857 119 -1425 116 -41 0 -105 52 -132 108 -22 46 -25 62 -21 123 6 76 34 131 90 172 96 72 902 34 1452 -68 260 -48 519 -114 730 -185 49 -16 92 -27 97 -24 5 3 9 29 9 57 0 102 37 441 71 657 116 731 342 1302 648 1635 60 65 175 165 226 195 38 24 219 97 241 99 6 1 16 -16 22 -36z m-3032 -32 c50 -23 83 -64 128 -162 99 -215 170 -517 197 -844 17 -207 7 -764 -16 -827 -18 -50 -73 -114 -112 -129 -58 -22 -140 -3 -182 42 -57 60 -56 51 -56 484 0 360 -2 415 -22 550 -35 239 -77 390 -146 534 -54 110 -60 176 -24 254 47 103 138 141 233 98z m5042 -2796 c82 -35 126 -106 126 -205 0 -109 -36 -159 -179 -244 -64 -38 -178 -116 -250 -173 -13 -10 -170 -150 -200 -178 -93 -86 -201 -233 -271 -365 -28 -54 -47 -77 -79 -95 -111 -66 -235 2 -266 143 -19 90 15 178 137 363 158 237 437 493 760 695 122 77 156 86 222 59z"/></g></svg></span>Asistente</span>
+      <button class="modal-x" onclick="cerrarAsistente()">×</button>
+    </div>
+    <div class="modal-body" id="ia-mensajes" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px"></div>
+    <div class="modal-ft" style="gap:8px">
+      <button id="ia-hands" class="btn btn-ghost btn-icon" onclick="toggleManosLibres()" title="Manos libres (conversación continua)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H4a1 1 0 0 1-1-1v-6a9 9 0 0 1 18 0v6a1 1 0 0 1-1 1h-2a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg></button>
+      <button id="ia-mic" class="btn btn-ghost btn-icon" onclick="iaVoz()" title="Hablar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg></button>
+      <input id="ia-input" class="form-input" style="flex:1;min-width:0" placeholder="Escribe o habla tu pregunta..." onkeydown="if(event.key==='Enter')iaEnviar()">
+      <button class="btn btn-accent" onclick="iaEnviar()">Enviar</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ov-detalle">
+  <div class="modal wide">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Detalle del Préstamo</span>
+      <button class="modal-x" onclick="closeOverlay('ov-detalle')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto">
+      <div id="detalle-info" style="font-size:13px"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-detalle')">Cerrar</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ov-tasa">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg> Tasa del Día</span>
+      <button class="modal-x" onclick="closeOverlay('ov-tasa')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto">
+      <div id="tasa-info-actual" style="background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:13px;"></div>
+      <div class="form-group">
+        <label class="form-label">Tasa de Hoy (Bs por $1 USD)</label>
+        <input class="form-input" type="number" step="0.01" id="tasa-nueva" placeholder="Ej: 544.58" style="font-family:var(--mono);font-size:16px;">
+        <span class="form-hint">Ingresa cuántos bolívares equivalen a 1 dólar hoy (fuente: BCV)</span>
+      </div>
+      <div style="border-top:1px solid var(--border);margin:20px 0 16px;padding-top:16px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:var(--text)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> Agregar tasa de fecha anterior</div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div style="flex:1">
+            <label class="form-label" style="font-size:11px">Fecha</label>
+            <input class="form-input" type="date" id="hist-fecha" style="font-size:13px">
+          </div>
+          <div style="flex:1">
+            <label class="form-label" style="font-size:11px">Tasa Bs/$</label>
+            <input class="form-input" type="number" step="0.01" id="hist-tasa" placeholder="0.00" style="font-family:var(--mono);font-size:13px">
+          </div>
+          <button class="btn btn-accent btn-sm" onclick="guardarTasaFecha()" style="white-space:nowrap">+ Agregar</button>
+        </div>
+      </div>
+      <div id="historial-tasas-lista" style="max-height:260px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-tasa')">Cerrar</button>
+      <button class="btn btn-amber" onclick="guardarTasa()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg> Guardar Tasa de Hoy</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="ov-pago">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> Registrar Pago de Cuota</span>
+      <button class="modal-x" onclick="closeOverlay('ov-pago')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="pago-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px;line-height:1.6;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Fecha del pago</label>
+          <input class="form-input" type="date" id="pago-fecha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">N° de cuota</label>
+          <input class="form-input" type="number" min="1" id="pago-cuota" placeholder="Ej: 5">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Monto pagado (Bs)</label>
+          <input class="form-input" type="number" step="0.01" id="pago-bs" placeholder="0.00"
+            oninput="onPagoBsInput()" style="font-family:var(--mono)">
+          <span class="form-hint" id="pago-bs-hint" style="color:var(--muted);font-size:11px"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tasa BCV (Bs/$)</label>
+          <input class="form-input" type="number" step="0.01" id="pago-tasa" placeholder="Ej: 60.00"
+            oninput="onPagoBsInput()" style="font-family:var(--mono)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nota (opcional)</label>
+        <input class="form-input" type="text" id="pago-nota" placeholder="Ej: Transferencia BDV ref #12345">
+      </div>
+      <div class="form-group"><label class="form-label">Banco de salida (opcional)</label><select class="form-input" id="pago-banco"><option value="">(no descontar de banco)</option><option value="BANESCO">BANESCO</option><option value="BDV">BDV</option><option value="BNC">BNC</option><option value="CARIBE">CARIBE</option><option value="MERCANTIL">MERCANTIL</option><option value="PROVINCIAL">PROVINCIAL</option><option value="TESORO">TESORO</option></select></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-pago')">Cancelar</button>
+      <button class="btn btn-green" onclick="guardarPago()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg> Confirmar Pago</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-movbanco">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg> Registrar movimiento</span>
+      <button class="modal-x" onclick="closeOverlay('ov-movbanco')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto">
+      <div class="form-group"><label class="form-label">Tipo de movimiento</label>
+        <select class="form-input" id="mov-tipo" onchange="movBancoTipoChange()">
+          <option value="salida">Salida (pago / transferencia)</option>
+          <option value="entrada">Entrada (ingreso)</option>
+          <option value="traspaso">Traspaso entre bancos</option>
+        </select></div>
+      <div style="display:flex;gap:8px">
+        <div class="form-group" style="flex:1;margin:0 0 12px"><label class="form-label" id="mov-lbl-origen">Banco</label>
+          <select class="form-input" id="mov-entidad"><option value="FARMACIA">Farmacia</option><option value="DROGUERIA">Droguería</option></select></div>
+        <div class="form-group" style="flex:1;margin:0 0 12px"><label class="form-label">&nbsp;</label>
+          <select class="form-input" id="mov-banco"></select></div>
+      </div>
+      <div id="mov-dest" style="display:none">
+        <div style="display:flex;gap:8px">
+          <div class="form-group" style="flex:1;margin:0 0 12px"><label class="form-label">Banco destino</label>
+            <select class="form-input" id="mov-entidad-dest"><option value="FARMACIA">Farmacia</option><option value="DROGUERIA">Droguería</option></select></div>
+          <div class="form-group" style="flex:1;margin:0 0 12px"><label class="form-label">&nbsp;</label>
+            <select class="form-input" id="mov-banco-dest"></select></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div class="form-group" style="flex:1;margin:0 0 6px"><label class="form-label">Moneda</label>
+          <select class="form-input" id="mov-moneda" onchange="movBancoCalc()"><option value="BS">Bs</option><option value="USD">$ USD</option></select></div>
+        <div class="form-group" style="flex:2;margin:0 0 6px"><label class="form-label">Monto</label>
+          <input class="form-input" type="number" step="0.01" id="mov-monto" oninput="movBancoCalc()" style="font-family:var(--mono)" placeholder="0.00"></div>
+      </div>
+      <span class="form-hint" id="mov-conv" style="color:var(--muted);font-size:11px"></span>
+      <div class="form-group" style="margin-top:12px"><label class="form-label">Concepto</label><input class="form-input" id="mov-concepto" placeholder="Ej: Pago proveedor / Gasto / Traspaso"></div>
+      <div class="form-group"><label class="form-label">Referencia (opcional)</label><input class="form-input" id="mov-ref" placeholder="Ej: Transf. #12345"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-movbanco')">Cancelar</button>
+      <button class="btn btn-accent" onclick="guardarMovBanco()">Guardar movimiento</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="ov-delete">
+  <div class="modal narrow">
+    <div class="modal-hd">
+      <span class="modal-title" style="color:var(--red)">Eliminar Factura</span>
+      <button class="modal-x" onclick="closeOverlay('ov-delete')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="delete-id">
+      <p style="margin-bottom:12px;color:var(--muted);font-size:13px">Esta acción es permanente y no se puede deshacer.</p>
+      <div id="delete-info" style="background:var(--red-light);border:1px solid #fca5a5;border-radius:var(--radius-sm);padding:12px;font-size:13px;line-height:1.5;"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeOverlay('ov-delete')">Cancelar</button>
+      <button class="btn btn-red" onclick="ejecutarEliminar()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── CDN libs ─────────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+<!-- ── App modules (order matters) ─────────────────────────────────────── -->
+
+<script src="js/01-core-datos.js?v=414"></script>
+<script src="js/02-tasas-prestamos.js?v=414"></script>
+<script src="js/03-facturas-historial.js?v=414"></script>
+<script src="js/04-bancos-verificacion.js?v=414"></script>
+<script src="js/05-asistente-ia.js?v=414"></script>
+<script src="js/06-historial-bancario-cxc.js?v=414"></script>
+<script src="js/07-navegacion-config.js?v=414"></script>
+<script src="js/08-gastos-resultados.js?v=414"></script>
+<script src="js/09-turnos-personal.js?v=414"></script>
+<script src="js/10-inicio-hud.js?v=414"></script>
+<script src="js/11-vencimientos.js?v=414"></script>
+<script src="js/12-crm-seguimiento.js?v=414"></script>
+<script src="js/13-mercado.js?v=414"></script>
+<script src="js/14-cierre-caja.js?v=414"></script>
+<script src="js/15-conciliacion-bancaria.js?v=414"></script>
+<script src="js/16-anomalias-gerencia.js?v=414"></script>
+<script src="js/17-compras-pedidos.js?v=414"></script>
+<script src="js/18-lista-precios.js?v=414"></script>
+<script src="js/19-admin-usuarios.js?v=414"></script>
+<script src="js/20-reto-ventas.js?v=414"></script>
+<script src="js/21-cxp-pagos.js?v=414"></script>
+<script src="js/22-calendario-pagos.js?v=414"></script>
+<script src="js/23-mapa-sistema.js?v=414"></script>
+<script src="js/24-cobranzas.js?v=414"></script>
+<script src="js/25-vales.js?v=414"></script>
+<script src="js/26-rrhh.js?v=414"></script>
+<script src="js/27-yapague.js?v=414"></script>
+<script src="js/28-anomalias.js?v=414"></script>
+<script src="js/29-consumo-familia.js?v=414"></script>
+<script src="js/30-desempeno.js?v=414"></script>
+<script src="js/31-vacaciones.js?v=414"></script>
+<script src="js/32-almacen.js?v=414"></script>
+<script src="js/33-reparto.js?v=414"></script>
+<script src="js/34-compras-esenciales.js?v=414"></script>
+<script src="js/35-refrescar.js?v=414"></script>
+</div><!-- /app-content -->
+
+<!-- ════ MOBILE OVERLAY ════ -->
+<div class="mobile-overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- ════ BOTTOM NAVIGATION (mobile) ════ -->
+
+</body>
+</html>
