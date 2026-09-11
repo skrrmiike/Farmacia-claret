@@ -218,9 +218,10 @@
     <div class="card">
       <h2>El spread BCV → Binance</h2>
       <div class="prod"><div class="nm">Tasa BCV</div><div class="rt"><b id="anBcv">—</b></div></div>
-      <div class="prod"><div class="nm">Tasa Binance / mercado</div><div class="rt"><b id="anBinance">—</b></div></div>
-      <div class="prod"><div class="nm">Spread a tu favor</div><div class="rt"><b id="anSpread" style="color:var(--ok)">—</b></div></div>
-      <div class="note" style="margin-top:8px">Pagas a proveedores en Bs a tasa BCV (baja) y vendes tus dólares a Binance (alta). Ese spread es tu ganancia cambiaria.</div>
+      <div class="prod"><div><div class="nm">Binance — compra $</div><div class="mt">para acumular USDT</div></div><div class="rt"><b id="anBinanceC">—</b></div></div>
+      <div class="prod"><div><div class="nm">Binance — venta $</div><div class="mt">para pagar en Bs</div></div><div class="rt"><b id="anBinanceV">—</b></div></div>
+      <div class="prod"><div><div class="nm">Spread a tu favor</div><div class="mt">venta Binance vs BCV</div></div><div class="rt"><b id="anSpread" style="color:var(--ok)">—</b></div></div>
+      <div class="note" style="margin-top:8px">En Binance P2P hay dos tasas: <b>compra</b> (la que pagas al acumular dólares) y <b>venta</b> (la que te dan al vender tus dólares para tener Bs y pagar a proveedores). Como cobras a BCV (baja) y vendes tus dólares a Binance (alta), ese spread es tu ganancia cambiaria.</div>
     </div>
     <div class="card">
       <h2>Análisis de la semana</h2>
@@ -451,7 +452,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v4 · 11/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v5 · 11/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -1278,8 +1279,10 @@ function totals(){
 function S(sel,v){ var e=$(sel); if(e) e.textContent=v; }
 function render(){
   const c=state.cfg;
-  const spread = state.bcv>0 && c.binance>0 ? (c.binance/state.bcv-1)*100 : 0;
-  S('#hdrTasa',`BCV ${fmt(state.bcv)} · Binance ${fmt(c.binance)} · spread ${spread.toFixed(0)}%`);
+  const tC=Number(c.binance)||0, tV=Number(c.binanceVenta)||0;
+  const tRef = tV>0 ? tV : tC;   // el spread que importa usa la tasa de VENTA (a la que vendes tus dólares)
+  const spread = state.bcv>0 && tRef>0 ? (tRef/state.bcv-1)*100 : 0;
+  S('#hdrTasa',`BCV ${fmt(state.bcv)} · Binance ${tC?fmt(tC):'—'} compra / ${tV?fmt(tV):'—'} venta · spread ${spread.toFixed(0)}%`);
   // HOY (encabezado)
   const hf=$('#hoyFecha'); if(hf) hf.textContent=new Date().toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'short'});
   S('#hoyCaja',money(state.caja.usd));
@@ -1287,7 +1290,8 @@ function render(){
   renderProductos();
   // ANÁLISIS (spread real)
   S('#anBcv','Bs '+fmt(state.bcv));
-  S('#anBinance','Bs '+fmt(c.binance));
+  S('#anBinanceC', tC? 'Bs '+fmt(tC):'— (pon la tasa)');
+  S('#anBinanceV', tV? 'Bs '+fmt(tV):'— (pon la tasa)');
   S('#anSpread',spread.toFixed(0)+'%');
   renderA2Info();
 }
