@@ -231,8 +231,13 @@
       </div>
       <div class="kpis" style="margin-top:8px">
         <div class="kpi"><div class="l">Venta</div><div class="v" id="anSemVenta">$0</div></div>
-        <div class="kpi"><div class="l">Utilidad</div><div class="v" id="anSemUtil">$0</div></div>
+        <div class="kpi"><div class="l">Reinversión</div><div class="v" id="anSemReinv">$0</div><div class="mini">costo real</div></div>
       </div>
+      <div class="kpis" style="margin-top:8px">
+        <div class="kpi"><div class="l">IVA</div><div class="v" id="anSemIva">$0</div></div>
+        <div class="kpi"><div class="l">Ganancia neta</div><div class="v" id="anSemNeto">$0</div><div class="mini">después de IVA</div></div>
+      </div>
+      <div class="note" id="anSemAviso" style="margin-top:8px;display:none"></div>
       <div class="btnrow" style="margin-top:12px"><button class="btn" id="anBtnXls" onclick="descargarExcelSemana()">⬇️ Descargar Excel de la semana</button></div>
       <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="openOrdenEdilso()">📋 Órdenes de compra para Edilso (por rubro)</button></div>
       <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="openEstimado()">💰 Estimado de compra (privado, con costos)</button></div>
@@ -433,7 +438,7 @@
   </div>
 </div></dialog>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script>
 const $=(s)=>document.querySelector(s), $$=(s)=>document.querySelectorAll(s);
 const money=(n)=>'$'+(Math.round(n||0)).toLocaleString('es-VE');
@@ -446,7 +451,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v3 · 11/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v4 · 11/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -572,43 +577,218 @@ async function loadAnalisisSemana(){
     S('#anSemEnt',(d.tot_ent_uds||0)+' uds');
     S('#anSemSal',(d.tot_sal_uds||0)+' uds');
     S('#anSemVenta',money2(d.tot_venta||0));
-    S('#anSemUtil',money2((Number(d.tot_venta)||0)-(Number(d.tot_reinv)||0)));
+    S('#anSemReinv',money2(d.tot_reinv||0));
+    S('#anSemIva',money2(d.tot_iva||0));
+    S('#anSemNeto',money2(d.tot_util_neto!=null?d.tot_util_neto:((Number(d.tot_venta)||0)-(Number(d.tot_reinv)||0))));
+    const av=$('#anSemAviso');
+    if(av){ if(Number(d.n_sin_costo)>0){ av.style.display=''; av.innerHTML='⚠ '+d.n_sin_costo+' producto(s) vendidos sin costo cargado ('+money2(d.venta_sin_costo)+' en ventas) — no cuentan en la ganancia hasta que les pongas el costo.'; } else { av.style.display='none'; } }
     const f=(iso)=>{const c=new Date(new Date(iso).getTime()-4*3600e3);const p=n=>String(n).padStart(2,'0');return p(c.getUTCDate())+'/'+p(c.getUTCMonth()+1)+' '+p(c.getUTCHours())+':'+p(c.getUTCMinutes());};
     if(d.desde&&d.hasta) S('#anSemRango','Del '+f(d.desde)+' al '+f(d.hasta)+' (jueves → hoy)');
   }catch(e){ /* silencioso */ }
 }
-function descargarExcelSemana(){
-  if(typeof XLSX==='undefined'){ toast('Cargando Excel… intenta de nuevo en un momento'); return; }
+/* ---------- Excel semanal bonito (ExcelJS: colores, totales, agotados y gráficos) ---------- */
+const _DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const _DIAS_AB=['dom','lun','mar','mié','jue','vie','sáb'];
+function _dowName(n){ return _DIAS[(Number(n)||0)%7]||''; }
+function _diaLabel(iso){ // 'YYYY-MM-DD' -> 'jueves 10/09'
+  if(!iso) return '';
+  const d=new Date(iso+'T12:00:00');
+  return _DIAS[d.getDay()]+' '+iso.slice(8,10)+'/'+iso.slice(5,7);
+}
+function _diaCorto(iso){ if(!iso) return ''; const d=new Date(iso+'T12:00:00'); return _DIAS_AB[d.getDay()]+' '+iso.slice(8,10)+'/'+iso.slice(5,7); }
+// Dibuja un gráfico de barras en un canvas y devuelve base64 PNG (sin prefijo).
+function _barChart(opts){
+  const labels=opts.labels||[], vals=opts.values||[];
+  const colors=opts.colors||null, accent=opts.color||'#0a7d3b';
+  const money=!!opts.money;
+  const W=880, H=440, dpr=2, pad={l:64,r:24,t:64,b:70};
+  const cv=document.createElement('canvas'); cv.width=W*dpr; cv.height=H*dpr;
+  const x=cv.getContext('2d'); x.scale(dpr,dpr);
+  x.fillStyle='#ffffff'; x.fillRect(0,0,W,H);
+  x.fillStyle='#0f2a1c'; x.font='bold 26px system-ui,Arial'; x.textBaseline='top';
+  x.fillText(opts.title||'', pad.l, 18);
+  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+  const max=Math.max(1, ...vals.map(v=>Number(v)||0));
+  // gridlines + eje Y
+  x.strokeStyle='#e6ece9'; x.fillStyle='#8a9a92'; x.font='12px system-ui,Arial'; x.textBaseline='middle'; x.lineWidth=1;
+  const steps=4;
+  for(let i=0;i<=steps;i++){
+    const gv=max*i/steps, gy=pad.t+ch-(ch*i/steps);
+    x.beginPath(); x.moveTo(pad.l,gy); x.lineTo(pad.l+cw,gy); x.stroke();
+    const lab=money?('$'+(Math.round(gv)).toLocaleString('es-VE')):((Math.round(gv)).toLocaleString('es-VE'));
+    x.textAlign='right'; x.fillText(lab, pad.l-8, gy);
+  }
+  const n=Math.max(1,vals.length);
+  const bw=Math.min(90, cw/n*0.62), gap=cw/n;
+  for(let i=0;i<vals.length;i++){
+    const v=Number(vals[i])||0, bh=ch*(v/max);
+    const bx=pad.l+gap*i+(gap-bw)/2, by=pad.t+ch-bh;
+    x.fillStyle=colors?colors[i%colors.length]:accent;
+    const r=6; // barra con esquina redondeada arriba
+    x.beginPath();
+    x.moveTo(bx,by+bh); x.lineTo(bx,by+r); x.quadraticCurveTo(bx,by,bx+r,by);
+    x.lineTo(bx+bw-r,by); x.quadraticCurveTo(bx+bw,by,bx+bw,by+r); x.lineTo(bx+bw,by+bh); x.closePath(); x.fill();
+    // valor arriba
+    x.fillStyle='#0f2a1c'; x.font='bold 13px system-ui,Arial'; x.textAlign='center'; x.textBaseline='bottom';
+    x.fillText(money?('$'+v.toLocaleString('es-VE',{maximumFractionDigits:0})):(v.toLocaleString('es-VE')), bx+bw/2, by-3);
+    // etiqueta X
+    x.fillStyle='#5a6b62'; x.font='13px system-ui,Arial'; x.textBaseline='top'; x.textAlign='center';
+    String(labels[i]||'').split('\n').forEach((ln,k)=>{ x.fillText(ln, bx+bw/2, pad.t+ch+8+k*15); });
+  }
+  return cv.toDataURL('image/png').split(',')[1];
+}
+
+async function descargarExcelSemana(){
+  if(typeof ExcelJS==='undefined'){ toast('Cargando Excel… intenta de nuevo en un momento'); return; }
   const d=_semData;
   if(!d){ toast('Aún no cargó el análisis'); return; }
+  toast('Generando Excel…');
   const catL=(c)=>catLabel(c||'');
-  const sal=(d.salidas||[]).map(x=>({
-    'Producto':x.descr||x.codigo, 'Categoría':catL(x.cat), 'Unidades vendidas':x.uds,
-    'Precio venta $':Number(x.precio||0), 'Costo $':Number(x.costo||0),
-    'Venta $':Number(x.monto||0), 'Reinversión $':Number(x.reinv||0),
-    'Utilidad $':Number(((x.monto||0)-(x.reinv||0)).toFixed(2))
-  }));
-  const ent=(d.entradas||[]).map(x=>({
-    'Producto':x.descr||x.codigo, 'Categoría':catL(x.cat), 'Unidades que entraron':x.uds
-  }));
-  const resumen=[
-    {'Concepto':'Desde','Valor':d.desde? new Date(d.desde).toLocaleString('es-VE'):''},
-    {'Concepto':'Hasta','Valor':d.hasta? new Date(d.hasta).toLocaleString('es-VE'):''},
-    {'Concepto':'Unidades que entraron','Valor':d.tot_ent_uds||0},
-    {'Concepto':'Unidades vendidas','Valor':d.tot_sal_uds||0},
-    {'Concepto':'Venta total $','Valor':Number(d.tot_venta||0)},
-    {'Concepto':'Reinversión $','Valor':Number(d.tot_reinv||0)},
-    {'Concepto':'Utilidad $','Valor':Number(((d.tot_venta||0)-(d.tot_reinv||0)).toFixed(2))}
-  ];
+  const GREEN='FF0A7D3B', GREEN2='FF12A150', HEAD='FF0E5A2B', ZEBRA='FFF3F8F5', TOTBG='FFE7F2EC',
+        REDBG='FFFDEAEA', REDTX='FFB42318', GREY='FF667085', INK='FF0F2A1C';
+  const MFMT='"$"#,##0.00', UFMT='#,##0';
+  const rango = (d.desde&&d.hasta)
+    ? ('Del '+_diaLabel(String(d.desde).slice(0,10))+' al '+_diaLabel(String(d.hasta).slice(0,10))+'  (jueves → hoy)')
+    : 'Semana en curso';
   try{
-    const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen), 'Resumen');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sal.length?sal:[{'Producto':'(sin ventas)'}]), 'Salidas (vendido)');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ent.length?ent:[{'Producto':'(sin entradas)'}]), 'Entradas (reposición)');
-    const hoy=new Date().toISOString().slice(0,10);
-    XLSX.writeFile(wb, 'Analisis_Semana_Claret_'+hoy+'.xlsx');
-    toast('Excel generado');
-  }catch(e){ toast('No se pudo generar el Excel'); }
+    const wb=new ExcelJS.Workbook();
+    wb.creator='Operación Reinversión'; wb.created=new Date();
+
+    // helpers de estilo
+    const paintHeader=(ws,row,cols)=>{ for(let i=1;i<=cols;i++){ const c=ws.getCell(row,i);
+      c.fill={type:'pattern',pattern:'solid',fgColor:{argb:HEAD}}; c.font={bold:true,color:{argb:'FFFFFFFF'},size:11};
+      c.alignment={vertical:'middle',horizontal:i===1?'left':'center'}; c.border={bottom:{style:'thin',color:{argb:'FFFFFFFF'}}}; } ws.getRow(row).height=22; };
+
+    /* ===== HOJA RESUMEN ===== */
+    const R=wb.addWorksheet('Resumen',{views:[{showGridLines:false}]});
+    R.columns=[{width:34},{width:20},{width:16},{width:16},{width:16}];
+    R.mergeCells('A1:E1'); const t1=R.getCell('A1'); t1.value='Operación Reinversión — Resumen de la semana';
+    t1.font={bold:true,size:18,color:{argb:'FFFFFFFF'}}; t1.alignment={vertical:'middle',horizontal:'left',indent:1};
+    t1.fill={type:'pattern',pattern:'solid',fgColor:{argb:GREEN2}}; R.getRow(1).height=34;
+    R.mergeCells('A2:E2'); const t2=R.getCell('A2'); t2.value=rango; t2.font={italic:true,color:{argb:GREY}}; R.getRow(2).height=18;
+    R.addRow([]);
+    const kpis=[
+      ['Unidades que entraron (reposición)', Number(d.tot_ent_uds)||0, UFMT],
+      ['Unidades vendidas', Number(d.tot_sal_uds)||0, UFMT],
+      ['Venta total', Number(d.tot_venta)||0, MFMT],
+      ['Reinversión (costo real)', Number(d.tot_reinv)||0, MFMT],
+      ['IVA', Number(d.tot_iva)||0, MFMT],
+      ['Ganancia neta (después de IVA)', Number(d.tot_util_neto)||0, MFMT]
+    ];
+    kpis.forEach((k,i)=>{ const r=R.addRow([k[0],k[1]]); const lab=r.getCell(1), val=r.getCell(2);
+      lab.font={bold:true,color:{argb:INK}}; val.numFmt=k[2]; val.alignment={horizontal:'right'};
+      val.font={bold:true,size:12,color:{argb: k[0].indexOf('Ganancia')>=0?GREEN:INK}};
+      const bg=(i%2===0)?ZEBRA:'FFFFFFFF'; lab.fill=val.fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}};
+      r.getCell(1).border=r.getCell(2).border={bottom:{style:'hair',color:{argb:'FFDDE5E0'}}}; r.height=20; });
+    if(Number(d.n_sin_costo)>0){ R.addRow([]); const w=R.addRow(['⚠ '+d.n_sin_costo+' producto(s) vendidos sin costo cargado ('+money2(d.venta_sin_costo)+' en ventas) — no cuentan en la ganancia hasta ponerles el costo.']);
+      R.mergeCells('A'+w.number+':E'+w.number); w.getCell(1).font={italic:true,color:{argb:REDTX}}; w.getCell(1).alignment={wrapText:true}; w.height=30; }
+
+    // Gráficos
+    const pd=(d.por_dia||[]);
+    if(pd.length){
+      const img=wb.addImage({base64:_barChart({title:'Ventas por día ($)', labels:pd.map(r=>_diaCorto(r.dia)), values:pd.map(r=>Number(r.venta)||0), money:true, color:'#12a150'}), extension:'png'});
+      const row0=R.lastRow.number+2; R.addImage(img,{tl:{col:0,row:row0},ext:{width:440,height:220}});
+    }
+    const pc=(d.por_cat||[]);
+    if(pc.length){
+      const colores=pc.map(r=> r.cat==='pepsi'?'#1f6feb': r.cat==='coca'?'#d1242f': r.cat==='chuche'?'#bf8700':'#6e7781');
+      const img=wb.addImage({base64:_barChart({title:'Ventas por categoría ($)', labels:pc.map(r=>catL(r.cat)), values:pc.map(r=>Number(r.venta)||0), money:true, colors:colores}), extension:'png'});
+      const row0=R.lastRow.number+ (pd.length?13:2); R.addImage(img,{tl:{col:0,row:row0},ext:{width:440,height:220}});
+    }
+
+    /* ===== HOJA VENDIDO ===== */
+    const V=wb.addWorksheet('Vendido',{views:[{state:'frozen',ySplit:1}]});
+    const vcols=['Producto','Categoría','Uds vendidas','Precio $','Costo $','Venta $','Reinversión $','Utilidad $','Existencia','Estado','Día que se acabó'];
+    V.addRow(vcols); paintHeader(V,1,vcols.length);
+    V.columns=[{width:34},{width:13},{width:12},{width:11},{width:11},{width:12},{width:14},{width:12},{width:11},{width:11},{width:18}];
+    let tU=0,tV=0,tR=0,tG=0;
+    (d.salidas||[]).forEach((s,i)=>{
+      const costo=Number(s.costo)||0, monto=Number(s.monto)||0, reinv=Number(s.reinv)||0;
+      const util = costo>0 ? Number((monto-reinv).toFixed(2)) : null;
+      const agot = !!s.agotado;
+      const r=V.addRow([ s.descr||s.codigo, catL(s.cat), Number(s.uds)||0, Number(s.precio)||0, costo, monto, reinv,
+        (util==null?'sin costo':util), Number(s.existencia)||0, (agot?'AGOTADO':'OK'), (agot? _diaLabel(s.dia_agotado):'') ]);
+      [4,5,6,7,8].forEach(c=>{ if(typeof r.getCell(c).value==='number') r.getCell(c).numFmt=MFMT; });
+      r.getCell(3).numFmt=UFMT; r.getCell(9).numFmt=UFMT;
+      r.getCell(3).alignment=r.getCell(9).alignment=r.getCell(10).alignment={horizontal:'center'};
+      const bg = agot?REDBG : (i%2? ZEBRA:'FFFFFFFF');
+      for(let c=1;c<=vcols.length;c++){ r.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}}; r.getCell(c).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; }
+      if(agot){ r.getCell(10).font={bold:true,color:{argb:REDTX}}; r.getCell(11).font={color:{argb:REDTX}}; }
+      tU+=Number(s.uds)||0; tV+=monto; tR+=reinv; if(util!=null) tG+=util;
+    });
+    if(!(d.salidas||[]).length){ const r=V.addRow(['(sin ventas en la semana)']); V.mergeCells('A2:K2'); r.getCell(1).font={italic:true,color:{argb:GREY}}; }
+    else{
+      const tr=V.addRow(['TOTAL','',tU,'','',Number(tV.toFixed(2)),Number(tR.toFixed(2)),Number(tG.toFixed(2)),'','','']);
+      tr.getCell(3).numFmt=UFMT; tr.getCell(6).numFmt=tr.getCell(7).numFmt=tr.getCell(8).numFmt=MFMT;
+      for(let c=1;c<=vcols.length;c++){ tr.getCell(c).font={bold:true,color:{argb:INK}}; tr.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:TOTBG}}; tr.getCell(c).border={top:{style:'thin',color:{argb:GREEN}}}; }
+      tr.getCell(3).alignment={horizontal:'center'};
+    }
+    V.autoFilter='A1:K1';
+
+    /* ===== HOJA AGOTADOS ===== */
+    const A=wb.addWorksheet('Agotados',{views:[{state:'frozen',ySplit:1}]});
+    const acols=['Producto','Categoría','Uds vendidas','Día que se acabó','Existencia'];
+    A.addRow(acols); paintHeader(A,1,acols.length);
+    A.columns=[{width:36},{width:14},{width:13},{width:22},{width:12}];
+    const ags=(d.agotados||[]);
+    if(!ags.length){ const r=A.addRow(['🎉 Ningún producto se agotó en esta ventana.']); A.mergeCells('A2:E2'); r.getCell(1).font={italic:true,color:{argb:GREY}}; }
+    else ags.forEach((s,i)=>{
+      const r=A.addRow([ s.descr||s.codigo, catL(s.cat), Number(s.uds)||0,
+        (s.dia_agotado? (_dowName(s.dow_agotado)+' '+s.dia_agotado.slice(8,10)+'/'+s.dia_agotado.slice(5,7)) : '—'), Number(s.existencia)||0 ]);
+      r.getCell(3).numFmt=UFMT; r.getCell(5).numFmt=UFMT;
+      r.getCell(3).alignment=r.getCell(5).alignment={horizontal:'center'};
+      r.getCell(4).font={bold:true,color:{argb:REDTX}};
+      const bg=i%2?ZEBRA:'FFFFFFFF';
+      for(let c=1;c<=acols.length;c++){ r.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}}; r.getCell(c).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; }
+    });
+
+    /* ===== HOJA POR DÍA ===== */
+    const D=wb.addWorksheet('Por día');
+    const dcols=['Día','Uds vendidas','Venta $'];
+    D.addRow(dcols); paintHeader(D,1,dcols.length);
+    D.columns=[{width:22},{width:14},{width:14}];
+    let du=0,dv=0;
+    pd.forEach((r,i)=>{ const rr=D.addRow([_diaLabel(r.dia), Number(r.uds)||0, Number(r.venta)||0]);
+      rr.getCell(2).numFmt=UFMT; rr.getCell(3).numFmt=MFMT; rr.getCell(2).alignment={horizontal:'center'};
+      const bg=i%2?ZEBRA:'FFFFFFFF'; for(let c=1;c<=3;c++){ rr.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}}; }
+      du+=Number(r.uds)||0; dv+=Number(r.venta)||0; });
+    if(pd.length){ const tr=D.addRow(['TOTAL',du,Number(dv.toFixed(2))]); tr.getCell(2).numFmt=UFMT; tr.getCell(3).numFmt=MFMT;
+      for(let c=1;c<=3;c++){ tr.getCell(c).font={bold:true}; tr.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:TOTBG}}; tr.getCell(c).border={top:{style:'thin',color:{argb:GREEN}}}; } tr.getCell(2).alignment={horizontal:'center'}; }
+
+    /* ===== HOJA POR CATEGORÍA ===== */
+    const C=wb.addWorksheet('Por categoría');
+    const ccols=['Categoría','Uds','Venta $','Reinversión $','Utilidad $'];
+    C.addRow(ccols); paintHeader(C,1,ccols.length);
+    C.columns=[{width:16},{width:10},{width:14},{width:16},{width:14}];
+    let cu=0,cv=0,cr=0,cg=0;
+    pc.forEach((r,i)=>{ const rr=C.addRow([catL(r.cat), Number(r.uds)||0, Number(r.venta)||0, Number(r.reinv)||0, Number(r.util)||0]);
+      rr.getCell(2).numFmt=UFMT; [3,4,5].forEach(c=>rr.getCell(c).numFmt=MFMT); rr.getCell(2).alignment={horizontal:'center'};
+      const bg=i%2?ZEBRA:'FFFFFFFF'; for(let c=1;c<=5;c++){ rr.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}}; }
+      cu+=Number(r.uds)||0; cv+=Number(r.venta)||0; cr+=Number(r.reinv)||0; cg+=Number(r.util)||0; });
+    if(pc.length){ const tr=C.addRow(['TOTAL',cu,Number(cv.toFixed(2)),Number(cr.toFixed(2)),Number(cg.toFixed(2))]);
+      tr.getCell(2).numFmt=UFMT; [3,4,5].forEach(c=>tr.getCell(c).numFmt=MFMT);
+      for(let c=1;c<=5;c++){ tr.getCell(c).font={bold:true}; tr.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:TOTBG}}; tr.getCell(c).border={top:{style:'thin',color:{argb:GREEN}}}; } tr.getCell(2).alignment={horizontal:'center'}; }
+
+    /* ===== HOJA ENTRADAS ===== */
+    const E=wb.addWorksheet('Entradas (reposición)',{views:[{state:'frozen',ySplit:1}]});
+    const ecols=['Producto','Categoría','Uds que entraron'];
+    E.addRow(ecols); paintHeader(E,1,ecols.length);
+    E.columns=[{width:36},{width:14},{width:16}];
+    let eu=0;
+    (d.entradas||[]).forEach((s,i)=>{ const rr=E.addRow([s.descr||s.codigo, catL(s.cat), Number(s.uds)||0]);
+      rr.getCell(3).numFmt=UFMT; rr.getCell(3).alignment={horizontal:'center'};
+      const bg=i%2?ZEBRA:'FFFFFFFF'; for(let c=1;c<=3;c++){ rr.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}}; }
+      eu+=Number(s.uds)||0; });
+    if(!(d.entradas||[]).length){ const r=E.addRow(['(sin entradas en la semana)']); E.mergeCells('A2:C2'); r.getCell(1).font={italic:true,color:{argb:GREY}}; }
+    else{ const tr=E.addRow(['TOTAL','',eu]); tr.getCell(3).numFmt=UFMT; for(let c=1;c<=3;c++){ tr.getCell(c).font={bold:true}; tr.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:TOTBG}}; tr.getCell(c).border={top:{style:'thin',color:{argb:GREEN}}}; } tr.getCell(3).alignment={horizontal:'center'}; }
+
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='Analisis_Semana_Claret_'+hoyStr()+'.xlsx';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500);
+    toast('Excel generado ✓');
+  }catch(e){ console.error(e); toast('No se pudo generar el Excel'); }
 }
 
 /* ---------- Cierre diario ---------- */
