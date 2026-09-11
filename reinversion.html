@@ -296,39 +296,6 @@
   </section>
 
   <!-- ===== CENTRAL (tablero gerente, toda la farmacia, en vivo) ===== -->
-  <section id="tab-central" class="hide">
-    <div class="card">
-      <h2>Claret Central · en vivo</h2>
-      <div class="mini" id="cenRango" style="margin-bottom:8px">día 12 a 12 · semana lunes a domingo</div>
-      <div class="kpis">
-        <div class="kpi"><div class="l">Hoy · unidades</div><div class="v" id="cenDiaUds">—</div></div>
-        <div class="kpi"><div class="l">Hoy · ventas (Bs)</div><div class="v" id="cenDiaBs">—</div></div>
-      </div>
-      <div class="kpis" style="margin-top:8px">
-        <div class="kpi"><div class="l">Semana · unidades</div><div class="v" id="cenSemUds">—</div></div>
-        <div class="kpi"><div class="l">Semana · ventas (Bs)</div><div class="v" id="cenSemBs">—</div></div>
-      </div>
-      <div class="mini" id="cenUpd" style="margin-top:8px">—</div>
-      <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="loadCentral()">↻ Actualizar ahora</button></div>
-    </div>
-    <div class="card">
-      <div style="margin-bottom:8px"><div class="seg">
-        <button type="button" id="cenSegDia" class="on" onclick="cenSetPer('dia')">Hoy</button>
-        <button type="button" id="cenSegSem" onclick="cenSetPer('sem')">Semana</button>
-      </div></div>
-      <div class="grid2">
-        <div>
-          <div class="mini" style="font-weight:700;margin-bottom:4px">🏆 Top por unidades</div>
-          <div id="cenTopUds"><div class="mini">Cargando…</div></div>
-        </div>
-        <div>
-          <div class="mini" style="font-weight:700;margin-bottom:4px">💵 Top por monto (Bs)</div>
-          <div id="cenTopMonto"><div class="mini">Cargando…</div></div>
-        </div>
-      </div>
-      <div class="note" id="cenNota" style="margin-top:8px"></div>
-    </div>
-  </section>
 </main>
 
 <nav class="hide" id="navbar">
@@ -338,7 +305,6 @@
   <button data-tab="analisis" onclick="go('analisis')"><span class="ic">📊</span>Análisis</button>
   <button data-tab="mayra" onclick="go('mayra')"><span class="ic">🧾</span>Mayra</button>
   <button data-tab="cierre" onclick="go('cierre')"><span class="ic">🧮</span>Cierre</button>
-  <button data-tab="central" onclick="go('central')"><span class="ic">🏥</span>Central</button>
 </nav>
 
 <!-- Dialog: producto -->
@@ -480,7 +446,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v2 · 11/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v3 · 11/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -589,7 +555,7 @@ function factor(){ const b=state.cfg.binance; return (b>0)? (state.bcv/b) : 1; }
 
 /* ---------- navegación ---------- */
 function go(tab){
-  ['hoy','productos','semana','analisis','mayra','cierre','central'].forEach(t=>$('#tab-'+t).classList.toggle('hide',t!==tab));
+  ['hoy','productos','semana','analisis','mayra','cierre'].forEach(t=>$('#tab-'+t).classList.toggle('hide',t!==tab));
   $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   render(); window.scrollTo(0,0);
   if(tab==='hoy') loadHoyReal();
@@ -597,7 +563,6 @@ function go(tab){
   if(tab==='cierre') loadCierre();
   if(tab==='analisis') loadAnalisisSemana();
   if(tab==='semana') loadCambio();
-  if(tab==='central'){ loadCentral(); startCentralTimer(); } else stopCentralTimer();
 }
 let _semData=null;
 async function loadAnalisisSemana(){
@@ -1072,43 +1037,6 @@ async function estimadoImagen(){
   await _drawFactura({titulo:'Estimado de compra (interno)', fecha, rows, totales,
     pie:(e.sinCosto>0?('⚠ '+e.sinCosto+' producto(s) sin costo cargado — no suman al total.\n'):'')+'Documento privado. No es para el proveedor.',
     name:'Estimado_Compra_'+hoyStr()});
-}
-
-/* ---------- Central: tablero en vivo de la farmacia (gerente) ---------- */
-let central=null, cenPer='dia', _cenTimer=null;
-function startCentralTimer(){ stopCentralTimer(); _cenTimer=setInterval(()=>{ if(!$('#tab-central').classList.contains('hide')) loadCentral(true); }, 60000); }
-function stopCentralTimer(){ if(_cenTimer){ clearInterval(_cenTimer); _cenTimer=null; } }
-function cenSetPer(p){ cenPer=(p==='sem')?'sem':'dia';
-  $('#cenSegDia').classList.toggle('on',cenPer==='dia'); $('#cenSegSem').classList.toggle('on',cenPer==='sem');
-  renderCentral(); }
-async function loadCentral(silencioso){
-  if(!silencioso){ S('#cenTopUds','') ; const a=$('#cenTopUds'),b=$('#cenTopMonto'); if(a&&!central)a.innerHTML='<div class="mini">Cargando…</div>'; if(b&&!central)b.innerHTML='<div class="mini">Cargando…</div>'; }
-  try{ const d=await api('farmacia_top',{limit:15}); central=d; renderCentral(); }
-  catch(e){ if(!central){ const a=$('#cenTopUds'); if(a) a.innerHTML='<div class="mini">No se pudo cargar.</div>'; } }
-}
-function _cenList(arr, conMonto){
-  if(!arr||!arr.length) return '<div class="mini">Sin ventas en esta ventana.</div>';
-  return arr.map((r,i)=>{
-    const val = conMonto ? bs(r.monto||0) : ((r.uds||0)+' uds');
-    const sub = conMonto ? ((r.uds||0)+' uds') : (r.monto!=null?bs(r.monto):'');
-    const nm=(r.descripcion||r.codigo||'').replace(/</g,'&lt;');
-    return `<div class="prod"><div><div class="nm">${i+1}. ${nm}</div><div class="mt">${sub}</div></div><div class="rt"><b>${val}</b></div></div>`;
-  }).join('');
-}
-function renderCentral(){
-  const d=central; if(!d) return;
-  S('#cenDiaUds', (Number(d.dia_uds)||0).toLocaleString('es-VE')+' uds');
-  S('#cenSemUds', (Number(d.sem_uds)||0).toLocaleString('es-VE')+' uds');
-  S('#cenDiaBs', d.con_precio? bs(d.dia_monto) : 'Bs — (faltan precios)');
-  S('#cenSemBs', d.con_precio? bs(d.sem_monto) : 'Bs — (faltan precios)');
-  const upd=new Date(d.ahora||Date.now()).toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit'});
-  S('#cenUpd','Actualizado a las '+upd+' · se refresca solo cada minuto');
-  const tu = cenPer==='sem'? d.top_sem_uds : d.top_dia_uds;
-  const tm = cenPer==='sem'? d.top_sem_monto : d.top_dia_monto;
-  const bu=$('#cenTopUds'), bm=$('#cenTopMonto');
-  if(bu) bu.innerHTML=_cenList(tu,false);
-  if(bm) bm.innerHTML= d.con_precio? _cenList(tm,true) : '<div class="mini">Faltan precios para el top por monto.</div>';
-  S('#cenNota', cenPer==='sem'?'Semana en curso (lunes a domingo). Los datos vienen de A2 según sincroniza el puente (cada ~15 min).':'Día de hoy (medianoche a medianoche). Los datos vienen de A2 según sincroniza el puente (cada ~15 min).');
 }
 
 /* ---------- cálculos ---------- */
