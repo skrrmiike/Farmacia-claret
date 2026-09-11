@@ -480,7 +480,25 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v1 · 11/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v2 · 11/09';   // sube este número cada vez que se publique un cambio
+/* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
+async function checkUpdate(){
+  try{
+    const r=await fetch(location.pathname+'?u='+Date.now(),{cache:'no-store'});
+    if(!r||!r.ok) return;
+    const t=await r.text();
+    const m=t.match(/APP_VER='([^']*)'/);
+    const latest=m?m[1]:null;
+    if(!latest) return;
+    if(latest===APP_VER){ try{sessionStorage.removeItem('opReinvUpd');}catch(e){} return; }
+    let done=''; try{done=sessionStorage.getItem('opReinvUpd')||'';}catch(e){}
+    if(done===latest) return; // ya intentamos actualizar a esta versión; evitar bucle
+    try{sessionStorage.setItem('opReinvUpd',latest);}catch(e){}
+    try{ const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); }catch(e){}
+    try{ if(typeof toast==='function') toast('Actualizando a la versión '+latest+'…'); }catch(e){}
+    setTimeout(()=>{ location.reload(); }, 400);
+  }catch(e){}
+}
 
 let PIN='';
 let lastSync='';
@@ -1474,6 +1492,8 @@ function closeDlg(id){$('#'+id).close();}
 function toast(m){const d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:#0f1720;color:#fff;padding:10px 16px;border-radius:99px;font-size:13px;z-index:120;box-shadow:0 6px 20px rgba(0,0,0,.3)';document.body.appendChild(d);setTimeout(()=>d.remove(),1600);}
 
 boot();
+checkUpdate();
+setInterval(checkUpdate, 5*60*1000);
 </script>
 </body>
 </html>
