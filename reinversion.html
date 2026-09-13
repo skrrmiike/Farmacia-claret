@@ -149,7 +149,9 @@
   <section id="tab-productos" class="hide">
     <div class="card">
       <h2>Productos en la operación</h2>
+      <input id="prodBuscar" type="search" placeholder="🔍 Buscar producto o código…" autocomplete="off" oninput="renderProductos()" style="margin:4px 0 10px">
       <div class="sub" style="margin-bottom:6px">Solo lo que tomas tú: bebidas (Pepsi y Coca-Cola), chucherías y medicamentos en falla. El % que ves es el margen REAL (tras el spread).</div>
+      <div class="mini" id="prodBuscarInfo" style="margin-bottom:4px"></div>
       <div id="listaProd"></div>
       <div id="prodToggle" style="margin-top:6px"></div>
       <div class="btnrow"><button class="btn sec" onclick="refrescar(true)">↻ Actualizar existencias desde A2</button></div>
@@ -222,6 +224,8 @@
       <div class="prod"><div><div class="nm">Binance — venta $</div><div class="mt">para pagar en Bs</div></div><div class="rt"><b id="anBinanceV">—</b></div></div>
       <div class="prod"><div><div class="nm">Spread a tu favor</div><div class="mt">venta Binance vs BCV</div></div><div class="rt"><b id="anSpread" style="color:var(--ok)">—</b></div></div>
       <div class="note" style="margin-top:8px">En Binance P2P hay dos tasas: <b>compra</b> (la que pagas al acumular dólares) y <b>venta</b> (la que te dan al vender tus dólares para tener Bs y pagar a proveedores). Como cobras a BCV (baja) y vendes tus dólares a Binance (alta), ese spread es tu ganancia cambiaria.</div>
+      <div class="btnrow" style="margin-top:8px"><button class="btn" onclick="traerTasasBinance()">🔄 Actualizar tasas Binance (Provincial)</button></div>
+      <div class="mini" id="anTasasTs" style="margin-top:6px"></div>
     </div>
     <div class="card">
       <h2>Análisis de la semana</h2>
@@ -402,6 +406,19 @@
   </div>
 </div></dialog>
 
+<!-- Dialog: detalle de un movimiento de Mayra -->
+<dialog id="dlgMovDet"><div class="dlg">
+  <h3 id="mdTitulo">Detalle</h3>
+  <div class="big" id="mdMonto">$0</div>
+  <div class="sub" id="mdMontoBs">Bs 0</div>
+  <div id="mdInfo" style="margin-top:10px"></div>
+  <div id="mdFactura" style="margin-top:10px"></div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn sec" onclick="closeDlg('dlgMovDet')">Cerrar</button>
+    <button class="btn" id="mdBorrar" style="background:#c0392b" onclick="borrarDesdeDet()">🗑 Borrar este movimiento</button>
+  </div>
+</div></dialog>
+
 <!-- Dialog: cambio de dólares -->
 <dialog id="dlgCambio"><div class="dlg">
   <h3 id="dlgCambioT">Movimiento de cambio</h3>
@@ -452,7 +469,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v5 · 11/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v9 · 12/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -529,6 +546,7 @@ function mostrarApp(){
   $('#navbar').classList.remove('hide');
   var hv=$('#hdrVer'); if(hv) hv.textContent='Versión '+APP_VER;
   render(); loadHoyReal();
+  traerTasasBinance(true);   // trae las tasas de Binance (Provincial) al abrir
 }
 
 function aplicarEstado(d){
@@ -727,21 +745,55 @@ async function descargarExcelSemana(){
     V.autoFilter='A1:K1';
 
     /* ===== HOJA AGOTADOS ===== */
-    const A=wb.addWorksheet('Agotados',{views:[{state:'frozen',ySplit:1}]});
-    const acols=['Producto','Categoría','Uds vendidas','Día que se acabó','Existencia'];
-    A.addRow(acols); paintHeader(A,1,acols.length);
-    A.columns=[{width:36},{width:14},{width:13},{width:22},{width:12}];
+    const A=wb.addWorksheet('Agotados',{views:[{state:'frozen',ySplit:2}]});
+    // Semana de reposición: jueves (inicio) → jueves siguiente
+    const _dn=s=>Math.floor(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))/86400e3);
+    const _ds=n=>{const t=new Date(n*86400e3);return t.toISOString().slice(0,10);};
+    const inicioStr=String(d.desde||'').slice(0,10);
+    const inicioN=inicioStr?_dn(inicioStr):null;
+    const reposN=inicioN!=null?inicioN+7:null;
+    const colchon=Math.max(0,Number(state.cfg.colchonDias)||3);
+    A.mergeCells('A1:J1'); const at=A.getCell('A1');
+    at.value='Productos agotados esta semana · reposición el jueves '+(reposN!=null?_diaLabel(_ds(reposN)).replace(/^\w+ /,''):'—')+' · colchón de '+colchon+' días';
+    at.font={bold:true,size:12,color:{argb:'FFFFFFFF'}}; at.fill={type:'pattern',pattern:'solid',fgColor:{argb:GREEN2}}; at.alignment={vertical:'middle',indent:1}; A.getRow(1).height=24;
+    const acols=['Producto','Categoría','Uds vendidas','Día que se acabó','Días con stock','Días SIN stock (hasta jueves)','Demanda diaria (uds/día)','Dejaste de vender (uds)','Compra sugerida (uds)','Existencia'];
+    A.addRow(acols); paintHeader(A,2,acols.length); A.getRow(2).height=34;
+    for(let c=1;c<=acols.length;c++) A.getCell(2,c).alignment={vertical:'middle',horizontal:c===1?'left':'center',wrapText:true};
+    A.columns=[{width:36},{width:12},{width:11},{width:20},{width:11},{width:15},{width:14},{width:15},{width:15},{width:11}];
     const ags=(d.agotados||[]);
-    if(!ags.length){ const r=A.addRow(['🎉 Ningún producto se agotó en esta ventana.']); A.mergeCells('A2:E2'); r.getCell(1).font={italic:true,color:{argb:GREY}}; }
+    let tFalto=0,tSug=0;
+    if(!ags.length){ const r=A.addRow(['🎉 Ningún producto se agotó en esta ventana.']); A.mergeCells('A3:J3'); r.getCell(1).font={italic:true,color:{argb:GREY}}; }
     else ags.forEach((s,i)=>{
-      const r=A.addRow([ s.descr||s.codigo, catL(s.cat), Number(s.uds)||0,
-        (s.dia_agotado? (_dowName(s.dow_agotado)+' '+s.dia_agotado.slice(8,10)+'/'+s.dia_agotado.slice(5,7)) : '—'), Number(s.existencia)||0 ]);
-      r.getCell(3).numFmt=UFMT; r.getCell(5).numFmt=UFMT;
-      r.getCell(3).alignment=r.getCell(5).alignment={horizontal:'center'};
+      const uds=Number(s.uds)||0;
+      let diasCon='',diasSin='',dem='',falto='',sug='';
+      if(s.dia_agotado && inicioN!=null){
+        const agN=_dn(s.dia_agotado);
+        diasCon=Math.max(1, agN-inicioN+1);            // el día que se acabó también vendió
+        diasSin=Math.max(0, reposN-agN-1);              // días completos sin producto antes del jueves
+        dem=uds/diasCon;
+        falto=Math.round(dem*diasSin);
+        sug=Math.ceil(dem*(7+colchon));                 // lo que hay que traer para toda la semana + colchón
+        tFalto+=falto; tSug+=sug;
+      }
+      const r=A.addRow([ s.descr||s.codigo, catL(s.cat), uds,
+        (s.dia_agotado? (_dowName(s.dow_agotado)+' '+s.dia_agotado.slice(8,10)+'/'+s.dia_agotado.slice(5,7)) : '—'),
+        diasCon, diasSin, (dem===''?'':Number(dem.toFixed(2))), falto, sug, Number(s.existencia)||0 ]);
+      [3,5,6,8,9,10].forEach(c=>{ r.getCell(c).numFmt=UFMT; r.getCell(c).alignment={horizontal:'center'}; });
+      r.getCell(7).numFmt='0.00'; r.getCell(7).alignment={horizontal:'center'};
       r.getCell(4).font={bold:true,color:{argb:REDTX}};
+      r.getCell(6).font={bold:true,color:{argb:REDTX}};
+      r.getCell(9).font={bold:true,color:{argb:GREEN}};
       const bg=i%2?ZEBRA:'FFFFFFFF';
       for(let c=1;c<=acols.length;c++){ r.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}}; r.getCell(c).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; }
     });
+    if(ags.length){
+      const tr=A.addRow(['TOTAL','','','','','','',tFalto,tSug,'']);
+      tr.getCell(8).numFmt=tr.getCell(9).numFmt=UFMT; tr.getCell(8).alignment=tr.getCell(9).alignment={horizontal:'center'};
+      for(let c=1;c<=acols.length;c++){ tr.getCell(c).font={bold:true,color:{argb:INK}}; tr.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:TOTBG}}; tr.getCell(c).border={top:{style:'thin',color:{argb:GREEN}}}; }
+      const n1=A.addRow(['Cómo se calcula: Demanda diaria = uds vendidas ÷ días que hubo stock (desde el jueves hasta el día que se acabó). "Dejaste de vender" = demanda diaria × días sin stock hasta el jueves de reposición.']);
+      const n2=A.addRow(['Compra sugerida = demanda diaria × (7 días + '+colchon+' de colchón), redondeado hacia arriba: es lo que hay que traer el jueves para que ese producto dure toda la semana. El colchón se cambia en Ajustes ("Colchón de días"). ⚠ Si se agotó en 1 o 2 días, la demanda es un estimado con pocos datos: úsala como guía y ajústala con tu criterio.']);
+      [n1,n2].forEach(r=>{ A.mergeCells('A'+r.number+':J'+r.number); r.getCell(1).font={italic:true,size:9,color:{argb:GREY}}; r.getCell(1).alignment={wrapText:true}; r.height=28; });
+    }
 
     /* ===== HOJA POR DÍA ===== */
     const D=wb.addWorksheet('Por día');
@@ -868,7 +920,7 @@ function renderMayra(){
   if(!movs.length){ box.innerHTML='<div class="note">Aún no hay movimientos. Registra un pago o corte, o se irán agregando solos con cada corte diario.</div>'; return; }
   movs.forEach(m=>{
     const esPago=m.tipo==='pago';
-    const div=document.createElement('div'); div.className='prod'; div.style.cursor='pointer'; div.onclick=()=>delMov(m);
+    const div=document.createElement('div'); div.className='prod'; div.style.cursor='pointer'; div.onclick=()=>openMovDet(m);
     const et=esPago?'Pago':(m.tipo==='ajuste'?'Ajuste':'Corte');
     div.innerHTML=`<div><div class="nm">${esc(m.concepto||et)}</div>
       <div class="mt"><span class="pill ${esPago?'ok':'warn'}" style="font-size:9.5px">${et}</span> ${m.fecha||''}${m.ref?(' · '+esc(m.ref)):''}</div></div>
@@ -931,10 +983,40 @@ async function saveMov(){
   catch(e){ toast('No se pudo guardar'); }
   finally{ $('#movGuardar').disabled=false; }
 }
+let _movDet=null;
+async function openMovDet(m){
+  _movDet=m;
+  const et = m.tipo==='pago'?'Pago':(m.tipo==='ajuste'?'Ajuste':'Corte');
+  $('#mdTitulo').textContent = m.tipo==='corte' ? 'Corte — factura del día' : et;
+  $('#mdMonto').textContent = (m.tipo==='pago'?'−':'+')+money2(m.usd);
+  $('#mdMontoBs').textContent = Number(m.bs)>0 ? bs(m.bs) : '';
+  const info=[];
+  info.push(['Tipo', et]);
+  if(m.fecha) info.push(['Fecha', m.fecha]);
+  if(m.concepto) info.push(['Concepto', esc(m.concepto)]);
+  if(m.ref) info.push(['Referencia', esc(m.ref)]);
+  if(m.tasa) info.push(['Tasa', 'Bs '+fmt(m.tasa)]);
+  $('#mdInfo').innerHTML = info.map(r=>`<div class="prod"><div class="nm">${r[0]}</div><div class="rt"><b>${r[1]}</b></div></div>`).join('');
+  const fb=$('#mdFactura'); fb.innerHTML='';
+  if(m.tipo==='corte' && m.fecha){
+    fb.innerHTML='<div class="mini">Cargando factura…</div>';
+    try{
+      const d=await api('mayra_factura',{fecha:m.fecha});
+      const ls=(d && d.lineas)||[];
+      if(ls.length){
+        fb.innerHTML='<div class="mini" style="font-weight:700;margin:8px 0 2px">🧾 Productos de este corte · '+(d.total_unid||0)+' uds</div>'
+          + ls.map(l=>`<div class="prod"><div><div class="nm">${esc(l.nombre)}</div><div class="mt">${l.cantidad} × ${money2(l.precio)}</div></div><div class="rt"><b>${money2(l.subtotal)}</b></div></div>`).join('')
+          + `<div class="prod" style="border-top:2px solid var(--line)"><div class="nm"><b>Total de la factura</b></div><div class="rt"><b>${money2(d.total_usd)}</b></div></div>`;
+      } else { fb.innerHTML='<div class="note">No hay detalle de productos para este corte.</div>'; }
+    }catch(e){ fb.innerHTML='<div class="note">No se pudo cargar el detalle de productos (revisa tu internet).</div>'; }
+  }
+  $('#dlgMovDet').showModal();
+}
+function borrarDesdeDet(){ const m=_movDet; closeDlg('dlgMovDet'); if(m) delMov(m); }
 async function delMov(m){
-  if(!confirm('¿Eliminar este movimiento?\n'+(m.concepto||m.tipo)+' · '+money(m.usd))) return;
-  try{ await api('mayra_del',{id:m.id}); await loadMayra(); toast('Eliminado'); }
-  catch(e){ toast('No se pudo eliminar'); }
+  if(!confirm('¿Seguro que quieres BORRAR este movimiento?\n'+(m.concepto||m.tipo)+' · '+money2(m.usd)+'\n\nEsta acción no se puede deshacer.')) return;
+  try{ await api('mayra_del',{id:m.id}); await loadMayra(); toast('Movimiento borrado'); }
+  catch(e){ toast('No se pudo borrar'); }
 }
 
 /* ---------- Cambio de dólares (dos tasas Binance) ---------- */
@@ -1293,7 +1375,29 @@ function render(){
   S('#anBinanceC', tC? 'Bs '+fmt(tC):'— (pon la tasa)');
   S('#anBinanceV', tV? 'Bs '+fmt(tV):'— (pon la tasa)');
   S('#anSpread',spread.toFixed(0)+'%');
+  if($('#anTasasTs')){ $('#anTasasTs').textContent = _tasasTs? ('Tasas de Binance actualizadas '+new Date(_tasasTs).toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit'})) : 'Toca el botón para traer las tasas actuales de Binance (Provincial).'; }
   renderA2Info();
+}
+
+/* ---------- Tasas Binance P2P (Provincial) automáticas ---------- */
+let _tasasTs=0, _tasasCargando=false;
+async function traerTasasBinance(silencioso){
+  if(_tasasCargando) return; _tasasCargando=true;
+  try{
+    const d=await api('binance_p2p',{pay:'Provincial'});
+    const cambios={};
+    if(d && d.compra && Number(d.compra.rate)>0) cambios.binance=Number(d.compra.rate);
+    if(d && d.venta && Number(d.venta.rate)>0) cambios.binanceVenta=Number(d.venta.rate);
+    if(Object.keys(cambios).length){
+      Object.assign(state.cfg,cambios);
+      _tasasTs=Date.now();
+      try{ await api('guardar_config',{config:cambios}); }catch(e){}
+      render();
+      if(typeof renderCambio==='function' && $('#tab-semana') && !$('#tab-semana').classList.contains('hide')) renderCambio();
+      if(!silencioso) toast('Tasas Binance: compra Bs '+fmt(state.cfg.binance)+' · venta Bs '+fmt(state.cfg.binanceVenta));
+    } else if(!silencioso){ toast('No se pudieron traer las tasas ahora'); }
+  }catch(e){ if(!silencioso) toast('No se pudieron traer las tasas'); }
+  finally{ _tasasCargando=false; }
 }
 /* ---------- HOY: venta y corte reales (desde A2 vía 'cierre') ---------- */
 let corteHoy=0;
@@ -1351,14 +1455,18 @@ function renderProductos(){
   const box=$('#listaProd'); if(!box) return; box.innerHTML='';
   if(state.productos.length===0){box.innerHTML='<div class="note">Aún no hay productos. Toca "Agregar producto" para empezar.</div>';const tg0=$('#prodToggle');if(tg0)tg0.innerHTML='';return;}
   const showAll=window.prodShowAll||false;
+  const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const q=norm(($('#prodBuscar')||{}).value).trim();
   let ocultos=0;
   const vis=state.productos.filter(p=>{
+    if(q){ return norm(p.nombre).includes(q) || norm(p.codigo).includes(q); }  // al buscar, muestra todos los que coincidan (aunque estén en 0)
     const desc=existenciaDesconocida(p); const st=stockDe(p);
     const enCero = !!p.codigo && !desc && st<=0;
     if(enCero && !showAll){ ocultos++; return false; }
     return true;
   });
-  if(!vis.length){ box.innerHTML='<div class="note">Todos los productos están en 0 ahorita. Toca "Ver todos" para mostrarlos.</div>'; }
+  const bi=$('#prodBuscarInfo'); if(bi) bi.textContent = q ? (vis.length+' resultado'+(vis.length===1?'':'s')+' para "'+(($('#prodBuscar')||{}).value||'').trim()+'"') : '';
+  if(!vis.length){ box.innerHTML = q ? '<div class="note">No encontré ningún producto con ese nombre o código.</div>' : '<div class="note">Todos los productos están en 0 ahorita. Toca "Ver todos" para mostrarlos.</div>'; }
   vis.forEach(p=>{
     const st=stockDe(p);
     const mr=Math.round(margenReal(p)*100);
