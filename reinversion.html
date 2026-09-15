@@ -149,7 +149,8 @@
         <div class="kpi"><div class="l">Cortes (te debe)</div><div class="v" id="myrCargos">$0</div></div>
         <div class="kpi"><div class="l">Pagos (abonó)</div><div class="v" id="myrAbonos">$0</div></div>
       </div>
-      <div class="btnrow"><button class="btn" onclick="openCobro()">📲 Cobrar varios cortes a Mayra</button></div>
+      <div class="mini" id="myrNetoNota" style="margin-top:6px"></div>
+      <div class="btnrow"><button class="btn" onclick="openCobro()">📲 Cobrar varios cortes a Mayra (con impuestos y Excel)</button></div>
       <div class="btnrow"><button class="btn sec" onclick="openMov('pago')">+ Registrar pago de Mayra</button></div>
       <div class="btnrow"><button class="btn sec" onclick="openMov('ajuste')">+ Ajuste manual</button></div>
       <div class="note" style="margin-top:8px">El corte diario se carga <b>solo</b> aquí cada mañana (lo que Mayra te debe, calculado con lo vendido). Tú solo registras el <b>pago</b> cuando ella te transfiere, y el saldo baja. Toca un movimiento para ver su detalle o factura.</div>
@@ -374,13 +375,21 @@
 
 <dialog id="dlgCobro"><div class="dlg">
   <h3>Cobrar cortes a Mayra</h3>
-  <div class="mini" style="margin-bottom:8px">Marca los días que quieres cobrarle y se junta el total en un solo mensaje.</div>
-  <div id="cobroLista" style="max-height:46vh;overflow:auto"></div>
-  <div class="prod" style="border-top:2px solid var(--line);margin-top:6px"><div><div class="nm">Total a cobrar</div><div class="mt"><span id="cobroN">0</span> corte(s)</div></div><div class="rt"><b id="cobroTot">$0</b><span class="mini" id="cobroTotBs">Bs 0</span></div></div>
-  <div class="btnrow" style="margin-top:14px">
-    <button class="btn sec" onclick="closeDlg('dlgCobro')">Cerrar</button>
-    <button class="btn" id="cobroEnviar" onclick="enviarCobro()">Enviar por WhatsApp</button>
+  <div class="mini" style="margin-bottom:8px">Marca los días que quieres cobrarle. La app descuenta sola los impuestos (<span id="cobroImpL">SEDEMAT + ISLR</span>) y te da el neto.</div>
+  <div class="btnrow" style="margin:0 0 6px"><button class="btn sec" style="padding:7px 10px;font-size:12px" onclick="cobroMarcar(true)">Marcar todos</button><button class="btn sec" style="padding:7px 10px;font-size:12px" onclick="cobroMarcar(false)">Ninguno</button></div>
+  <div id="cobroLista" style="max-height:38vh;overflow:auto"></div>
+  <div style="border-top:2px solid var(--line);margin-top:6px;padding-top:4px">
+    <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500">Venta bruta</div><div class="mt"><span id="cobroN">0</span> corte(s)</div></div><div class="rt"><b id="cobroTot">$0</b></div></div>
+    <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500;color:var(--bad)">− Impuestos</div><div class="mt" id="cobroImpDet">SEDEMAT + ISLR</div></div><div class="rt"><b id="cobroImp" style="color:var(--bad)">−$0</b></div></div>
+    <div class="prod" style="padding:8px 0;border-top:1px solid var(--line)"><div><div class="nm">Neto a cobrar</div><div class="mt">lo que Mayra te transfiere</div></div><div class="rt"><b id="cobroNeto" style="color:var(--ok);font-size:18px">$0</b><span class="mini" id="cobroTotBs">Bs 0</span></div></div>
   </div>
+  <div class="btnrow" style="margin-top:12px">
+    <button class="btn" id="cobroEnviar" onclick="enviarCobro()">📲 WhatsApp</button>
+    <button class="btn" style="background:#0a7d3b" id="cobroXls" onclick="excelCobro()">📊 Excel para Mayra</button>
+  </div>
+  <div class="btnrow" style="margin-top:8px"><button class="btn sec" id="cobroReg" onclick="registrarImpuestosCobro()">🧾 Registrar impuestos en la cuenta</button></div>
+  <div class="mini" style="margin-top:6px">"Registrar impuestos" anota un ajuste negativo por los impuestos de estos cortes, para que el saldo de Mayra quede en el neto que ella realmente paga.</div>
+  <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="closeDlg('dlgCobro')">Cerrar</button></div>
 </div></dialog>
 
 <!-- Dialog: movimiento Mayra -->
@@ -468,7 +477,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v12 · 14/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v13 · 15/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -553,7 +562,8 @@ function aplicarEstado(d){
   state.productos=(d.productos||[]).map(p=>({
     id:p.id, cat:p.cat||'pepsi', nombre:p.nombre||'', codigo:(p.codigo||'').trim(),
     costo:Number(p.costo)||0, precio:Number(p.precio)||0, venta:Number(p.venta_estim)||0,
-    stock_manual:Number(p.stock_manual)||0, existencia:(p.existencia==null?null:Number(p.existencia))
+    stock_manual:Number(p.stock_manual)||0, existencia:(p.existencia==null?null:Number(p.existencia)),
+    empaque:Math.max(1,Math.round(Number(p.empaque)||1))
   }));
   state.registros=(d.registros||[]).map(r=>({f:r.f,p:r.p,cod:r.cod,q:Number(r.q)||0}));
   state.caja=d.caja||{semana:'',usd:0};
@@ -919,6 +929,7 @@ function renderMayra(){
   $('#myrSaldoBs').textContent=bs(mayra.saldo_bs);
   $('#myrCargos').textContent=money(mayra.cargos_usd);
   $('#myrAbonos').textContent=money(mayra.abonos_usd);
+  const nn=$('#myrNetoNota'); if(nn){ const sal=Number(mayra.saldo_usd)||0; nn.textContent = sal>0 ? ('Si aún no registraste los impuestos de estos cortes, el neto a cobrar sería ≈ '+money2(sal-impuestosDe(sal))+' ('+impLabel()+' descontado).') : ''; }
   const box=$('#myrLista'); if(!box) return; box.innerHTML='';
   const movs=mayra.movs||[];
   if(!movs.length){ box.innerHTML='<div class="note">Aún no hay movimientos. Registra un pago o corte, o se irán agregando solos con cada corte diario.</div>'; return; }
@@ -928,41 +939,169 @@ function renderMayra(){
     const et=esPago?'Pago':(m.tipo==='ajuste'?'Ajuste':'Corte');
     div.innerHTML=`<div><div class="nm">${esc(m.concepto||et)}</div>
       <div class="mt"><span class="pill ${esPago?'ok':'warn'}" style="font-size:9.5px">${et}</span> ${m.fecha||''}${m.ref?(' · '+esc(m.ref)):''}</div></div>
-      <div class="rt"><b style="color:${esPago?'var(--ok)':'var(--ink)'}">${esPago?'−':'+'}${money(m.usd)}</b><span class="mini">${bs(m.bs)}</span></div>`;
+      <div class="rt"><b style="color:${esPago?'var(--ok)':(Number(m.usd)<0?'var(--bad)':'var(--ink)')}">${esPago?'−':(Number(m.usd)<0?'−':'+')}${money2(Math.abs(Number(m.usd)||0))}</b><span class="mini">${bs(Math.abs(Number(m.bs)||0))}</span></div>`;
     box.appendChild(div);
   });
 }
+function _cobroSel(){
+  const cortes=(mayra.movs||[]).filter(m=>m.tipo!=='pago'&&m.tipo!=='ajuste');
+  const sel=[]; $$('.cobroChk').forEach((c,i)=>{ if(c.checked && cortes[i]) sel.push(cortes[i]); });
+  return sel;
+}
+function _fechaCorta(f){ if(!f) return ''; const d=new Date(String(f).slice(0,10)+'T12:00:00'); return _DIAS_AB[d.getDay()]+' '+String(f).slice(8,10)+'/'+String(f).slice(5,7); }
 function openCobro(){
   const cortes=(mayra.movs||[]).filter(m=>m.tipo!=='pago'&&m.tipo!=='ajuste');
   const box=$('#cobroLista');
+  S('#cobroImpL', impLabel()); S('#cobroImpDet', impLabel()+' sobre la venta');
   if(!cortes.length){ box.innerHTML='<div class="note">No hay cortes registrados todavía.</div>'; }
   else{
     box.innerHTML=cortes.map(m=>`<label class="prod" style="cursor:pointer">
-      <div><div class="nm">${esc(m.concepto||'Corte')}</div><div class="mt">${m.fecha||''}${m.ref?(' · '+esc(m.ref)):''}</div></div>
+      <div><div class="nm">${esc(m.concepto||'Corte')}</div><div class="mt">${_fechaCorta(m.fecha)}${m.ref?(' · '+esc(m.ref)):''}</div></div>
       <div class="rt" style="display:flex;align-items:center;gap:10px"><b>${money2(m.usd)}</b>
       <input type="checkbox" class="cobroChk" data-usd="${Number(m.usd)||0}" onchange="calcCobro()" style="width:20px;height:20px"></div></label>`).join('');
   }
   calcCobro();
   $('#dlgCobro').showModal();
 }
+function cobroMarcar(v){ $$('.cobroChk').forEach(c=>c.checked=!!v); calcCobro(); }
 function calcCobro(){
   let t=0,n=0;
   $$('.cobroChk').forEach(c=>{ if(c.checked){ t+=Number(c.dataset.usd)||0; n++; } });
   const tasa=Number(state.bcv)||0;
-  S('#cobroTot',money2(t)); S('#cobroN',n); S('#cobroTotBs',bs(t*tasa));
-  window._cobroTot=t; window._cobroN=n;
+  const imp=impuestosDe(t), neto=t-imp;
+  S('#cobroTot',money2(t)); S('#cobroN',n); S('#cobroImp','−'+money2(imp)); S('#cobroNeto',money2(neto)); S('#cobroTotBs',bs(neto*tasa));
+  window._cobroTot=t; window._cobroN=n; window._cobroImp=imp; window._cobroNeto=neto;
 }
 function enviarCobro(){
-  const t=window._cobroTot||0, n=window._cobroN||0;
+  const t=window._cobroTot||0, n=window._cobroN||0, imp=window._cobroImp||0, neto=window._cobroNeto||0;
   if(n===0){ toast('Marca al menos un corte'); return; }
   const tasa=Number(state.bcv)||0;
   const num=(state.cfg.waMayra||'').replace(/\D/g,'');
-  const cortes=(mayra.movs||[]).filter(m=>m.tipo!=='pago'&&m.tipo!=='ajuste');
-  const chks=$$('.cobroChk'); const sel=[];
-  chks.forEach((c,i)=>{ if(c.checked && cortes[i]) sel.push(cortes[i]); });
-  const lineas=sel.map(m=>`• ${m.fecha||''}: ${money2(m.usd)}`).join('\n');
-  const msg=`Hola Mayra, estos son los cortes que te cobro:\n${lineas}\nTotal: ${money2(t)} (${bs(t*tasa)} a tasa BCV ${tasa}). ¿Me confirmas el pago? ¡Gracias!`;
+  const sel=_cobroSel();
+  const lineas=sel.map(m=>`• ${_fechaCorta(m.fecha)}: ${money2(m.usd)}`).join('\n');
+  const msg=`Hola Mayra, estos son los cortes que te cobro:\n${lineas}\nVenta bruta: ${money2(t)}\nImpuestos (${impLabel()}): −${money2(imp)}\n*Neto a pagar: ${money2(neto)}* (${bs(neto*tasa)} a tasa BCV ${fmt(tasa)}).\nTe envío el Excel con el detalle. ¿Me confirmas el pago? ¡Gracias!`;
   window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
+}
+async function registrarImpuestosCobro(){
+  const n=window._cobroN||0, imp=window._cobroImp||0;
+  if(n===0){ toast('Marca al menos un corte'); return; }
+  if(imp<=0){ toast('No hay impuestos que registrar'); return; }
+  const sel=_cobroSel();
+  const fechas=sel.map(m=>_fechaCorta(m.fecha)).join(', ');
+  const ya=(mayra.movs||[]).some(m=>m.tipo==='ajuste' && String(m.ref||'').includes('cortes: '+fechas));
+  if(ya){ if(!confirm('Ya registraste los impuestos de estos mismos cortes. ¿Registrar otra vez?')) return; }
+  if(!confirm(`Se anotará un ajuste de −${money2(imp)} (${impLabel()}) en la cuenta de Mayra por ${n} corte(s): ${fechas}. ¿Continuar?`)) return;
+  const tasa=Number(state.bcv)||0;
+  const mov={tipo:'ajuste', fecha:hoyStr(), concepto:'Impuestos '+impLabel()+' · '+n+' corte(s)', usd:-Number(imp.toFixed(2)), bs:-Math.round(imp*tasa), tasa, ref:'cortes: '+fechas};
+  $('#cobroReg').disabled=true;
+  try{ await api('mayra_add',{mov}); await loadMayra(); toast('Impuestos registrados en la cuenta'); }
+  catch(e){ toast('No se pudo registrar'); }
+  finally{ $('#cobroReg').disabled=false; }
+}
+async function _shareOrDownload(blob,name){
+  try{
+    const file=new File([blob],name,{type:blob.type});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:name}); return true; }
+  }catch(e){ if(e && e.name==='AbortError') return true; }
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500); return true;
+}
+async function excelCobro(){
+  const n=window._cobroN||0;
+  if(n===0){ toast('Marca al menos un corte'); return; }
+  if(typeof ExcelJS==='undefined'){ toast('Cargando Excel… intenta de nuevo en un momento'); return; }
+  const sel=_cobroSel().slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+  toast('Generando Excel…');
+  $('#cobroXls').disabled=true;
+  try{
+    const dets=await Promise.all(sel.map(async m=>{ try{ return await api('mayra_factura',{fecha:String(m.fecha).slice(0,10)}); }catch(e){ return null; } }));
+    const tasa=Number(state.bcv)||0;
+    const pS=Number(state.cfg.impSedemat)||0, pI=Number(state.cfg.impIslr)||0;
+    const GREEN='FF0A7D3B', GREEN2='FF12A150', HEAD='FF0E5A2B', ZEBRA='FFF3F8F5', TOTBG='FFE7F2EC', GREY='FF667085', INK='FF0F2A1C', RED='FFB42318', GOLD='FFFFF4D6';
+    const MFMT='"$"#,##0.00', UFMT='#,##0', BSFMT='"Bs "#,##0';
+    const fill=(c)=>({type:'pattern',pattern:'solid',fgColor:{argb:c}});
+    const r2=x=>Number((Number(x)||0).toFixed(2));
+    const hoy=new Date();
+    const fechaLarga=hoy.toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const wb=new ExcelJS.Workbook(); wb.creator='Operación Reinversión'; wb.created=hoy;
+
+    /* ===== HOJA 1: COBRO (detalle formal) ===== */
+    const W=wb.addWorksheet('Cobro a Mayra',{views:[{showGridLines:false}],pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0}});
+    W.columns=[{width:44},{width:12},{width:14},{width:16}];
+    let r=1;
+    const merge=(txt,opts)=>{ W.mergeCells(`A${r}:D${r}`); const c=W.getCell(`A${r}`); c.value=txt; Object.assign(c,opts||{}); r++; return c; };
+    let c=merge('FARMACIA CLARET',{font:{bold:true,size:20,color:{argb:'FFFFFFFF'}},fill:fill(GREEN2),alignment:{vertical:'middle',horizontal:'left',indent:1}}); W.getRow(r-1).height=36;
+    c=merge('Operación Reinversión · Estado de cuenta y cobro',{font:{bold:true,size:12,color:{argb:'FFFFFFFF'}},fill:fill(GREEN),alignment:{vertical:'middle',indent:1}}); W.getRow(r-1).height=22;
+    c=merge('Para: Mayra   ·   Fecha: '+fechaLarga+'   ·   Cortes incluidos: '+sel.length,{font:{italic:true,size:10,color:{argb:GREY}},alignment:{indent:1}}); W.getRow(r-1).height=18;
+    c=merge('Tasa BCV del día: Bs '+fmt(tasa)+' por $   ·   Impuestos aplicados sobre la venta: '+impLabel(),{font:{size:10,color:{argb:GREY}},alignment:{indent:1}}); W.getRow(r-1).height=18;
+    r++;
+    let bruto=0;
+    const paint=(row,bg,bold)=>{ for(let k=1;k<=4;k++){ const cc=row.getCell(k); cc.fill=fill(bg); if(bold) cc.font={bold:true,color:{argb:INK}}; cc.border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; } };
+    sel.forEach((m,idx)=>{
+      const usd=Number(m.usd)||0; bruto+=usd;
+      const d=dets[idx]; const ls=(d&&d.lineas)||[];
+      // encabezado del corte
+      W.mergeCells(`A${r}:D${r}`); const h=W.getCell(`A${r}`);
+      const fd=String(m.fecha).slice(0,10);
+      h.value=(idx+1)+'.  Corte del '+_dowName(new Date(fd+'T12:00:00').getDay())+' '+fd.slice(8,10)+'/'+fd.slice(5,7)+'/'+fd.slice(0,4)+'   ·   '+money2(usd);
+      h.font={bold:true,size:12,color:{argb:'FFFFFFFF'}}; h.fill=fill(HEAD); h.alignment={vertical:'middle',indent:1}; W.getRow(r).height=24; r++;
+      if(m.concepto){ W.mergeCells(`A${r}:D${r}`); const hc=W.getCell(`A${r}`); hc.value=m.concepto+(m.ref?('  ·  Ref. '+m.ref):''); hc.font={italic:true,size:9,color:{argb:GREY}}; hc.alignment={indent:1}; W.getRow(r).height=16; r++; }
+      const th=W.getRow(r); th.values=['Producto','Cantidad','Precio unit. $','Subtotal $'];
+      for(let k=1;k<=4;k++){ const cc=th.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(TOTBG); cc.alignment={horizontal:k===1?'left':'center'}; cc.border={bottom:{style:'thin',color:{argb:GREEN}}}; }
+      r++;
+      let sumL=0;
+      if(!ls.length){ const rr=W.getRow(r); rr.values=['(sin detalle de productos para este corte)','','',usd]; rr.getCell(1).font={italic:true,color:{argb:GREY}}; rr.getCell(4).numFmt=MFMT; paint(rr,'FFFFFFFF'); r++; sumL=usd; }
+      else ls.forEach((l,i)=>{
+        const rr=W.getRow(r); const sub=r2(l.subtotal); sumL+=sub;
+        rr.values=[l.nombre||'', Number(l.cantidad)||0, r2(l.precio), r2(sub)];
+        rr.getCell(2).numFmt=UFMT; rr.getCell(3).numFmt=MFMT; rr.getCell(4).numFmt=MFMT;
+        rr.getCell(2).alignment={horizontal:'center'}; rr.getCell(3).alignment={horizontal:'right'}; rr.getCell(4).alignment={horizontal:'right'};
+        paint(rr, i%2?ZEBRA:'FFFFFFFF'); r++;
+      });
+      const diff=Number((usd-sumL).toFixed(2));
+      if(ls.length && Math.abs(diff)>=0.01){ const rr=W.getRow(r); rr.values=['Ajuste del corte (corrección registrada en la cuenta)','','',diff]; rr.getCell(1).font={italic:true,color:{argb:GREY}}; rr.getCell(4).numFmt=MFMT; rr.getCell(4).alignment={horizontal:'right'}; paint(rr,'FFFFFFFF'); r++; }
+      const st=W.getRow(r); st.values=['Subtotal del corte','','',usd]; st.getCell(4).numFmt=MFMT; st.getCell(4).alignment={horizontal:'right'};
+      for(let k=1;k<=4;k++){ const cc=st.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(TOTBG); cc.border={top:{style:'thin',color:{argb:GREEN}},bottom:{style:'thin',color:{argb:GREEN}}}; }
+      r+=2;
+    });
+    bruto=r2(bruto); const imp=r2(impuestosDe(bruto)), impS=r2(bruto*pS/100), impI=r2(imp-impS), neto=r2(bruto-imp); const pc=x=>String(x).replace('.',',');
+    // Resumen
+    W.mergeCells(`A${r}:D${r}`); c=W.getCell(`A${r}`); c.value='RESUMEN DEL COBRO'; c.font={bold:true,size:12,color:{argb:'FFFFFFFF'}}; c.fill=fill(HEAD); c.alignment={vertical:'middle',indent:1}; W.getRow(r).height=24; r++;
+    const line=(lab,val,opts)=>{ const rr=W.getRow(r); rr.values=[lab,'','',val]; W.mergeCells(`A${r}:C${r}`); const a=rr.getCell(1), v=rr.getCell(4); a.alignment={indent:1}; v.alignment={horizontal:'right'}; v.numFmt=(opts&&opts.fmt)||MFMT;
+      a.font={bold:!!(opts&&opts.bold),size:(opts&&opts.size)||11,color:{argb:(opts&&opts.color)||INK}}; v.font={bold:true,size:(opts&&opts.size)||11,color:{argb:(opts&&opts.color)||INK}};
+      for(let k=1;k<=4;k++){ rr.getCell(k).fill=fill((opts&&opts.bg)||'FFFFFFFF'); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFDDE5E0'}}}; }
+      W.getRow(r).height=(opts&&opts.h)||20; r++; };
+    line('Venta bruta de los cortes ('+sel.length+')', bruto);
+    line('SEDEMAT · Actividad Económica '+pc(pS)+'% sobre la venta', -impS, {color:RED});
+    line('Anticipo ISLR '+pc(pI)+'% sobre la venta', -impI, {color:RED});
+    line('Total impuestos retenidos ('+pc(pS+pI)+'%)', -imp, {color:RED,bold:true,bg:ZEBRA});
+    line('NETO A PAGAR (USD)', neto, {bold:true,size:14,color:GREEN,bg:GOLD,h:28});
+    line('Equivalente en bolívares · BCV Bs '+fmt(tasa), Math.round(neto*tasa), {bold:true,size:12,color:INK,bg:GOLD,fmt:BSFMT,h:24});
+    r++;
+    W.mergeCells(`A${r}:D${r}`); c=W.getCell(`A${r}`); c.value='Pago en bolívares a la tasa BCV del día. El IVA no forma parte de este cálculo. Documento generado automáticamente por Operación Reinversión · Farmacia Claret.'; c.font={italic:true,size:9,color:{argb:GREY}}; c.alignment={wrapText:true,indent:1}; W.getRow(r).height=30; r++;
+    W.mergeCells(`A${r}:D${r}`); c=W.getCell(`A${r}`); c.value='¡Gracias, Mayra!'; c.font={bold:true,size:12,color:{argb:GREEN}}; c.alignment={indent:1};
+
+    /* ===== HOJA 2: RESUMEN POR CORTE ===== */
+    const R2=wb.addWorksheet('Resumen por corte',{views:[{state:'frozen',ySplit:2}]});
+    R2.columns=[{width:16},{width:30},{width:14},{width:14},{width:14},{width:14}];
+    R2.mergeCells('A1:F1'); c=R2.getCell('A1'); c.value='Cortes cobrados · '+fechaLarga; c.font={bold:true,size:14,color:{argb:'FFFFFFFF'}}; c.fill=fill(GREEN2); c.alignment={vertical:'middle',indent:1}; R2.getRow(1).height=28;
+    const cols=['Fecha','Concepto','Venta bruta $','Impuestos $','Neto $','Neto Bs'];
+    const hr=R2.getRow(2); hr.values=cols; for(let k=1;k<=6;k++){ const cc=hr.getCell(k); cc.font={bold:true,color:{argb:'FFFFFFFF'}}; cc.fill=fill(HEAD); cc.alignment={horizontal:k<=2?'left':'center'}; } hr.height=22;
+    sel.forEach((m,i)=>{ const usd=r2(m.usd), im=r2(impuestosDe(usd)), ne=r2(usd-im);
+      const rr=R2.getRow(3+i); rr.values=[_dowName(new Date(String(m.fecha).slice(0,10)+'T12:00:00').getDay())+' '+String(m.fecha).slice(8,10)+'/'+String(m.fecha).slice(5,7), m.concepto||'Corte', usd, -im, ne, Math.round(ne*tasa)];
+      rr.getCell(3).numFmt=MFMT; rr.getCell(4).numFmt=MFMT; rr.getCell(5).numFmt=MFMT; rr.getCell(6).numFmt=BSFMT; rr.getCell(4).font={color:{argb:RED}}; rr.getCell(5).font={bold:true,color:{argb:GREEN}};
+      for(let k=1;k<=6;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:'FFFFFFFF'); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; } });
+    const tr=R2.getRow(3+sel.length); tr.values=['TOTAL','',bruto,-imp,neto,Math.round(neto*tasa)];
+    tr.getCell(3).numFmt=MFMT; tr.getCell(4).numFmt=MFMT; tr.getCell(5).numFmt=MFMT; tr.getCell(6).numFmt=BSFMT;
+    for(let k=1;k<=6;k++){ const cc=tr.getCell(k); cc.font={bold:true,color:{argb:k===5?GREEN:INK}}; cc.fill=fill(GOLD); cc.border={top:{style:'thin',color:{argb:GREEN}}}; }
+
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    await _shareOrDownload(blob,'Cobro_Mayra_'+hoyStr()+'.xlsx');
+    toast('Excel listo ✓');
+  }catch(e){ console.error(e); toast('No se pudo generar el Excel'); }
+  finally{ $('#cobroXls').disabled=false; }
 }
 function openMov(tipo){
   setMovTipo(tipo||'pago');
@@ -995,8 +1134,8 @@ async function openMovDet(m){
   _movDet=m;
   const et = m.tipo==='pago'?'Pago':(m.tipo==='ajuste'?'Ajuste':'Corte');
   $('#mdTitulo').textContent = m.tipo==='corte' ? 'Corte — factura del día' : et;
-  $('#mdMonto').textContent = (m.tipo==='pago'?'−':'+')+money2(m.usd);
-  $('#mdMontoBs').textContent = Number(m.bs)>0 ? bs(m.bs) : '';
+  $('#mdMonto').textContent = (m.tipo==='pago'||Number(m.usd)<0?'−':'+')+money2(Math.abs(Number(m.usd)||0));
+  $('#mdMontoBs').textContent = Number(m.bs)!==0 ? bs(Math.abs(Number(m.bs)||0)) : '';
   const info=[];
   info.push(['Tipo', et]);
   if(m.fecha) info.push(['Fecha', m.fecha]);
@@ -1364,7 +1503,7 @@ function acumDe(d, codigo){ const a=(d&&d.acum)||{}; const r=a[String(codigo||''
 /* ---------- impuestos sobre la venta (SEDEMAT + anticipo ISLR); el IVA NO entra en los cálculos ---------- */
 function impPct(){ return (Number(state.cfg.impSedemat)||0)+(Number(state.cfg.impIslr)||0); }
 function impuestosDe(venta){ return (Number(venta)||0)*impPct()/100; }
-function impLabel(){ const c=state.cfg; return 'SEDEMAT '+(Number(c.impSedemat)||0)+'% + ISLR '+(Number(c.impIslr)||0)+'%'; }
+function impLabel(){ const c=state.cfg; const f=x=>String(Number(x)||0).replace('.',','); return 'SEDEMAT '+f(c.impSedemat)+'% + ISLR '+f(c.impIslr)+'%'; }
 
 /* ---------- cálculos ---------- */
 function margenNom(p){return p.costo>0?(p.precio-p.costo)/p.costo:0}
