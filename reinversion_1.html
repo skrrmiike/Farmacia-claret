@@ -69,6 +69,7 @@
   .seg{display:flex;background:var(--chip);border-radius:11px;padding:3px;gap:3px}
   .seg button{flex:1;border:none;background:none;padding:9px;border-radius:9px;font-weight:600;color:var(--muted);font-size:13px;font-family:inherit;cursor:pointer}
   .seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+  #prodCatSeg button{font-size:12px;padding:8px 3px}
   .hide{display:none!important}
   .center{text-align:center}
   .warnbox{background:rgba(232,160,32,.12);border:1px solid rgba(232,160,32,.35);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--ink);line-height:1.5}
@@ -132,32 +133,7 @@
       <div class="big" id="mCorte">$0</div>
       <div class="sub">lo que Mayra debe pasarte del día · <span id="mCorteBs">Bs 0</span></div>
       <div class="note" id="mCorteIva" style="margin-top:6px"></div>
-      <div class="btnrow">
-        <a class="btn wa" id="waMayra" href="#" target="_blank" rel="noopener">Pedir a Mayra por WhatsApp</a>
-      </div>
-      <div class="btnrow">
-        <button class="btn sec" onclick="facturaMayra()">🧾 Factura del corte (imagen)</button>
-      </div>
-      <div class="note" style="margin-top:4px">El corte se calcula solo con lo vendido, se carga a la cuenta de Mayra (aquí abajo) y se le envía la factura por Telegram cada mañana a las 9. <b>Mayra paga en Bs a la tasa BCV del día.</b> Cuando registres su pago, la app te propone de una vez registrar la compra de esos dólares en Binance.</div>
-    </div>
-    <!-- ===== Cuenta con Mayra (antes era pestaña aparte) ===== -->
-    <div class="card">
-      <h2>Cuenta con Mayra</h2>
-      <div class="big" id="myrSaldo">$0</div>
-      <div class="sub">saldo que Mayra debe · <span id="myrSaldoBs">Bs 0</span></div>
-      <div class="kpis" style="margin-top:12px">
-        <div class="kpi"><div class="l">Cortes (te debe)</div><div class="v" id="myrCargos">$0</div></div>
-        <div class="kpi"><div class="l">Pagos (abonó)</div><div class="v" id="myrAbonos">$0</div></div>
-      </div>
-      <div class="mini" id="myrNetoNota" style="margin-top:6px"></div>
-      <div class="btnrow"><button class="btn" onclick="openCobro()">📲 Cobrar varios cortes a Mayra (con impuestos y Excel)</button></div>
-      <div class="btnrow"><button class="btn sec" onclick="openMov('pago')">+ Registrar pago de Mayra</button></div>
-      <div class="btnrow"><button class="btn sec" onclick="openMov('ajuste')">+ Ajuste manual</button></div>
-      <div class="note" style="margin-top:8px">El corte diario se carga <b>solo</b> aquí cada mañana (lo que Mayra te debe, calculado con lo vendido). Tú solo registras el <b>pago</b> cuando ella te transfiere, y el saldo baja. Toca un movimiento para ver su detalle o factura.</div>
-    </div>
-    <div class="card">
-      <h2>Movimientos con Mayra</h2>
-      <div id="myrLista"></div>
+      <div class="note" style="margin-top:4px">El corte se calcula solo con lo vendido, se carga a la cuenta de Mayra (en 💱 Dinero) y se le envía la factura por Telegram cada mañana a las 9. <b>Mayra paga en Bs a la tasa BCV del día.</b> El cobro y la cuenta de Mayra los llevas en la pestaña 💱 Dinero.</div>
     </div>
   </section>
 
@@ -165,7 +141,14 @@
   <section id="tab-productos" class="hide">
     <div class="card">
       <h2>Productos en la operación</h2>
-      <input id="prodBuscar" type="search" placeholder="🔍 Buscar producto o código…" autocomplete="off" oninput="renderProductos()" style="margin:4px 0 10px">
+      <input id="prodBuscar" type="search" placeholder="🔍 Buscar producto o código…" autocomplete="off" oninput="renderProductos()" style="margin:4px 0 8px">
+      <div class="seg" id="prodCatSeg" style="margin:0 0 10px">
+        <button type="button" class="on" data-cat="" onclick="setProdCat('')">Todos</button>
+        <button type="button" data-cat="pepsi" onclick="setProdCat('pepsi')">Pepsi</button>
+        <button type="button" data-cat="coca" onclick="setProdCat('coca')">Coca</button>
+        <button type="button" data-cat="chuche" onclick="setProdCat('chuche')">Chuche</button>
+        <button type="button" data-cat="medicina" onclick="setProdCat('medicina')">Medicina</button>
+      </div>
       <div class="sub" style="margin-bottom:6px">Solo lo que tomas tú: bebidas (Pepsi y Coca-Cola), chucherías y medicamentos en falla. El % que ves es el margen REAL (tras el spread).</div>
       <div class="mini" id="prodBuscarInfo" style="margin-bottom:4px"></div>
       <div id="listaProd"></div>
@@ -178,31 +161,50 @@
 
   <!-- ===== SEMANA (Reunir dólares · cambio) ===== -->
   <section id="tab-semana" class="hide">
-    <div class="card" id="cardSemCurso">
-      <h2>Semana en curso</h2>
-      <div class="mini" id="scRango" style="margin-bottom:8px">martes → hoy · cargando…</div>
-      <div class="kpis">
-        <div class="kpi"><div class="l">Venta</div><div class="v" id="scVenta">$0</div><div class="mini" id="scVentaOv"></div></div>
-        <div class="kpi"><div class="l">Reinversión (costo real)</div><div class="v" id="scReinv">$0</div><div class="mini" id="scReinvOv"></div></div>
+    <div class="card" id="cardCobros">
+      <h2>Cobrar a Mayra</h2>
+      <div class="mini" style="margin-bottom:8px">Marca los cortes que le vas a cobrar. La app descuenta sola el IVA incluido en bebidas y chucherías y los impuestos (<span id="cobroImpL">SEDEMAT + ISLR</span>), y te muestra el neto que Mayra paga y tu <b>ganancia real</b> (después del costo).</div>
+      <div class="btnrow" style="margin:0 0 6px">
+        <button class="btn sec" style="padding:7px 10px;font-size:12px" onclick="cobroMarcar(true)">Marcar todos</button>
+        <button class="btn sec" style="padding:7px 10px;font-size:12px" onclick="cobroMarcar(false)">Ninguno</button>
       </div>
-      <div class="kpis" style="margin-top:8px">
-        <div class="kpi"><div class="l">Impuestos + IVA</div><div class="v" id="scImp">$0</div><div class="mini" id="scImpOv"></div></div>
-        <div class="kpi"><div class="l">Ganancia neta</div><div class="v" id="scNeto">$0</div><div class="mini" id="scNetoOv"></div></div>
+      <div id="cobroLista" style="max-height:40vh;overflow:auto"><div class="mini">Cargando cortes…</div></div>
+      <div style="border-top:2px solid var(--line);margin-top:6px;padding-top:4px">
+        <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500">Venta bruta</div><div class="mt"><span id="cobroN">0</span> corte(s)</div></div><div class="rt"><b id="cobroTot">$0</b></div></div>
+        <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500;color:var(--bad)">− IVA incluido</div><div class="mt" id="cobroIvaDet">bebidas y chucherías</div></div><div class="rt"><b id="cobroIva" style="color:var(--bad)">−$0</b></div></div>
+        <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500;color:var(--bad)">− Impuestos</div><div class="mt" id="cobroImpDet">SEDEMAT + ISLR</div></div><div class="rt"><b id="cobroImp" style="color:var(--bad)">−$0</b></div></div>
+        <div class="prod" style="padding:8px 0;border-top:1px solid var(--line)"><div><div class="nm">Neto a cobrar</div><div class="mt">lo que Mayra te transfiere</div></div><div class="rt"><b id="cobroNeto" style="color:var(--ok);font-size:18px">$0</b><span class="mini" id="cobroTotBs">Bs 0</span></div></div>
+        <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500;color:var(--muted)">− Costo (reinversión)</div><div class="mt" id="cobroCostoDet">lo que te costó esa mercancía</div></div><div class="rt"><b id="cobroCosto" style="color:var(--muted)">−$0</b></div></div>
+        <div class="prod" style="padding:8px 0;border-top:1px solid var(--line)"><div><div class="nm">Tu ganancia real</div><div class="mt">neto − costo</div></div><div class="rt"><b id="cobroGan" style="color:var(--ok);font-size:16px">$0</b></div></div>
       </div>
-      <div class="note" style="margin-top:10px">
-        <b>Capital real en Binance (USDT)</b>
-        <div class="prod"><div><div class="nm">Reunido esta semana</div><div class="mt" id="scCapNota">estimado por la app</div></div><div class="rt"><b id="scCap">$0</b></div></div>
-        <div class="prod"><div><div class="nm">Ganancia neta en $ reales</div><div class="mt">lo que la ganancia vale en dólares Binance</div></div><div class="rt"><b id="scNetoUsdt">$0</b></div></div>
+      <div class="btnrow" style="margin-top:12px"><button class="btn" id="cobroRegistrar" onclick="registrarCobro()">✅ Registrar cobro</button></div>
+      <div class="btnrow" style="margin-top:8px">
+        <button class="btn sec" id="cobroEnviar" onclick="enviarCobro()">📲 WhatsApp</button>
+        <button class="btn sec" id="cobroXls" onclick="excelCobro()">📊 Excel para Mayra</button>
       </div>
-      <div class="btnrow" style="margin-top:10px;flex-wrap:wrap;gap:6px">
-        <button class="btn sec" style="padding:8px 12px" onclick="editarSem('venta')">✎ Venta</button>
-        <button class="btn sec" style="padding:8px 12px" onclick="editarSem('reinv')">✎ Reinversión</button>
-        <button class="btn sec" style="padding:8px 12px" onclick="editarSem('imp')">✎ Impuestos+IVA</button>
-        <button class="btn sec" style="padding:8px 12px" onclick="editarSem('neto')">✎ Ganancia</button>
-        <button class="btn sec" style="padding:8px 12px" onclick="editarSem('capital')">✎ Capital</button>
+      <div class="note" style="margin-top:8px">Al <b>Registrar cobro</b> se guarda el historial (abajo), se abona el neto a la cuenta de Mayra y se descuenta el IVA + impuestos, así el saldo de Mayra (en <b>☀️ Hoy</b>) queda exacto sin que anotes nada más. Aquí solo aparecen los cortes que <b>aún no has cobrado</b> con esta herramienta.</div>
+    </div>
+    <div class="card">
+      <h2>Historial de cobros</h2>
+      <div class="mini" style="margin-bottom:6px">Cada cobro guarda cuánto te pagó Mayra, cuánto se fue en IVA e impuestos y tu ganancia real. Toca uno para deshacerlo.</div>
+      <div id="cobHist"><div class="mini">Cargando…</div></div>
+    </div>
+    <div class="card">
+      <h2>Cuenta con Mayra</h2>
+      <div class="big" id="myrSaldo">$0</div>
+      <div class="sub">saldo que Mayra debe · <span id="myrSaldoBs">Bs 0</span></div>
+      <div class="kpis" style="margin-top:12px">
+        <div class="kpi"><div class="l">Cortes (te debe)</div><div class="v" id="myrCargos">$0</div></div>
+        <div class="kpi"><div class="l">Pagos (abonó)</div><div class="v" id="myrAbonos">$0</div></div>
       </div>
-      <div class="btnrow" style="margin-top:4px"><button class="btn sec" id="scReset" onclick="resetSem()" style="display:none">↺ Volver a lo calculado por la app</button></div>
-      <div class="note" style="margin-top:6px">La app suma sola lo vendido de la semana (martes → hoy) y calcula venta, costo real, el IVA incluido en bebidas y chucherías, los impuestos (SEDEMAT + anticipo ISLR sobre la venta) y la ganancia neta. Si un número no cuadra con tu realidad, tócalo con ✎ y ponlo a mano — quedará marcado como <b>ajustado por ti</b>.</div>
+      <div class="mini" id="myrNetoNota" style="margin-top:6px"></div>
+      <div class="btnrow"><button class="btn sec" onclick="openMov('pago')">+ Registrar pago de Mayra</button></div>
+      <div class="btnrow"><button class="btn sec" onclick="openMov('ajuste')">+ Ajuste manual</button></div>
+      <div class="note" style="margin-top:8px">El corte diario se carga <b>solo</b> aquí cada mañana (lo que Mayra te debe, calculado con lo vendido). Al registrar el cobro arriba, el saldo baja solo. También puedes registrar un <b>pago</b> suelto o un <b>ajuste</b> a mano. Toca un movimiento para ver su detalle o factura.</div>
+    </div>
+    <div class="card">
+      <h2>Movimientos con Mayra</h2>
+      <div id="myrLista"></div>
     </div>
     <div class="card">
       <h2>Reunir dólares · cambio Binance</h2>
@@ -231,13 +233,6 @@
       <div class="note" style="margin-top:8px">En Binance P2P hay dos tasas: <b>compra</b> (la que pagas al acumular dólares) y <b>venta</b> (la que te dan al vender tus dólares para tener Bs y pagar a proveedores). Como cobras a BCV (baja) y vendes tus dólares a Binance (alta), ese spread es tu ganancia cambiaria.</div>
       <div class="btnrow" style="margin-top:8px"><button class="btn" onclick="traerTasasBinance()">🔄 Actualizar tasas Binance (Provincial)</button></div>
       <div class="mini" id="anTasasTs" style="margin-top:6px"></div>
-    </div>
-    <div class="card">
-      <h2>¿Cómo funciona?</h2>
-      <div class="note">Dos tasas de Binance, dos usos distintos:
-        <br>• <b>Compra</b> (tasa a la que compras dólares): cada día que apartas dólares para ahorrar, registras aquí lo que compraste. Así reúnes tu capital durante la semana.
-        <br>• <b>Venta</b> (tasa a la que vendes dólares): cuando toca pagar a proveedores, vendes dólares para tener los bolívares. Registras aquí lo vendido.
-        <br>Lo <b>reunido</b> = comprados − vendidos. Es el capital en dólares que te queda disponible. Las tasas se ponen en Ajustes; cada movimiento puede llevar su propia tasa.</div>
     </div>
   </section>
 
@@ -377,26 +372,6 @@
   </div>
 </div></dialog>
 
-<dialog id="dlgCobro"><div class="dlg">
-  <h3>Cobrar cortes a Mayra</h3>
-  <div class="mini" style="margin-bottom:8px">Marca los días que quieres cobrarle. La app descuenta sola el IVA incluido en bebidas y chucherías y los impuestos (<span id="cobroImpL">SEDEMAT + ISLR</span>) y te da el neto.</div>
-  <div class="btnrow" style="margin:0 0 6px"><button class="btn sec" style="padding:7px 10px;font-size:12px" onclick="cobroMarcar(true)">Marcar todos</button><button class="btn sec" style="padding:7px 10px;font-size:12px" onclick="cobroMarcar(false)">Ninguno</button></div>
-  <div id="cobroLista" style="max-height:38vh;overflow:auto"></div>
-  <div style="border-top:2px solid var(--line);margin-top:6px;padding-top:4px">
-    <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500">Venta bruta</div><div class="mt"><span id="cobroN">0</span> corte(s)</div></div><div class="rt"><b id="cobroTot">$0</b></div></div>
-    <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500;color:var(--bad)">− IVA incluido</div><div class="mt" id="cobroIvaDet">bebidas y chucherías</div></div><div class="rt"><b id="cobroIva" style="color:var(--bad)">−$0</b></div></div>
-    <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500;color:var(--bad)">− Impuestos</div><div class="mt" id="cobroImpDet">SEDEMAT + ISLR</div></div><div class="rt"><b id="cobroImp" style="color:var(--bad)">−$0</b></div></div>
-    <div class="prod" style="padding:8px 0;border-top:1px solid var(--line)"><div><div class="nm">Neto a cobrar</div><div class="mt">lo que Mayra te transfiere</div></div><div class="rt"><b id="cobroNeto" style="color:var(--ok);font-size:18px">$0</b><span class="mini" id="cobroTotBs">Bs 0</span></div></div>
-  </div>
-  <div class="btnrow" style="margin-top:12px">
-    <button class="btn" id="cobroEnviar" onclick="enviarCobro()">📲 WhatsApp</button>
-    <button class="btn" style="background:#0a7d3b" id="cobroXls" onclick="excelCobro()">📊 Excel para Mayra</button>
-  </div>
-  <div class="btnrow" style="margin-top:8px"><button class="btn sec" id="cobroReg" onclick="registrarImpuestosCobro()">🧾 Registrar IVA + impuestos en la cuenta</button></div>
-  <div class="mini" style="margin-top:6px">"Registrar IVA + impuestos" anota un ajuste negativo por el IVA y los impuestos de estos cortes, para que el saldo de Mayra quede en el neto que ella realmente paga.</div>
-  <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="closeDlg('dlgCobro')">Cerrar</button></div>
-</div></dialog>
-
 <!-- Dialog: movimiento Mayra -->
 <dialog id="dlgMov"><div class="dlg">
   <h3 id="dlgMovT">Registrar pago</h3>
@@ -482,7 +457,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v16 · 16/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v19 · 16/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -604,10 +579,10 @@ function go(tab){
   ['hoy','productos','semana','analisis','cierre'].forEach(t=>$('#tab-'+t).classList.toggle('hide',t!==tab));
   $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   render(); window.scrollTo(0,0);
-  if(tab==='hoy'){ loadHoyReal(); loadMayra(); }
+  if(tab==='hoy') loadHoyReal();
   if(tab==='cierre') loadCierre();
   if(tab==='analisis') loadAnalisisSemana();
-  if(tab==='semana') loadCambio();
+  if(tab==='semana'){ loadCambio(); loadMayra().then(loadCobros); }
 }
 let _semData=null;
 async function loadAnalisisSemana(){
@@ -943,7 +918,7 @@ function renderMayra(){
   $('#myrSaldoBs').textContent=bs((Number(mayra.saldo_usd)||0)*(Number(state.bcv)||0))+' a BCV de hoy';
   $('#myrCargos').textContent=money(mayra.cargos_usd);
   $('#myrAbonos').textContent=money(mayra.abonos_usd);
-  const nn=$('#myrNetoNota'); if(nn){ const sal=Number(mayra.saldo_usd)||0; nn.textContent = sal>0 ? ('El neto exacto (IVA de bebidas/chucherías + '+impLabel()+' descontados) lo ves al tocar "Cobrar varios cortes a Mayra".') : ''; }
+  const nn=$('#myrNetoNota'); if(nn){ const sal=Number(mayra.saldo_usd)||0; nn.textContent = sal>0 ? ('El neto exacto (IVA de bebidas/chucherías + '+impLabel()+' descontados) y tu ganancia real los cobras en 💱 Dinero → Cobrar a Mayra.') : ''; }
   const box=$('#myrLista'); if(!box) return; box.innerHTML='';
   const movs=mayra.movs||[];
   if(!movs.length){ box.innerHTML='<div class="note">Aún no hay movimientos. Registra un pago o corte, o se irán agregando solos con cada corte diario.</div>'; return; }
@@ -967,13 +942,23 @@ function _fechaCorta(f){ if(!f) return ''; const d=new Date(String(f).slice(0,10
 let _cobroFac={};
 // IVA de un corte: usa la base gravable de sus líneas; si no hay detalle, asume el total gravado
 function _ivaCorteId(id, usdFallback){ const f=_cobroFac[id]; return f? f.iva : ivaContenido(Number(usdFallback)||0); }
-async function openCobro(){
-  const cortes=(mayra.movs||[]).filter(m=>m.tipo!=='pago'&&m.tipo!=='ajuste');
+function _costoCorteId(id){ const f=_cobroFac[id]; return f? (Number(f.costo)||0) : 0; }
+// historial de cobros + set de cortes ya cobrados con esta herramienta
+let cobros=[];
+let cobradosIds=new Set();
+async function loadCobros(){
+  if(!$('#cobroLista')) return;
+  try{ const d=await api('mayra_cobros'); cobros=(d&&d.cobros)||[]; }
+  catch(e){ /* deja el historial anterior si falla */ }
+  cobradosIds=new Set();
+  cobros.forEach(c=>{ (c.corte_ids||[]).forEach(id=>cobradosIds.add(String(id))); });
+  renderHistCobros();
+  const cortes=(mayra.movs||[]).filter(m=>m.tipo!=='pago'&&m.tipo!=='ajuste'&&!cobradosIds.has(String(m.id)));
   const box=$('#cobroLista');
   S('#cobroImpL', impLabel()); S('#cobroImpDet', impLabel()+' sobre la venta');
   S('#cobroIvaDet', 'IVA '+pctStr(ivaRate())+'% incluido · solo bebidas y chucherías');
   _cobroFac={};
-  if(!cortes.length){ box.innerHTML='<div class="note">No hay cortes registrados todavía.</div>'; }
+  if(!cortes.length){ box.innerHTML='<div class="note">No hay cortes pendientes por cobrar. Los cortes nuevos aparecen aquí cada mañana.</div>'; }
   else{
     box.innerHTML=cortes.map(m=>`<label class="prod" style="cursor:pointer">
       <div><div class="nm">${esc(m.concepto||'Corte')}</div><div class="mt">${_fechaCorta(m.fecha)}${m.ref?(' · '+esc(m.ref)):''}</div></div>
@@ -981,24 +966,28 @@ async function openCobro(){
       <input type="checkbox" class="cobroChk" data-id="${esc(String(m.id))}" data-usd="${Number(m.usd)||0}" onchange="calcCobro()" style="width:20px;height:20px"></div></label>`).join('');
   }
   calcCobro();
-  $('#dlgCobro').showModal();
-  // traer las facturas para separar el IVA real (solo bebidas/chucherías) por corte
+  // traer las facturas para separar el IVA real (solo bebidas/chucherías) y el costo por corte
   if(cortes.length){
     await Promise.all(cortes.map(async m=>{
-      try{ const d=await api('mayra_factura',{fecha:String(m.fecha).slice(0,10)}); const lineas=(d&&d.lineas)||null; if(lineas&&lineas.length){ const taxable=baseGravableLineas(lineas); _cobroFac[String(m.id)]={taxable, iva:ivaContenido(taxable)}; } }catch(e){}
+      try{ const d=await api('mayra_factura',{fecha:String(m.fecha).slice(0,10)});
+        const lineas=(d&&d.lineas)||null;
+        const taxable=(lineas&&lineas.length)? baseGravableLineas(lineas) : (Number(m.usd)||0);
+        _cobroFac[String(m.id)]={taxable, iva:ivaContenido(taxable), costo:Number(d&&d.total_costo)||0};
+      }catch(e){}
     }));
     calcCobro();
   }
 }
 function cobroMarcar(v){ $$('.cobroChk').forEach(c=>c.checked=!!v); calcCobro(); }
 function calcCobro(){
-  let t=0,n=0,iva=0;
-  $$('.cobroChk').forEach(c=>{ if(c.checked){ const usd=Number(c.dataset.usd)||0; t+=usd; n++; iva+=_ivaCorteId(c.dataset.id, usd); } });
+  let t=0,n=0,iva=0,costo=0;
+  $$('.cobroChk').forEach(c=>{ if(c.checked){ const usd=Number(c.dataset.usd)||0; t+=usd; n++; iva+=_ivaCorteId(c.dataset.id, usd); costo+=_costoCorteId(c.dataset.id); } });
   const tasa=Number(state.bcv)||0;
-  iva=Math.round(iva*100)/100;
-  const imp=impuestosDe(t), neto=t-iva-imp;
+  iva=Math.round(iva*100)/100; costo=Math.round(costo*100)/100;
+  const imp=impuestosDe(t), neto=t-iva-imp, gan=neto-costo;
   S('#cobroTot',money2(t)); S('#cobroN',n); S('#cobroIva','−'+money2(iva)); S('#cobroImp','−'+money2(imp)); S('#cobroNeto',money2(neto)); S('#cobroTotBs',bs(neto*tasa));
-  window._cobroTot=t; window._cobroN=n; window._cobroIva=iva; window._cobroImp=imp; window._cobroNeto=neto;
+  S('#cobroCosto','−'+money2(costo)); S('#cobroGan',money2(gan));
+  window._cobroTot=t; window._cobroN=n; window._cobroIva=iva; window._cobroImp=imp; window._cobroNeto=neto; window._cobroCosto=costo; window._cobroGan=gan;
 }
 function enviarCobro(){
   const t=window._cobroTot||0, n=window._cobroN||0, iva=window._cobroIva||0, imp=window._cobroImp||0, neto=window._cobroNeto||0;
@@ -1011,23 +1000,36 @@ function enviarCobro(){
   const msg=`Hola Mayra, estos son los cortes que te cobro:\n${lineas}\nVenta bruta: ${money2(t)}\n${lineaIva}Impuestos (${impLabel()}): −${money2(imp)}\n*Neto a pagar: ${money2(neto)}* (${bs(neto*tasa)} a tasa BCV ${fmt(tasa)}).\nTe envío el Excel con el detalle. ¿Me confirmas el pago? ¡Gracias!`;
   window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
 }
-async function registrarImpuestosCobro(){
-  const n=window._cobroN||0, iva=window._cobroIva||0, imp=window._cobroImp||0;
-  const total=Number((iva+imp).toFixed(2));
-  if(n===0){ toast('Marca al menos un corte'); return; }
-  if(total<=0){ toast('No hay IVA ni impuestos que registrar'); return; }
+async function registrarCobro(){
   const sel=_cobroSel();
-  const fechas=sel.map(m=>_fechaCorta(m.fecha)).join(', ');
-  const ya=(mayra.movs||[]).some(m=>m.tipo==='ajuste' && String(m.ref||'').includes('cortes: '+fechas));
-  if(ya){ if(!confirm('Ya registraste el IVA/impuestos de estos mismos cortes. ¿Registrar otra vez?')) return; }
-  const detImp = 'IVA '+money2(iva)+' + impuestos '+money2(imp);
-  if(!confirm(`Se anotará un ajuste de −${money2(total)} (${detImp}) en la cuenta de Mayra por ${n} corte(s): ${fechas}. ¿Continuar?`)) return;
+  const n=window._cobroN||0;
+  if(!n){ toast('Marca al menos un corte'); return; }
+  const bruto=window._cobroTot||0, iva=window._cobroIva||0, imp=window._cobroImp||0, costo=window._cobroCosto||0, neto=window._cobroNeto||0, gan=window._cobroGan||0;
   const tasa=Number(state.bcv)||0;
-  const mov={tipo:'ajuste', fecha:hoyStr(), concepto:'IVA + impuestos ('+impLabel()+') · '+n+' corte(s)', usd:-total, bs:-Math.round(total*tasa), tasa, ref:'cortes: '+fechas};
-  $('#cobroReg').disabled=true;
-  try{ await api('mayra_add',{mov}); await loadMayra(); toast('IVA e impuestos registrados en la cuenta'); }
-  catch(e){ toast('No se pudo registrar'); }
-  finally{ $('#cobroReg').disabled=false; }
+  if(!confirm('Registrar el cobro de '+n+' corte(s):\n\nVenta bruta: '+money2(bruto)+'\n− IVA + impuestos: −'+money2(iva+imp)+'\nNeto que paga Mayra: '+money2(neto)+'\n− Costo (reinversión): −'+money2(costo)+'\nTu ganancia real: '+money2(gan)+'\n\nSe abona el neto a la cuenta de Mayra y se guarda en el historial. ¿Continuar?')) return;
+  const cobro={ corte_ids:sel.map(m=>String(m.id)), bruto, iva, impuestos:imp, costo, neto, ganancia:gan, tasa, bs:Math.round(neto*tasa), fecha:hoyStr() };
+  $('#cobroRegistrar').disabled=true;
+  try{ await api('mayra_cobrar',{cobro}); toast('Cobro registrado ✓'); await loadMayra(); await loadCobros(); }
+  catch(e){ toast('No se pudo registrar el cobro'); }
+  finally{ $('#cobroRegistrar').disabled=false; }
+}
+function renderHistCobros(){
+  const box=$('#cobHist'); if(!box) return;
+  if(!cobros.length){ box.innerHTML='<div class="note">Todavía no has registrado ningún cobro.</div>'; return; }
+  box.innerHTML=cobros.map(c=>{
+    const ret=(Number(c.iva)||0)+(Number(c.impuestos)||0);
+    const f=String(c.fecha||'').slice(0,10);
+    return '<div class="prod" style="cursor:pointer" onclick="deshacerCobro(\''+esc(String(c.id))+'\')">'
+      +'<div><div class="nm">Cobro · '+(c.n_cortes||0)+' corte(s)</div>'
+      +'<div class="mt">'+_fechaCorta(f)+' · bruto '+money2(c.bruto)+' · IVA+imp −'+money2(ret)+'</div></div>'
+      +'<div class="rt"><b style="color:var(--ok)">'+money2(c.neto)+'</b><span class="mini">ganancia '+money2(c.ganancia)+'</span></div></div>';
+  }).join('');
+}
+async function deshacerCobro(id){
+  const c=cobros.find(x=>String(x.id)===String(id)); if(!c) return;
+  if(!confirm('¿Deshacer este cobro de '+(c.n_cortes||0)+' corte(s) (neto '+money2(c.neto)+')?\n\nSe borrarán el abono y el ajuste de IVA + impuestos de la cuenta de Mayra, y esos cortes volverán a quedar pendientes.')) return;
+  try{ await api('mayra_cobro_del',{id}); toast('Cobro deshecho'); await loadMayra(); await loadCobros(); }
+  catch(e){ toast('No se pudo deshacer'); }
 }
 async function _shareOrDownload(blob,name){
   try{
@@ -1212,88 +1214,8 @@ let cbTipo='compra';
 async function loadCambio(){
   try{ const d=await api('cambio_list'); cambio=d||cambio; renderCambio(); }
   catch(e){ /* silencioso */ }
-  loadSemanaCurso();
 }
 
-/* ---------- Semana en curso (acumulado martes → hoy, con ajuste manual) ---------- */
-const SEMOVKEY='opReinvSemOv_v1';
-let semCurso={ base:null, key:'' };
-function _semOvAll(){ try{ return JSON.parse(localStorage.getItem(SEMOVKEY)||'{}')||{}; }catch(e){ return {}; } }
-function _semOv(){ const k=semCurso.key; if(!k) return {}; return _semOvAll()[k]||{}; }
-function _semSetOv(campo,val){
-  const all=_semOvAll(); const k=semCurso.key||'x';
-  if(!all[k]) all[k]={};
-  if(val==null || isNaN(val)) delete all[k][campo]; else all[k][campo]=val;
-  if(Object.keys(all[k]).length===0) delete all[k];
-  try{ localStorage.setItem(SEMOVKEY, JSON.stringify(all)); }catch(e){}
-}
-async function loadSemanaCurso(){
-  if(!$('#scVenta')) return;
-  try{
-    const d=await api('cierre',{modo:'semana'});
-    const venta=Number(d.total_monto)||0;
-    const reinv=Number(d.total_reinv)||0;
-    const util=Number(d.total_util)||0;
-    const iva=ivaDePorCat(d.por_cat);
-    const impSed=impuestosDe(venta);
-    const imp=iva+impSed;          // "Impuestos + IVA" combinado
-    const neto=util-imp;
-    semCurso.base={venta,reinv,imp,neto,desde:d.desde,hasta:d.hasta,_iva:iva,_impSed:impSed};
-    semCurso.key=(d.desde||'').slice(0,10);
-    renderSemanaCurso();
-  }catch(e){ if($('#scRango')) $('#scRango').textContent='No se pudo cargar la semana.'; }
-}
-function _semVal(campo){
-  const ov=_semOv(); const b=semCurso.base||{};
-  if(ov[campo]!=null) return {v:Number(ov[campo]), aj:true};
-  if(campo==='capital') return {v:Number(cambio.reunido_usd)||0, aj:false};
-  return {v:Number(b[campo])||0, aj:false};
-}
-function renderSemanaCurso(){
-  if(!semCurso.base){ return; }
-  const b=semCurso.base;
-  const f=(iso)=>{const c=new Date(new Date(iso).getTime()-4*3600e3);const p=n=>String(n).padStart(2,'0');return p(c.getUTCDate())+'/'+p(c.getUTCMonth()+1)+' '+p(c.getUTCHours())+':'+p(c.getUTCMinutes());};
-  if(b.desde&&b.hasta) S('#scRango','Del '+f(b.desde)+' al '+f(b.hasta)+' (martes → hoy)');
-  const set=(sel,campo)=>{
-    const r=_semVal(campo);
-    S(sel, money2(r.v));
-    const ov=$(sel+'Ov'); if(ov) ov.textContent = r.aj ? 'ajustado por ti' : '';
-  };
-  set('#scVenta','venta'); set('#scReinv','reinv'); set('#scImp','imp'); set('#scNeto','neto');
-  // subtítulo del tile Impuestos + IVA: desglose cuando no está ajustado a mano
-  const impV=_semVal('imp'); const io=$('#scImpOv'); if(io && !impV.aj) io.textContent = 'IVA '+money2(b._iva||0)+' + '+impLabel();
-  // Capital real en Binance (USDT)
-  const cap=_semVal('capital');
-  S('#scCap', money2(cap.v));
-  const cn=$('#scCapNota'); if(cn) cn.textContent = cap.aj ? 'ajustado por ti' : 'estimado por la app (dólares reunidos)';
-  // Ganancia neta convertida a dólares reales (Binance)
-  const neto=_semVal('neto').v;
-  const bcv=Number(state.bcv)||0, tComp=Number(state.cfg.binance)||0;
-  const netoUsdt=(bcv>0 && tComp>0) ? (neto*bcv/tComp) : 0;
-  S('#scNetoUsdt', (bcv>0 && tComp>0) ? money2(netoUsdt) : '$— (pon tasa Binance)');
-  // botón de reset visible solo si hay algún ajuste
-  const hayAj=Object.keys(_semOv()).length>0;
-  const rb=$('#scReset'); if(rb) rb.style.display = hayAj ? '' : 'none';
-}
-function editarSem(campo){
-  const lbl={venta:'Venta de la semana',reinv:'Reinversión (costo real)',imp:'Impuestos + IVA (SEDEMAT + ISLR + IVA)',neto:'Ganancia neta',capital:'Capital real en Binance (USDT)'}[campo]||campo;
-  const actual=_semVal(campo).v;
-  const inp=prompt('Ajustar '+lbl+' (en $).\nDeja vacío para volver a lo que calcula la app.', (actual||0).toFixed(2));
-  if(inp===null) return;
-  const t=inp.trim();
-  if(t===''){ _semSetOv(campo,null); toast('Volvió a lo calculado por la app'); }
-  else{
-    const v=Number(t.replace(',','.'));
-    if(isNaN(v)){ toast('Número no válido'); return; }
-    _semSetOv(campo,v); toast(lbl+' ajustado');
-  }
-  renderSemanaCurso();
-}
-function resetSem(){
-  if(!confirm('¿Quitar todos tus ajustes y volver a lo que calcula la app?')) return;
-  const all=_semOvAll(); delete all[semCurso.key]; try{ localStorage.setItem(SEMOVKEY, JSON.stringify(all)); }catch(e){}
-  toast('Ajustes borrados'); renderSemanaCurso();
-}
 function renderCambio(){
   const c=state.cfg;
   const tVenta=Number(c.binanceVenta)||0, tComp=Number(c.binance)||0;
@@ -1419,19 +1341,6 @@ function _drawFactura({titulo, fecha, rows, totales, pie, name}){
   if(pie){ y+=6; x.fillStyle='#666'; x.font='14px system-ui,Arial';
     String(pie).split('\n').forEach(l=>{ x.fillText(_clip(x,l,W-2*pad),pad,y+16); y+=22; }); }
   return _shareCanvas(cv, name);
-}
-async function facturaMayra(){
-  toast('Generando factura…');
-  let d; try{ d=await api('cierre',{modo:'curso'}); }catch(e){ toast('No se pudo leer el corte'); return; }
-  const P=(d.productos||[]).slice().sort((a,b)=>Number(b.monto)-Number(a.monto));
-  if(!P.length){ toast('Aún no hay ventas hoy'); return; }
-  const total=Number(d.total_monto)||0, tasa=Number(state.bcv)||0;
-  const rows=P.map(p=>({izq:p.nombre, sub:`${p.vendido} × ${money2(p.precio)}`, der:money2(p.monto)}));
-  const fecha=new Date().toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const totales=[{l:'Total a pagar (USD)', v:money2(total), big:true},
-    {l:`En bolívares · BCV ${fmt(tasa)}`, v: tasa>0?bs(Math.round(total*tasa)):'—'}];
-  await _drawFactura({titulo:'Corte para Mayra', fecha, rows, totales,
-    pie:'Pago en bolívares a la tasa BCV del día.\n¡Gracias!', name:'Factura_Mayra_'+hoyStr()});
 }
 async function openOrdenEdilso(){
   toast('Cargando…');
@@ -1620,12 +1529,15 @@ async function loadHoyReal(){
     if(ivi) ivi.innerHTML = corteHoy>0
       ? `Mayra te pasa el total (<b>${money2(corteHoy)}</b>).`+(window._hoyIva>0?` IVA del día (${pctStr(ivaRate())}% en bebidas y chucherías): <b>${money2(window._hoyIva)}</b> ·`:'')+` impuestos (${impLabel()}): <b>${money2(window._hoyImp)}</b> · tu ganancia neta del día: <b>${money2(window._hoyUtilNeto)}</b>.`
       : '';
-    const num=(state.cfg.waMayra||'').replace(/\D/g,'');
-    const msg=`Hola Mayra, el corte de hoy es ${money2(corteHoy)} (${bs(corteHoy*tasa)} a tasa BCV ${fmt(tasa)}). Por favor transfiéreme para comprar los dólares. ¡Gracias!`;
-    const wa=$('#waMayra'); if(wa) wa.href='https://wa.me/'+num+'?text='+encodeURIComponent(msg);
   }catch(e){ /* silencioso */ }
 }
 function fmt(n){return (n||0).toLocaleString('es-VE')}
+let prodCat='';
+function setProdCat(c){
+  prodCat=c||'';
+  const seg=$('#prodCatSeg'); if(seg) Array.from(seg.children).forEach(b=>b.classList.toggle('on',(b.dataset.cat||'')===prodCat));
+  renderProductos();
+}
 function renderProductos(){
   const box=$('#listaProd'); if(!box) return; box.innerHTML='';
   if(state.productos.length===0){box.innerHTML='<div class="note">Aún no hay productos. Toca "Agregar producto" para empezar.</div>';const tg0=$('#prodToggle');if(tg0)tg0.innerHTML='';return;}
@@ -1634,13 +1546,16 @@ function renderProductos(){
   const q=norm(($('#prodBuscar')||{}).value).trim();
   let ocultos=0;
   const vis=state.productos.filter(p=>{
+    if(prodCat && p.cat!==prodCat) return false;   // filtro por categoría
     if(q){ return norm(p.nombre).includes(q) || norm(p.codigo).includes(q); }  // al buscar, muestra todos los que coincidan (aunque estén en 0)
     const desc=existenciaDesconocida(p); const st=stockDe(p);
     const enCero = !!p.codigo && !desc && st<=0;
     if(enCero && !showAll){ ocultos++; return false; }
     return true;
   });
-  const bi=$('#prodBuscarInfo'); if(bi) bi.textContent = q ? (vis.length+' resultado'+(vis.length===1?'':'s')+' para "'+(($('#prodBuscar')||{}).value||'').trim()+'"') : '';
+  const bi=$('#prodBuscarInfo'); if(bi) bi.textContent = q
+    ? (vis.length+' resultado'+(vis.length===1?'':'s')+' para "'+(($('#prodBuscar')||{}).value||'').trim()+'"'+(prodCat?(' en '+catLabel(prodCat)):''))
+    : (prodCat ? (vis.length+' en '+catLabel(prodCat)) : '');
   if(!vis.length){ box.innerHTML = q ? '<div class="note">No encontré ningún producto con ese nombre o código.</div>' : '<div class="note">Todos los productos están en 0 ahorita. Toca "Ver todos" para mostrarlos.</div>'; }
   vis.forEach(p=>{
     const st=stockDe(p);
