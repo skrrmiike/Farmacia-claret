@@ -69,6 +69,7 @@
   .seg{display:flex;background:var(--chip);border-radius:11px;padding:3px;gap:3px}
   .seg button{flex:1;border:none;background:none;padding:9px;border-radius:9px;font-weight:600;color:var(--muted);font-size:13px;font-family:inherit;cursor:pointer}
   .seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+  #prodCatSeg button{font-size:12px;padding:8px 3px}
   .hide{display:none!important}
   .center{text-align:center}
   .warnbox{background:rgba(232,160,32,.12);border:1px solid rgba(232,160,32,.35);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--ink);line-height:1.5}
@@ -132,32 +133,7 @@
       <div class="big" id="mCorte">$0</div>
       <div class="sub">lo que Mayra debe pasarte del día · <span id="mCorteBs">Bs 0</span></div>
       <div class="note" id="mCorteIva" style="margin-top:6px"></div>
-      <div class="btnrow">
-        <a class="btn wa" id="waMayra" href="#" target="_blank" rel="noopener">Pedir a Mayra por WhatsApp</a>
-      </div>
-      <div class="btnrow">
-        <button class="btn sec" onclick="facturaMayra()">🧾 Factura del corte (imagen)</button>
-      </div>
-      <div class="note" style="margin-top:4px">El corte se calcula solo con lo vendido, se carga a la cuenta de Mayra (aquí abajo) y se le envía la factura por Telegram cada mañana a las 9. <b>Mayra paga en Bs a la tasa BCV del día.</b> Cuando registres su pago, la app te propone de una vez registrar la compra de esos dólares en Binance.</div>
-    </div>
-    <!-- ===== Cuenta con Mayra (antes era pestaña aparte) ===== -->
-    <div class="card">
-      <h2>Cuenta con Mayra</h2>
-      <div class="big" id="myrSaldo">$0</div>
-      <div class="sub">saldo que Mayra debe · <span id="myrSaldoBs">Bs 0</span></div>
-      <div class="kpis" style="margin-top:12px">
-        <div class="kpi"><div class="l">Cortes (te debe)</div><div class="v" id="myrCargos">$0</div></div>
-        <div class="kpi"><div class="l">Pagos (abonó)</div><div class="v" id="myrAbonos">$0</div></div>
-      </div>
-      <div class="mini" id="myrNetoNota" style="margin-top:6px"></div>
-      <div class="btnrow"><button class="btn" onclick="go('semana')">📲 Cobrar cortes a Mayra (en 💱 Dinero)</button></div>
-      <div class="btnrow"><button class="btn sec" onclick="openMov('pago')">+ Registrar pago de Mayra</button></div>
-      <div class="btnrow"><button class="btn sec" onclick="openMov('ajuste')">+ Ajuste manual</button></div>
-      <div class="note" style="margin-top:8px">El corte diario se carga <b>solo</b> aquí cada mañana (lo que Mayra te debe, calculado con lo vendido). Tú solo registras el <b>pago</b> cuando ella te transfiere, y el saldo baja. Toca un movimiento para ver su detalle o factura.</div>
-    </div>
-    <div class="card">
-      <h2>Movimientos con Mayra</h2>
-      <div id="myrLista"></div>
+      <div class="note" style="margin-top:4px">El corte se calcula solo con lo vendido, se carga a la cuenta de Mayra (en 💱 Dinero) y se le envía la factura por Telegram cada mañana a las 9. <b>Mayra paga en Bs a la tasa BCV del día.</b> El cobro y la cuenta de Mayra los llevas en la pestaña 💱 Dinero.</div>
     </div>
   </section>
 
@@ -165,7 +141,14 @@
   <section id="tab-productos" class="hide">
     <div class="card">
       <h2>Productos en la operación</h2>
-      <input id="prodBuscar" type="search" placeholder="🔍 Buscar producto o código…" autocomplete="off" oninput="renderProductos()" style="margin:4px 0 10px">
+      <input id="prodBuscar" type="search" placeholder="🔍 Buscar producto o código…" autocomplete="off" oninput="renderProductos()" style="margin:4px 0 8px">
+      <div class="seg" id="prodCatSeg" style="margin:0 0 10px">
+        <button type="button" class="on" data-cat="" onclick="setProdCat('')">Todos</button>
+        <button type="button" data-cat="pepsi" onclick="setProdCat('pepsi')">Pepsi</button>
+        <button type="button" data-cat="coca" onclick="setProdCat('coca')">Coca</button>
+        <button type="button" data-cat="chuche" onclick="setProdCat('chuche')">Chuche</button>
+        <button type="button" data-cat="medicina" onclick="setProdCat('medicina')">Medicina</button>
+      </div>
       <div class="sub" style="margin-bottom:6px">Solo lo que tomas tú: bebidas (Pepsi y Coca-Cola), chucherías y medicamentos en falla. El % que ves es el margen REAL (tras el spread).</div>
       <div class="mini" id="prodBuscarInfo" style="margin-bottom:4px"></div>
       <div id="listaProd"></div>
@@ -207,6 +190,23 @@
       <div id="cobHist"><div class="mini">Cargando…</div></div>
     </div>
     <div class="card">
+      <h2>Cuenta con Mayra</h2>
+      <div class="big" id="myrSaldo">$0</div>
+      <div class="sub">saldo que Mayra debe · <span id="myrSaldoBs">Bs 0</span></div>
+      <div class="kpis" style="margin-top:12px">
+        <div class="kpi"><div class="l">Cortes (te debe)</div><div class="v" id="myrCargos">$0</div></div>
+        <div class="kpi"><div class="l">Pagos (abonó)</div><div class="v" id="myrAbonos">$0</div></div>
+      </div>
+      <div class="mini" id="myrNetoNota" style="margin-top:6px"></div>
+      <div class="btnrow"><button class="btn sec" onclick="openMov('pago')">+ Registrar pago de Mayra</button></div>
+      <div class="btnrow"><button class="btn sec" onclick="openMov('ajuste')">+ Ajuste manual</button></div>
+      <div class="note" style="margin-top:8px">El corte diario se carga <b>solo</b> aquí cada mañana (lo que Mayra te debe, calculado con lo vendido). Al registrar el cobro arriba, el saldo baja solo. También puedes registrar un <b>pago</b> suelto o un <b>ajuste</b> a mano. Toca un movimiento para ver su detalle o factura.</div>
+    </div>
+    <div class="card">
+      <h2>Movimientos con Mayra</h2>
+      <div id="myrLista"></div>
+    </div>
+    <div class="card">
       <h2>Reunir dólares · cambio Binance</h2>
       <div class="big" id="cbReunido">$0</div>
       <div class="sub">dólares reunidos esta semana · <span id="cbReunidoBs">Bs 0</span> (a tasa venta)</div>
@@ -233,13 +233,6 @@
       <div class="note" style="margin-top:8px">En Binance P2P hay dos tasas: <b>compra</b> (la que pagas al acumular dólares) y <b>venta</b> (la que te dan al vender tus dólares para tener Bs y pagar a proveedores). Como cobras a BCV (baja) y vendes tus dólares a Binance (alta), ese spread es tu ganancia cambiaria.</div>
       <div class="btnrow" style="margin-top:8px"><button class="btn" onclick="traerTasasBinance()">🔄 Actualizar tasas Binance (Provincial)</button></div>
       <div class="mini" id="anTasasTs" style="margin-top:6px"></div>
-    </div>
-    <div class="card">
-      <h2>¿Cómo funciona?</h2>
-      <div class="note">Dos tasas de Binance, dos usos distintos:
-        <br>• <b>Compra</b> (tasa a la que compras dólares): cada día que apartas dólares para ahorrar, registras aquí lo que compraste. Así reúnes tu capital durante la semana.
-        <br>• <b>Venta</b> (tasa a la que vendes dólares): cuando toca pagar a proveedores, vendes dólares para tener los bolívares. Registras aquí lo vendido.
-        <br>Lo <b>reunido</b> = comprados − vendidos. Es el capital en dólares que te queda disponible. Las tasas se ponen en Ajustes; cada movimiento puede llevar su propia tasa.</div>
     </div>
   </section>
 
@@ -464,7 +457,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v17 · 16/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v19 · 16/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -586,10 +579,10 @@ function go(tab){
   ['hoy','productos','semana','analisis','cierre'].forEach(t=>$('#tab-'+t).classList.toggle('hide',t!==tab));
   $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   render(); window.scrollTo(0,0);
-  if(tab==='hoy'){ loadHoyReal(); loadMayra(); }
+  if(tab==='hoy') loadHoyReal();
   if(tab==='cierre') loadCierre();
   if(tab==='analisis') loadAnalisisSemana();
-  if(tab==='semana'){ loadCambio(); loadCobros(); }
+  if(tab==='semana'){ loadCambio(); loadMayra().then(loadCobros); }
 }
 let _semData=null;
 async function loadAnalisisSemana(){
@@ -1349,19 +1342,6 @@ function _drawFactura({titulo, fecha, rows, totales, pie, name}){
     String(pie).split('\n').forEach(l=>{ x.fillText(_clip(x,l,W-2*pad),pad,y+16); y+=22; }); }
   return _shareCanvas(cv, name);
 }
-async function facturaMayra(){
-  toast('Generando factura…');
-  let d; try{ d=await api('cierre',{modo:'curso'}); }catch(e){ toast('No se pudo leer el corte'); return; }
-  const P=(d.productos||[]).slice().sort((a,b)=>Number(b.monto)-Number(a.monto));
-  if(!P.length){ toast('Aún no hay ventas hoy'); return; }
-  const total=Number(d.total_monto)||0, tasa=Number(state.bcv)||0;
-  const rows=P.map(p=>({izq:p.nombre, sub:`${p.vendido} × ${money2(p.precio)}`, der:money2(p.monto)}));
-  const fecha=new Date().toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const totales=[{l:'Total a pagar (USD)', v:money2(total), big:true},
-    {l:`En bolívares · BCV ${fmt(tasa)}`, v: tasa>0?bs(Math.round(total*tasa)):'—'}];
-  await _drawFactura({titulo:'Corte para Mayra', fecha, rows, totales,
-    pie:'Pago en bolívares a la tasa BCV del día.\n¡Gracias!', name:'Factura_Mayra_'+hoyStr()});
-}
 async function openOrdenEdilso(){
   toast('Cargando…');
   let d=_semData; if(!d){ try{ d=await api('reporte_semana_data'); _semData=d; }catch(e){ toast('No se pudo leer la semana'); return; } }
@@ -1549,12 +1529,15 @@ async function loadHoyReal(){
     if(ivi) ivi.innerHTML = corteHoy>0
       ? `Mayra te pasa el total (<b>${money2(corteHoy)}</b>).`+(window._hoyIva>0?` IVA del día (${pctStr(ivaRate())}% en bebidas y chucherías): <b>${money2(window._hoyIva)}</b> ·`:'')+` impuestos (${impLabel()}): <b>${money2(window._hoyImp)}</b> · tu ganancia neta del día: <b>${money2(window._hoyUtilNeto)}</b>.`
       : '';
-    const num=(state.cfg.waMayra||'').replace(/\D/g,'');
-    const msg=`Hola Mayra, el corte de hoy es ${money2(corteHoy)} (${bs(corteHoy*tasa)} a tasa BCV ${fmt(tasa)}). Por favor transfiéreme para comprar los dólares. ¡Gracias!`;
-    const wa=$('#waMayra'); if(wa) wa.href='https://wa.me/'+num+'?text='+encodeURIComponent(msg);
   }catch(e){ /* silencioso */ }
 }
 function fmt(n){return (n||0).toLocaleString('es-VE')}
+let prodCat='';
+function setProdCat(c){
+  prodCat=c||'';
+  const seg=$('#prodCatSeg'); if(seg) Array.from(seg.children).forEach(b=>b.classList.toggle('on',(b.dataset.cat||'')===prodCat));
+  renderProductos();
+}
 function renderProductos(){
   const box=$('#listaProd'); if(!box) return; box.innerHTML='';
   if(state.productos.length===0){box.innerHTML='<div class="note">Aún no hay productos. Toca "Agregar producto" para empezar.</div>';const tg0=$('#prodToggle');if(tg0)tg0.innerHTML='';return;}
@@ -1563,13 +1546,16 @@ function renderProductos(){
   const q=norm(($('#prodBuscar')||{}).value).trim();
   let ocultos=0;
   const vis=state.productos.filter(p=>{
+    if(prodCat && p.cat!==prodCat) return false;   // filtro por categoría
     if(q){ return norm(p.nombre).includes(q) || norm(p.codigo).includes(q); }  // al buscar, muestra todos los que coincidan (aunque estén en 0)
     const desc=existenciaDesconocida(p); const st=stockDe(p);
     const enCero = !!p.codigo && !desc && st<=0;
     if(enCero && !showAll){ ocultos++; return false; }
     return true;
   });
-  const bi=$('#prodBuscarInfo'); if(bi) bi.textContent = q ? (vis.length+' resultado'+(vis.length===1?'':'s')+' para "'+(($('#prodBuscar')||{}).value||'').trim()+'"') : '';
+  const bi=$('#prodBuscarInfo'); if(bi) bi.textContent = q
+    ? (vis.length+' resultado'+(vis.length===1?'':'s')+' para "'+(($('#prodBuscar')||{}).value||'').trim()+'"'+(prodCat?(' en '+catLabel(prodCat)):''))
+    : (prodCat ? (vis.length+' en '+catLabel(prodCat)) : '');
   if(!vis.length){ box.innerHTML = q ? '<div class="note">No encontré ningún producto con ese nombre o código.</div>' : '<div class="note">Todos los productos están en 0 ahorita. Toca "Ver todos" para mostrarlos.</div>'; }
   vis.forEach(p=>{
     const st=stockDe(p);
