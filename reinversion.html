@@ -163,7 +163,7 @@
   <section id="tab-semana" class="hide">
     <div class="card" id="cardCobros">
       <h2>Cobrar a Mayra</h2>
-      <div class="mini" style="margin-bottom:8px">Marca los cortes que le vas a cobrar. La app descuenta sola el IVA incluido en bebidas y chucherías y los impuestos (<span id="cobroImpL">SEDEMAT + ISLR</span>), y te muestra el neto que Mayra paga y tu <b>ganancia real</b> (después del costo).</div>
+      <div class="mini" style="margin-bottom:8px">Marca los cortes que le vas a cobrar. La app descuenta el IVA <b>sobre tu margen</b> (venta − costo, solo bebidas y chucherías) y los impuestos (<span id="cobroImpL">SEDEMAT + ISLR</span>), y te muestra el neto que Mayra paga y tu <b>ganancia real</b> (después del costo).</div>
       <div class="btnrow" style="margin:0 0 6px">
         <button class="btn sec" style="padding:7px 10px;font-size:12px" onclick="cobroMarcar(true)">Marcar todos</button>
         <button class="btn sec" style="padding:7px 10px;font-size:12px" onclick="cobroMarcar(false)">Ninguno</button>
@@ -171,7 +171,7 @@
       <div id="cobroLista" style="max-height:40vh;overflow:auto"><div class="mini">Cargando cortes…</div></div>
       <div style="border-top:2px solid var(--line);margin-top:6px;padding-top:4px">
         <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500">Venta bruta</div><div class="mt"><span id="cobroN">0</span> corte(s)</div></div><div class="rt"><b id="cobroTot">$0</b></div></div>
-        <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500;color:var(--bad)">− IVA incluido</div><div class="mt" id="cobroIvaDet">bebidas y chucherías</div></div><div class="rt"><b id="cobroIva" style="color:var(--bad)">−$0</b></div></div>
+        <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500;color:var(--bad)">− IVA (sobre el margen)</div><div class="mt" id="cobroIvaDet">bebidas y chucherías</div></div><div class="rt"><b id="cobroIva" style="color:var(--bad)">−$0</b></div></div>
         <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500;color:var(--bad)">− Impuestos</div><div class="mt" id="cobroImpDet">SEDEMAT + ISLR</div></div><div class="rt"><b id="cobroImp" style="color:var(--bad)">−$0</b></div></div>
         <div class="prod" style="padding:8px 0;border-top:1px solid var(--line)"><div><div class="nm">Neto a cobrar</div><div class="mt">lo que Mayra te transfiere</div></div><div class="rt"><b id="cobroNeto" style="color:var(--ok);font-size:18px">$0</b><span class="mini" id="cobroTotBs">Bs 0</span></div></div>
         <div class="prod" style="padding:6px 0"><div><div class="nm" style="font-weight:500;color:var(--muted)">− Costo (reinversión)</div><div class="mt" id="cobroCostoDet">lo que te costó esa mercancía</div></div><div class="rt"><b id="cobroCosto" style="color:var(--muted)">−$0</b></div></div>
@@ -240,7 +240,12 @@
   <section id="tab-analisis" class="hide">
     <div class="card">
       <h2>Compras de la semana</h2>
-      <div class="mini" id="anSemRango" style="margin-bottom:6px">martes (cobro a Mayra y compra) → hoy</div>
+      <div class="btnrow" style="gap:6px;margin:2px 0 8px">
+        <button class="btn" id="anPasada" onclick="setAnModo('pasada')">Semana pasada (para pedir)</button>
+        <button class="btn sec" id="anCurso" onclick="setAnModo('curso')">Semana en curso</button>
+      </div>
+      <div class="mini" id="anSemRango" style="margin-bottom:6px">cargando…</div>
+      <div class="note" style="margin-bottom:8px">Para decidir la compra usa <b>Semana pasada</b>: la orden se calcula con lo que se vendió la semana completa anterior, menos lo que ya tienes en stock.</div>
       <div class="kpis">
         <div class="kpi"><div class="l">Entró (uds)</div><div class="v" id="anSemEnt">0</div><div class="mini">reposición</div></div>
         <div class="kpi"><div class="l">Salió (uds)</div><div class="v" id="anSemSal">0</div><div class="mini">vendido</div></div>
@@ -457,7 +462,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v19 · 16/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v22 · 17/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -481,7 +486,7 @@ let PIN='';
 let lastSync='';
 let state={ cfg:{}, productos:[], registros:[], caja:{semana:'',usd:0}, bcv:0, bcv_fecha:'' };
 
-const DEF={meta:1500,tope:5000,retiro:200,margenObj:30,binance:0,binanceVenta:null,semanasDemanda:4,waMayra:'',waEdilso:'',cicloDia:2,leadDias:1,colchonDias:3,mayraPct:null,impSedemat:2.5,impIslr:1,iva:16};
+const DEF={meta:1500,tope:5000,retiro:200,margenObj:30,binance:0,binanceVenta:null,semanasDemanda:4,waMayra:'',waEdilso:'',cicloDia:2,leadDias:1,colchonDias:3,mayraPct:null,impSedemat:2.5,impIslr:1,iva:16,coberturaSemanas:1};
 
 /* ================= API ================= */
 async function api(action, extra={}){
@@ -585,22 +590,32 @@ function go(tab){
   if(tab==='semana'){ loadCambio(); loadMayra().then(loadCobros); }
 }
 let _semData=null;
+let _anModo='pasada';   // 'pasada' = semana pasada completa (para pedir) · 'curso' = semana en curso
+function setAnModo(m){
+  _anModo = m==='curso' ? 'curso' : 'pasada';
+  const bp=$('#anPasada'), bc=$('#anCurso');
+  if(bp) bp.className='btn'+(_anModo==='pasada'?'':' sec');
+  if(bc) bc.className='btn'+(_anModo==='curso'?'':' sec');
+  _semData=null;
+  loadAnalisisSemana();
+}
 async function loadAnalisisSemana(){
   try{
-    const d=await api('reporte_semana_data');
+    const d=await api('reporte_semana_data',{semana:_anModo});
     _semData=d;
     S('#anSemEnt',(d.tot_ent_uds||0)+' uds');
     S('#anSemSal',(d.tot_sal_uds||0)+' uds');
     S('#anSemVenta',money2(d.tot_venta||0));
     S('#anSemReinv',money2(d.tot_reinv||0));
     const _imp=impuestosDe(d.tot_venta||0);
-    const _iva=ivaDePorCat(d.por_cat);
+    const _iva=Number(d.tot_iva)||0;   // IVA sobre el margen (precio − costo), lo calcula el backend
     S('#anSemImp',money2(_iva+_imp)); S('#anSemImpL','IVA '+money2(_iva)+' + '+impLabel()+' '+money2(_imp));
     S('#anSemNeto',money2((Number(d.tot_util)||0)-_iva-_imp));
     const av=$('#anSemAviso');
     if(av){ if(Number(d.n_sin_costo)>0){ av.style.display=''; av.innerHTML='⚠ '+d.n_sin_costo+' producto(s) vendidos sin costo cargado ('+money2(d.venta_sin_costo)+' en ventas) — no cuentan en la ganancia hasta que les pongas el costo.'; } else { av.style.display='none'; } }
-    const f=(iso)=>{const c=new Date(new Date(iso).getTime()-4*3600e3);const p=n=>String(n).padStart(2,'0');return p(c.getUTCDate())+'/'+p(c.getUTCMonth()+1)+' '+p(c.getUTCHours())+':'+p(c.getUTCMinutes());};
-    if(d.desde&&d.hasta) S('#anSemRango','Del '+f(d.desde)+' al '+f(d.hasta)+' (martes → hoy)');
+    const f=(iso)=>{const c=new Date(new Date(iso).getTime()-4*3600e3);const p=n=>String(n).padStart(2,'0');return p(c.getUTCDate())+'/'+p(c.getUTCMonth()+1);};
+    const etq = (d.semana||_anModo)==='curso' ? 'semana en curso' : 'semana pasada · para pedir';
+    if(d.desde&&d.hasta) S('#anSemRango','Del '+f(d.desde)+' al '+f(d.hasta)+' ('+etq+')');
   }catch(e){ /* silencioso */ }
 }
 /* ---------- Excel semanal bonito (ExcelJS: colores, totales, agotados y gráficos) ---------- */
@@ -684,14 +699,14 @@ async function descargarExcelSemana(){
     t1.fill={type:'pattern',pattern:'solid',fgColor:{argb:GREEN2}}; R.getRow(1).height=34;
     R.mergeCells('A2:E2'); const t2=R.getCell('A2'); t2.value=rango; t2.font={italic:true,color:{argb:GREY}}; R.getRow(2).height=18;
     R.addRow([]);
-    const _ivaSem=ivaDePorCat(d.por_cat);
+    const _ivaSem=Number(d.tot_iva)||0;   // IVA sobre el margen (precio − costo)
     const kpis=[
       ['Unidades que entraron (reposición)', Number(d.tot_ent_uds)||0, UFMT],
       ['Unidades vendidas', Number(d.tot_sal_uds)||0, UFMT],
       ['Venta total', Number(d.tot_venta)||0, MFMT],
       ['Reinversión (costo real)', Number(d.tot_reinv)||0, MFMT],
       ['Utilidad bruta (venta − costo)', Number(d.tot_util)||0, MFMT],
-      ['IVA incluido ('+pctStr(ivaRate())+'% en bebidas y chucherías)', _ivaSem, MFMT],
+      ['IVA sobre el margen ('+pctStr(ivaRate())+'% de venta − costo, solo bebidas y chucherías)', _ivaSem, MFMT],
       ['Impuestos sobre la venta ('+impLabel()+')', impuestosDe(d.tot_venta||0), MFMT],
       ['Ganancia neta (después de IVA e impuestos)', (Number(d.tot_util)||0)-_ivaSem-impuestosDe(d.tot_venta||0), MFMT]
     ];
@@ -872,14 +887,14 @@ async function loadCierre(){
     if($('#cieCats')) $('#cieCats').innerHTML = cats.map(cc=>`<div class="kpi"><div class="l">${catLabel(cc.cat)}</div><div class="v">${money2(cc.monto)}</div><div class="mini">${cc.unid} uds</div></div>`).join('');
     // Reinversión, Utilidad bruta, IVA (bebidas/chucherías), Impuestos (SEDEMAT + ISLR), Utilidad neta
     const reinv=Number(d.total_reinv)||0, util=Number(d.total_util)||0;
-    const iva=ivaDePorCat(d.por_cat), imp=impuestosDe(d.total_monto||0), utilNeto=util-iva-imp;
+    const iva=Number(d.iva_neto)||0, imp=impuestosDe(d.total_monto||0), utilNeto=util-iva-imp;   // IVA sobre el margen (backend)
     if($('#cieUtil')) $('#cieUtil').innerHTML =
         `<div class="kpi"><div class="l">Reinversión</div><div class="v">${money2(reinv)}</div><div class="mini">reponer lo vendido</div></div>`
       + `<div class="kpi"><div class="l">Utilidad bruta</div><div class="v">${money2(util)}</div><div class="mini">venta − costo</div></div>`;
     // Desglose: IVA incluido (bebidas/chucherías) + impuestos sobre la venta
     let rep = `<div class="note"><b>Tu ganancia después de IVA e impuestos</b>`
         + `<div class="mini">Venta ${money2(d.total_monto)} − Reinversión ${money2(reinv)} = Utilidad bruta <b>${money2(util)}</b></div>`
-        + (iva>0?`<div class="mini">IVA incluido (${pctStr(ivaRate())}% en bebidas y chucherías): <b>−${money2(iva)}</b></div>`:'')
+        + (iva>0?`<div class="mini">IVA sobre el margen (${pctStr(ivaRate())}% de venta − costo, bebidas y chucherías): <b>−${money2(iva)}</b></div>`:'')
         + `<div class="mini">Impuestos (${impLabel()} sobre la venta): <b>−${money2(imp)}</b></div>`
         + `<div class="mini">Ganancia neta (lo que te queda): <b>${money2(utilNeto)}</b></div>`
         + `</div>`;
@@ -938,9 +953,9 @@ function _cobroSel(){
   return sel;
 }
 function _fechaCorta(f){ if(!f) return ''; const d=new Date(String(f).slice(0,10)+'T12:00:00'); return _DIAS_AB[d.getDay()]+' '+String(f).slice(8,10)+'/'+String(f).slice(5,7); }
-// cache por corte.id -> {taxable, iva} (se llena con la factura real de cada corte)
+// cache por corte.id -> {taxable, costoTax, iva, costo} (se llena con la factura real de cada corte)
 let _cobroFac={};
-// IVA de un corte: usa la base gravable de sus líneas; si no hay detalle, asume el total gravado
+// IVA de un corte: sobre el MARGEN gravable (venta − costo de bebidas/chucherías); sin detalle, cae al total
 function _ivaCorteId(id, usdFallback){ const f=_cobroFac[id]; return f? f.iva : ivaContenido(Number(usdFallback)||0); }
 function _costoCorteId(id){ const f=_cobroFac[id]; return f? (Number(f.costo)||0) : 0; }
 // historial de cobros + set de cortes ya cobrados con esta herramienta
@@ -956,7 +971,7 @@ async function loadCobros(){
   const cortes=(mayra.movs||[]).filter(m=>m.tipo!=='pago'&&m.tipo!=='ajuste'&&!cobradosIds.has(String(m.id)));
   const box=$('#cobroLista');
   S('#cobroImpL', impLabel()); S('#cobroImpDet', impLabel()+' sobre la venta');
-  S('#cobroIvaDet', 'IVA '+pctStr(ivaRate())+'% incluido · solo bebidas y chucherías');
+  S('#cobroIvaDet', 'IVA '+pctStr(ivaRate())+'% sobre el margen · solo bebidas y chucherías');
   _cobroFac={};
   if(!cortes.length){ box.innerHTML='<div class="note">No hay cortes pendientes por cobrar. Los cortes nuevos aparecen aquí cada mañana.</div>'; }
   else{
@@ -966,13 +981,14 @@ async function loadCobros(){
       <input type="checkbox" class="cobroChk" data-id="${esc(String(m.id))}" data-usd="${Number(m.usd)||0}" onchange="calcCobro()" style="width:20px;height:20px"></div></label>`).join('');
   }
   calcCobro();
-  // traer las facturas para separar el IVA real (solo bebidas/chucherías) y el costo por corte
+  // traer las facturas: IVA sobre el margen gravable (venta − costo de bebidas/chucherías) + costo total
   if(cortes.length){
     await Promise.all(cortes.map(async m=>{
       try{ const d=await api('mayra_factura',{fecha:String(m.fecha).slice(0,10)});
         const lineas=(d&&d.lineas)||null;
         const taxable=(lineas&&lineas.length)? baseGravableLineas(lineas) : (Number(m.usd)||0);
-        _cobroFac[String(m.id)]={taxable, iva:ivaContenido(taxable), costo:Number(d&&d.total_costo)||0};
+        const costoTax=(lineas&&lineas.length)? costoGravableLineas(lineas) : 0;
+        _cobroFac[String(m.id)]={taxable, costoTax, iva:ivaMargen(taxable, costoTax), costo:Number(d&&d.total_costo)||0};
       }catch(e){}
     }));
     calcCobro();
@@ -996,7 +1012,7 @@ function enviarCobro(){
   const num=(state.cfg.waMayra||'').replace(/\D/g,'');
   const sel=_cobroSel();
   const lineas=sel.map(m=>`• ${_fechaCorta(m.fecha)}: ${money2(m.usd)}`).join('\n');
-  const lineaIva = iva>0 ? `IVA incluido (${pctStr(ivaRate())}% en bebidas y chucherías): −${money2(iva)}\n` : '';
+  const lineaIva = iva>0 ? `IVA sobre el margen (${pctStr(ivaRate())}% de venta − costo, bebidas y chucherías): −${money2(iva)}\n` : '';
   const msg=`Hola Mayra, estos son los cortes que te cobro:\n${lineas}\nVenta bruta: ${money2(t)}\n${lineaIva}Impuestos (${impLabel()}): −${money2(imp)}\n*Neto a pagar: ${money2(neto)}* (${bs(neto*tasa)} a tasa BCV ${fmt(tasa)}).\nTe envío el Excel con el detalle. ¿Me confirmas el pago? ¡Gracias!`;
   window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank');
 }
@@ -1061,79 +1077,98 @@ async function excelCobro(){
 
     /* ===== HOJA 1: COBRO (detalle formal) ===== */
     const W=wb.addWorksheet('Cobro a Mayra',{views:[{showGridLines:false}],pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0}});
-    W.columns=[{width:44},{width:12},{width:14},{width:16}];
+    W.columns=[{width:40},{width:9},{width:13},{width:13},{width:13},{width:13}];
+    const NC=6;
     let r=1;
-    const merge=(txt,opts)=>{ W.mergeCells(`A${r}:D${r}`); const c=W.getCell(`A${r}`); c.value=txt; Object.assign(c,opts||{}); r++; return c; };
+    const merge=(txt,opts)=>{ W.mergeCells(`A${r}:F${r}`); const c=W.getCell(`A${r}`); c.value=txt; Object.assign(c,opts||{}); r++; return c; };
     let c=merge('FARMACIA CLARET',{font:{bold:true,size:20,color:{argb:'FFFFFFFF'}},fill:fill(GREEN2),alignment:{vertical:'middle',horizontal:'left',indent:1}}); W.getRow(r-1).height=36;
     c=merge('Operación Reinversión · Estado de cuenta y cobro',{font:{bold:true,size:12,color:{argb:'FFFFFFFF'}},fill:fill(GREEN),alignment:{vertical:'middle',indent:1}}); W.getRow(r-1).height=22;
     c=merge('Para: Mayra   ·   Fecha: '+fechaLarga+'   ·   Cortes incluidos: '+sel.length,{font:{italic:true,size:10,color:{argb:GREY}},alignment:{indent:1}}); W.getRow(r-1).height=18;
-    c=merge('Tasa BCV del día: Bs '+fmt(tasa)+' por $   ·   Impuestos aplicados sobre la venta: '+impLabel(),{font:{size:10,color:{argb:GREY}},alignment:{indent:1}}); W.getRow(r-1).height=18;
+    c=merge('Tasa BCV del día: Bs '+fmt(tasa)+' por $   ·   IVA sobre el margen (venta − costo) en bebidas y chucherías · impuestos: '+impLabel(),{font:{size:10,color:{argb:GREY}},alignment:{indent:1}}); W.getRow(r-1).height=18;
     r++;
-    let bruto=0;
-    const paint=(row,bg,bold)=>{ for(let k=1;k<=4;k++){ const cc=row.getCell(k); cc.fill=fill(bg); if(bold) cc.font={bold:true,color:{argb:INK}}; cc.border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; } };
+    let bruto=0, costoTot=0, ventaTax=0, costoTax=0;
+    const paint=(row,bg,bold)=>{ for(let k=1;k<=NC;k++){ const cc=row.getCell(k); cc.fill=fill(bg); if(bold) cc.font={bold:true,color:{argb:INK}}; cc.border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; } };
     sel.forEach((m,idx)=>{
       const usd=Number(m.usd)||0; bruto+=usd;
       const d=dets[idx]; const ls=(d&&d.lineas)||[];
       // encabezado del corte
-      W.mergeCells(`A${r}:D${r}`); const h=W.getCell(`A${r}`);
+      W.mergeCells(`A${r}:F${r}`); const h=W.getCell(`A${r}`);
       const fd=String(m.fecha).slice(0,10);
       h.value=(idx+1)+'.  Corte del '+_dowName(new Date(fd+'T12:00:00').getDay())+' '+fd.slice(8,10)+'/'+fd.slice(5,7)+'/'+fd.slice(0,4)+'   ·   '+money2(usd);
       h.font={bold:true,size:12,color:{argb:'FFFFFFFF'}}; h.fill=fill(HEAD); h.alignment={vertical:'middle',indent:1}; W.getRow(r).height=24; r++;
-      if(m.concepto){ W.mergeCells(`A${r}:D${r}`); const hc=W.getCell(`A${r}`); hc.value=m.concepto+(m.ref?('  ·  Ref. '+m.ref):''); hc.font={italic:true,size:9,color:{argb:GREY}}; hc.alignment={indent:1}; W.getRow(r).height=16; r++; }
-      const th=W.getRow(r); th.values=['Producto','Cantidad','Precio unit. $','Subtotal $'];
-      for(let k=1;k<=4;k++){ const cc=th.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(TOTBG); cc.alignment={horizontal:k===1?'left':'center'}; cc.border={bottom:{style:'thin',color:{argb:GREEN}}}; }
+      if(m.concepto){ W.mergeCells(`A${r}:F${r}`); const hc=W.getCell(`A${r}`); hc.value=m.concepto+(m.ref?('  ·  Ref. '+m.ref):''); hc.font={italic:true,size:9,color:{argb:GREY}}; hc.alignment={indent:1}; W.getRow(r).height=16; r++; }
+      const th=W.getRow(r); th.values=['Producto','Cant','Precio venta $','Venta $','Costo $','IVA en costo $'];
+      for(let k=1;k<=NC;k++){ const cc=th.getCell(k); cc.font={bold:true,color:{argb:INK},size:10}; cc.fill=fill(TOTBG); cc.alignment={horizontal:k===1?'left':'center',wrapText:true}; cc.border={bottom:{style:'thin',color:{argb:GREEN}}}; }
       r++;
-      let sumL=0;
-      if(!ls.length){ const rr=W.getRow(r); rr.values=['(sin detalle de productos para este corte)','','',usd]; rr.getCell(1).font={italic:true,color:{argb:GREY}}; rr.getCell(4).numFmt=MFMT; paint(rr,'FFFFFFFF'); r++; sumL=usd; }
+      let sumV=0,sumC=0,sumIC=0;
+      if(!ls.length){ const rr=W.getRow(r); rr.values=['(sin detalle de productos para este corte)','','',usd,'','']; rr.getCell(1).font={italic:true,color:{argb:GREY}}; rr.getCell(4).numFmt=MFMT; paint(rr,'FFFFFFFF'); r++; sumV=usd; }
       else ls.forEach((l,i)=>{
-        const rr=W.getRow(r); const sub=r2(l.subtotal); sumL+=sub;
-        rr.values=[l.nombre||'', Number(l.cantidad)||0, r2(l.precio), r2(sub)];
-        rr.getCell(2).numFmt=UFMT; rr.getCell(3).numFmt=MFMT; rr.getCell(4).numFmt=MFMT;
-        rr.getCell(2).alignment={horizontal:'center'}; rr.getCell(3).alignment={horizontal:'right'}; rr.getCell(4).alignment={horizontal:'right'};
+        const rr=W.getRow(r); const sub=r2(l.subtotal), subc=r2(l.subtotal_costo);
+        const grav=ivaCatGravada(l.cat); const ivc=grav? r2(ivaContenido(subc)) : 0;
+        sumV+=sub; sumC+=subc; sumIC+=ivc; if(grav){ ventaTax+=sub; costoTax+=subc; }
+        rr.values=[l.nombre||'', Number(l.cantidad)||0, r2(l.precio), sub, subc, ivc];
+        rr.getCell(2).numFmt=UFMT; for(let k=3;k<=6;k++){ rr.getCell(k).numFmt=MFMT; rr.getCell(k).alignment={horizontal:'right'}; }
+        rr.getCell(2).alignment={horizontal:'center'}; rr.getCell(6).font={color:{argb:GREY}};
         paint(rr, i%2?ZEBRA:'FFFFFFFF'); r++;
       });
-      const diff=Number((usd-sumL).toFixed(2));
-      if(ls.length && Math.abs(diff)>=0.01){ const rr=W.getRow(r); rr.values=['Ajuste del corte (corrección registrada en la cuenta)','','',diff]; rr.getCell(1).font={italic:true,color:{argb:GREY}}; rr.getCell(4).numFmt=MFMT; rr.getCell(4).alignment={horizontal:'right'}; paint(rr,'FFFFFFFF'); r++; }
-      const st=W.getRow(r); st.values=['Subtotal del corte','','',usd]; st.getCell(4).numFmt=MFMT; st.getCell(4).alignment={horizontal:'right'};
-      for(let k=1;k<=4;k++){ const cc=st.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(TOTBG); cc.border={top:{style:'thin',color:{argb:GREEN}},bottom:{style:'thin',color:{argb:GREEN}}}; }
+      const diff=Number((usd-sumV).toFixed(2));
+      if(ls.length && Math.abs(diff)>=0.01){ const rr=W.getRow(r); rr.values=['Ajuste del corte (corrección registrada en la cuenta)','','',diff,'','']; rr.getCell(1).font={italic:true,color:{argb:GREY}}; rr.getCell(4).numFmt=MFMT; rr.getCell(4).alignment={horizontal:'right'}; paint(rr,'FFFFFFFF'); r++; sumV=usd; }
+      costoTot+=sumC;
+      const st=W.getRow(r); st.values=['Subtotal del corte','','',r2(sumV),r2(sumC),r2(sumIC)];
+      for(let k=4;k<=6;k++){ st.getCell(k).numFmt=MFMT; st.getCell(k).alignment={horizontal:'right'}; }
+      for(let k=1;k<=NC;k++){ const cc=st.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(TOTBG); cc.border={top:{style:'thin',color:{argb:GREEN}},bottom:{style:'thin',color:{argb:GREEN}}}; }
       r+=2;
     });
     const pc=x=>String(x).replace('.',',');
     const rIva=ivaRate();
-    // IVA por corte: base gravable (bebidas/chucherías) de sus líneas; sin detalle -> todo el corte gravado
-    const ivaTot=r2(sel.reduce((a,m,idx)=>{ const d=dets[idx]; const lineas=(d&&d.lineas)||null; const taxable=(lineas&&lineas.length)? baseGravableLineas(lineas) : (Number(m.usd)||0); return a+ivaContenido(taxable); },0));
-    bruto=r2(bruto); const imp=r2(impuestosDe(bruto)), impS=r2(bruto*pS/100), impI=r2(imp-impS), neto=r2(bruto-ivaTot-imp);
+    bruto=r2(bruto); costoTot=r2(costoTot); ventaTax=r2(ventaTax); costoTax=r2(costoTax);
+    // La operación del IVA: el del costo (crédito, ya pagado) se cruza contra el de la venta (débito) -> solo queda el del margen
+    const ivaVenta=r2(ivaContenido(ventaTax)), ivaCosto=r2(ivaContenido(costoTax));
+    const ivaMar=r2(Math.max(0, ivaVenta-ivaCosto));
+    const imp=r2(impuestosDe(bruto)), impS=r2(bruto*pS/100), impI=r2(imp-impS);
+    const neto=r2(bruto-ivaMar-imp), gan=r2(neto-costoTot);
     // Resumen
-    W.mergeCells(`A${r}:D${r}`); c=W.getCell(`A${r}`); c.value='RESUMEN DEL COBRO'; c.font={bold:true,size:12,color:{argb:'FFFFFFFF'}}; c.fill=fill(HEAD); c.alignment={vertical:'middle',indent:1}; W.getRow(r).height=24; r++;
-    const line=(lab,val,opts)=>{ const rr=W.getRow(r); rr.values=[lab,'','',val]; W.mergeCells(`A${r}:C${r}`); const a=rr.getCell(1), v=rr.getCell(4); a.alignment={indent:1}; v.alignment={horizontal:'right'}; v.numFmt=(opts&&opts.fmt)||MFMT;
+    W.mergeCells(`A${r}:F${r}`); c=W.getCell(`A${r}`); c.value='RESUMEN DEL COBRO'; c.font={bold:true,size:12,color:{argb:'FFFFFFFF'}}; c.fill=fill(HEAD); c.alignment={vertical:'middle',indent:1}; W.getRow(r).height=24; r++;
+    const line=(lab,val,opts)=>{ const rr=W.getRow(r); rr.values=[lab,'','','','',val]; W.mergeCells(`A${r}:E${r}`); const a=rr.getCell(1), v=rr.getCell(6); a.alignment={indent:1}; v.alignment={horizontal:'right'}; v.numFmt=(opts&&opts.fmt)||MFMT;
       a.font={bold:!!(opts&&opts.bold),size:(opts&&opts.size)||11,color:{argb:(opts&&opts.color)||INK}}; v.font={bold:true,size:(opts&&opts.size)||11,color:{argb:(opts&&opts.color)||INK}};
-      for(let k=1;k<=4;k++){ rr.getCell(k).fill=fill((opts&&opts.bg)||'FFFFFFFF'); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFDDE5E0'}}}; }
+      for(let k=1;k<=NC;k++){ rr.getCell(k).fill=fill((opts&&opts.bg)||'FFFFFFFF'); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFDDE5E0'}}}; }
       W.getRow(r).height=(opts&&opts.h)||20; r++; };
     line('Venta bruta de los cortes ('+sel.length+')', bruto);
-    if(ivaTot>0) line('IVA '+pc(rIva)+'% incluido en el precio (bebidas y chucherías)', -ivaTot, {color:RED});
+    line('Costo de la mercancía · reinversión (IVA incluido)', costoTot, {color:GREY});
+    if(rIva>0){
+      line('IVA '+pc(rIva)+'% cobrado en la venta (bebidas y chucherías)', ivaVenta, {color:GREY});
+      line('(−) IVA '+pc(rIva)+'% que ya pagaste en el costo (crédito)', ivaCosto, {color:GREY});
+      line('IVA neto a pagar (solo sobre tu margen)', -ivaMar, {color:RED,bold:true,bg:ZEBRA});
+    }
     line('SEDEMAT · Actividad Económica '+pc(pS)+'% sobre la venta', -impS, {color:RED});
     line('Anticipo ISLR '+pc(pI)+'% sobre la venta', -impI, {color:RED});
-    line('Total retenido (IVA + impuestos)', -r2(ivaTot+imp), {color:RED,bold:true,bg:ZEBRA});
-    line('NETO A PAGAR (USD)', neto, {bold:true,size:14,color:GREEN,bg:GOLD,h:28});
+    line('Total retenido (IVA del margen + impuestos)', -r2(ivaMar+imp), {color:RED,bold:true,bg:ZEBRA});
+    line('NETO A PAGAR MAYRA (USD)', neto, {bold:true,size:14,color:GREEN,bg:GOLD,h:28});
     line('Equivalente en bolívares · BCV Bs '+fmt(tasa), Math.round(neto*tasa), {bold:true,size:12,color:INK,bg:GOLD,fmt:BSFMT,h:24});
+    line('Tu ganancia real (neto − costo)', gan, {bold:true,size:12,color:GREEN,bg:ZEBRA});
     r++;
-    W.mergeCells(`A${r}:D${r}`); c=W.getCell(`A${r}`); c.value='El IVA de bebidas y chucherías ya venía incluido en el precio de venta y lo declara la farmacia, por eso se descuenta. Las medicinas están exentas de IVA. Pago en bolívares a la tasa BCV del día. Documento generado automáticamente por Operación Reinversión · Farmacia Claret.'; c.font={italic:true,size:9,color:{argb:GREY}}; c.alignment={wrapText:true,indent:1}; W.getRow(r).height=42; r++;
-    W.mergeCells(`A${r}:D${r}`); c=W.getCell(`A${r}`); c.value='¡Gracias, Mayra!'; c.font={bold:true,size:12,color:{argb:GREEN}}; c.alignment={indent:1};
+    W.mergeCells(`A${r}:F${r}`); c=W.getCell(`A${r}`); c.value='El IVA de bebidas y chucherías ya venía incluido en el precio. El que pagaste al comprar (crédito) se cruza contra el de la venta (débito), así que solo pagas IVA sobre lo que le agregaste: tu margen. Las medicinas están exentas. Pago en bolívares a la tasa BCV del día. Documento generado por Operación Reinversión · Farmacia Claret.'; c.font={italic:true,size:9,color:{argb:GREY}}; c.alignment={wrapText:true,indent:1}; W.getRow(r).height=54; r++;
+    W.mergeCells(`A${r}:F${r}`); c=W.getCell(`A${r}`); c.value='¡Gracias, Mayra!'; c.font={bold:true,size:12,color:{argb:GREEN}}; c.alignment={indent:1};
 
     /* ===== HOJA 2: RESUMEN POR CORTE ===== */
     const R2=wb.addWorksheet('Resumen por corte',{views:[{state:'frozen',ySplit:2}]});
-    R2.columns=[{width:16},{width:28},{width:13},{width:12},{width:13},{width:13},{width:14}];
-    R2.mergeCells('A1:G1'); c=R2.getCell('A1'); c.value='Cortes cobrados · '+fechaLarga; c.font={bold:true,size:14,color:{argb:'FFFFFFFF'}}; c.fill=fill(GREEN2); c.alignment={vertical:'middle',indent:1}; R2.getRow(1).height=28;
-    const cols=['Fecha','Concepto','Venta bruta $','IVA $','Impuestos $','Neto $','Neto Bs'];
-    const hr=R2.getRow(2); hr.values=cols; for(let k=1;k<=7;k++){ const cc=hr.getCell(k); cc.font={bold:true,color:{argb:'FFFFFFFF'}}; cc.fill=fill(HEAD); cc.alignment={horizontal:k<=2?'left':'center'}; } hr.height=22;
+    R2.columns=[{width:15},{width:20},{width:12},{width:12},{width:13},{width:12},{width:12},{width:13}];
+    R2.mergeCells('A1:H1'); c=R2.getCell('A1'); c.value='Cortes cobrados · '+fechaLarga; c.font={bold:true,size:14,color:{argb:'FFFFFFFF'}}; c.fill=fill(GREEN2); c.alignment={vertical:'middle',indent:1}; R2.getRow(1).height=28;
+    const cols=['Fecha','Concepto','Venta $','Costo $','IVA margen $','Impuestos $','Neto $','Neto Bs'];
+    const hr=R2.getRow(2); hr.values=cols; for(let k=1;k<=8;k++){ const cc=hr.getCell(k); cc.font={bold:true,color:{argb:'FFFFFFFF'}}; cc.fill=fill(HEAD); cc.alignment={horizontal:k<=2?'left':'center',wrapText:true}; } hr.height=24;
     sel.forEach((m,i)=>{ const usd=r2(m.usd), im=r2(impuestosDe(usd));
-      const d=dets[i]; const lineas=(d&&d.lineas)||null; const iv=r2(ivaContenido((lineas&&lineas.length)? baseGravableLineas(lineas) : usd)); const ne=r2(usd-iv-im);
-      const rr=R2.getRow(3+i); rr.values=[_dowName(new Date(String(m.fecha).slice(0,10)+'T12:00:00').getDay())+' '+String(m.fecha).slice(8,10)+'/'+String(m.fecha).slice(5,7), m.concepto||'Corte', usd, -iv, -im, ne, Math.round(ne*tasa)];
-      rr.getCell(3).numFmt=MFMT; rr.getCell(4).numFmt=MFMT; rr.getCell(5).numFmt=MFMT; rr.getCell(6).numFmt=MFMT; rr.getCell(7).numFmt=BSFMT; rr.getCell(4).font={color:{argb:RED}}; rr.getCell(5).font={color:{argb:RED}}; rr.getCell(6).font={bold:true,color:{argb:GREEN}};
-      for(let k=1;k<=7;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:'FFFFFFFF'); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; } });
-    const tr=R2.getRow(3+sel.length); tr.values=['TOTAL','',bruto,-ivaTot,-imp,neto,Math.round(neto*tasa)];
-    tr.getCell(3).numFmt=MFMT; tr.getCell(4).numFmt=MFMT; tr.getCell(5).numFmt=MFMT; tr.getCell(6).numFmt=MFMT; tr.getCell(7).numFmt=BSFMT;
-    for(let k=1;k<=7;k++){ const cc=tr.getCell(k); cc.font={bold:true,color:{argb:k===6?GREEN:INK}}; cc.fill=fill(GOLD); cc.border={top:{style:'thin',color:{argb:GREEN}}}; }
+      const d=dets[i]; const lineas=(d&&d.lineas)||null;
+      const vt=(lineas&&lineas.length)? baseGravableLineas(lineas) : usd;
+      const ct=(lineas&&lineas.length)? costoGravableLineas(lineas) : 0;
+      const co=r2((d&&d.total_costo)||0);
+      const iv=r2(ivaMargen(vt,ct)); const ne=r2(usd-iv-im);
+      const rr=R2.getRow(3+i); rr.values=[_dowName(new Date(String(m.fecha).slice(0,10)+'T12:00:00').getDay())+' '+String(m.fecha).slice(8,10)+'/'+String(m.fecha).slice(5,7), m.concepto||'Corte', usd, co, -iv, -im, ne, Math.round(ne*tasa)];
+      rr.getCell(3).numFmt=MFMT; rr.getCell(4).numFmt=MFMT; rr.getCell(5).numFmt=MFMT; rr.getCell(6).numFmt=MFMT; rr.getCell(7).numFmt=MFMT; rr.getCell(8).numFmt=BSFMT;
+      rr.getCell(4).font={color:{argb:GREY}}; rr.getCell(5).font={color:{argb:RED}}; rr.getCell(6).font={color:{argb:RED}}; rr.getCell(7).font={bold:true,color:{argb:GREEN}};
+      for(let k=1;k<=8;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:'FFFFFFFF'); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; } });
+    const tr=R2.getRow(3+sel.length); tr.values=['TOTAL','',bruto,costoTot,-ivaMar,-imp,neto,Math.round(neto*tasa)];
+    tr.getCell(3).numFmt=MFMT; tr.getCell(4).numFmt=MFMT; tr.getCell(5).numFmt=MFMT; tr.getCell(6).numFmt=MFMT; tr.getCell(7).numFmt=MFMT; tr.getCell(8).numFmt=BSFMT;
+    for(let k=1;k<=8;k++){ const cc=tr.getCell(k); cc.font={bold:true,color:{argb:k===7?GREEN:INK}}; cc.fill=fill(GOLD); cc.border={top:{style:'thin',color:{argb:GREEN}}}; }
 
     const buf=await wb.xlsx.writeBuffer();
     const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -1362,23 +1397,28 @@ async function openOrdenEdilso(){
 async function ordenCat(c){
   const cats=window._ordenCats||{}; const items=cats[c]; if(!items||!items.length){ toast('Sin productos'); return; }
   toast('Generando…');
-  const d=_semData||{};
-  const rows=[], ret=[]; let totUds=0, totPaq=0, conEmp=0;
-  items.slice().sort((a,b)=>Number(b.uds)-Number(a.uds)).forEach(s=>{ const u=Number(s.uds)||0;
-    const q=paqPedir(u, empaqueDe(s.codigo), acumDe(d, s.codigo));
-    if(q.emp>1){
-      conEmp++;
-      if(q.paq>0){ totUds+=q.uds; totPaq+=q.paq; rows.push({izq:s.descr||s.codigo, sub:'vendidas: '+u+' · empaque de '+q.emp+(q.ret>0?' · quedan '+q.ret+' retenidas':''), der:q.paq+(q.paq===1?' paquete':' paquetes'), der2:'= '+q.uds+' uds'}); }
-      else { ret.push({izq:s.descr||s.codigo, sub:'vendidas: '+u+' · empaque de '+q.emp, der:'no pedir', der2:q.ret+' de '+q.emp+' (faltan '+q.faltan+')'}); }
-    } else { totUds+=u; rows.push({izq:s.descr||s.codigo, sub:'vendidas: '+u, der:u+' uds'}); }
+  const cov=coberturaSem();
+  const rows=[], nada=[]; let totUds=0, totPaq=0, conEmp=0;
+  items.slice().sort((a,b)=>Number(b.uds)-Number(a.uds)).forEach(s=>{
+    const u=Number(s.uds)||0, ex=Number(s.existencia)||0;
+    const q=pedirRepo(u, empaqueDe(s.codigo), ex, cov);
+    if(q.paq>0){
+      totUds+=q.uds; if(q.emp>1){ conEmp++; totPaq+=q.paq; }
+      rows.push({izq:s.descr||s.codigo,
+        sub:'vendió '+u+' · tienes '+ex+(q.emp>1?' · empaque de '+q.emp:''),
+        der: q.emp>1?(q.paq+(q.paq===1?' paquete':' paquetes')):(q.uds+' uds'),
+        der2: q.emp>1?('= '+q.uds+' uds'):''});
+    } else {
+      nada.push({izq:s.descr||s.codigo, sub:'vendió '+u+' · tienes '+ex, der:'no pedir', der2:'el stock cubre'});
+    }
   });
-  if(!rows.length && !ret.length){ toast('Sin productos'); return; }
-  if(ret.length){ rows.push({sec:'Retenidos · aún no completan el empaque'}); ret.forEach(r=>rows.push(r)); }
-  const fecha='Semana '+new Date().toLocaleDateString('es-VE',{day:'numeric',month:'short'})+' · reponer lo vendido';
+  if(!rows.length && !nada.length){ toast('Sin productos'); return; }
+  if(nada.length){ rows.push({sec:'Ya tienes suficiente · no pedir'}); nada.forEach(r=>rows.push(r)); }
+  const fecha='Semana '+new Date().toLocaleDateString('es-VE',{day:'numeric',month:'short'})+' · '+cov+' sem − stock';
   const totales=[{l:'Total de unidades a comprar', v:totUds+' uds', big:false}];
   if(conEmp>0) totales.unshift({l:'Total de empaques (bolsas/cajas)', v:totPaq+' paq', big:false});
   await _drawFactura({titulo:'Orden de compra — '+(catLabel(c)||c), fecha, rows, totales,
-    pie:'Solo '+(catLabel(c)||c)+'. Solo se piden empaques COMPLETOS; lo que no llega a paquete se retiene para la próxima semana.\nAjusta lo que haga falta antes de comprar.',
+    pie:'Solo '+(catLabel(c)||c)+'. Cantidad = lo vendido la semana pasada menos lo que ya tienes en stock, redondeado a empaques completos.\nAjusta lo que haga falta antes de comprar.',
     name:'Orden_'+(catLabel(c)||c).replace(/[^A-Za-z]/g,'')+'_'+hoyStr()});
 }
 async function _estimadoRows(){
@@ -1390,12 +1430,12 @@ async function _estimadoRows(){
   const grupos=[]; let totalUsd=0, sinCosto=0;
   Object.keys(cats).sort((a,b)=>{const ia=orden.indexOf(a),ib=orden.indexOf(b);return (ia<0?9:ia)-(ib<0?9:ib);})
    .forEach(c=>{ const items=cats[c].sort((a,b)=>Number(b.uds)-Number(a.uds)).map(s=>{
-      const vend=Number(s.uds)||0, cu=Number(s.costo)||0;
-      const q=paqPedir(vend, empaqueDe(s.codigo), acumDe(d, s.codigo));
-      const uds=q.uds;                       // lo que realmente se compra (solo empaques completos)
+      const vend=Number(s.uds)||0, cu=Number(s.costo)||0, ex=Number(s.existencia)||0;
+      const q=pedirRepo(vend, empaqueDe(s.codigo), ex, coberturaSem());
+      const uds=q.uds;                       // lo que realmente se compra (vendido − stock, en empaques completos)
       const sub=uds*cu;
       if(cu<=0){ if(uds>0) sinCosto++; } else totalUsd+=sub;
-      return {descr:s.descr||s.codigo, uds, vend, q, cu, sub, sinc:cu<=0};
+      return {descr:s.descr||s.codigo, uds, vend, ex, q, cu, sub, sinc:cu<=0};
     }); grupos.push({cat:c, items}); });
   return {grupos, totalUsd, sinCosto};
 }
@@ -1406,7 +1446,7 @@ async function openEstimado(){
   const tasa=Number(state.bcv)||0; window._estE=e;
   box.innerHTML=e.grupos.map(g=>{
     const head=`<div style="margin:8px 0 2px;font-weight:700;color:#0a7d3b">${catLabel(g.cat)||g.cat}</div>`;
-    const rows=g.items.map(it=>`<div class="prod"><div><div class="nm">${esc(it.descr)}</div><div class="mt">${it.q.emp>1?(it.q.paq>0?(it.q.paq+' paq × '+it.q.emp+' = '+it.uds+' uds'):('retenido · '+it.q.ret+' de '+it.q.emp)):(it.uds+' uds')} × ${it.sinc?'(sin costo)':money2(it.cu)}${it.q.emp>1?' · vendidas '+it.vend:''}</div></div><div class="rt"><b>${it.uds>0?(it.sinc?'—':money2(it.sub)):'$0,00'}</b></div></div>`).join('');
+    const rows=g.items.map(it=>`<div class="prod"><div><div class="nm">${esc(it.descr)}</div><div class="mt">${it.q.paq>0?(it.q.emp>1?(it.q.paq+' paq × '+it.q.emp+' = '+it.uds+' uds'):(it.uds+' uds')):'ya tienes suficiente'} × ${it.sinc?'(sin costo)':money2(it.cu)} · vendió ${it.vend} · tienes ${it.ex}</div></div><div class="rt"><b>${it.uds>0?(it.sinc?'—':money2(it.sub)):'$0,00'}</b></div></div>`).join('');
     return head+rows;
   }).join('');
   S('#estTot',money2(e.totalUsd));
@@ -1419,7 +1459,7 @@ async function estimadoImagen(){
   if(!e){ toast('No hay datos'); return; }
   const tasa=Number(state.bcv)||0; const rows=[];
   e.grupos.forEach(g=>{ rows.push({sec:catLabel(g.cat)||g.cat});
-    g.items.forEach(it=> rows.push({izq:it.descr, sub:`${it.q.emp>1?(it.q.paq>0?(it.q.paq+' paq × '+it.q.emp+' = '+it.uds+' uds'):('retenido · '+it.q.ret+' de '+it.q.emp)):(it.uds+' uds')} × ${it.sinc?'(sin costo)':money2(it.cu)}`, der: it.uds>0?(it.sinc?'—':money2(it.sub)):'$0,00'})); });
+    g.items.forEach(it=> rows.push({izq:it.descr, sub:`${it.q.paq>0?(it.q.emp>1?(it.q.paq+' paq × '+it.q.emp+' = '+it.uds+' uds'):(it.uds+' uds')):'ya tienes suficiente'} × ${it.sinc?'(sin costo)':money2(it.cu)} · vendió ${it.vend}, tienes ${it.ex}`, der: it.uds>0?(it.sinc?'—':money2(it.sub)):'$0,00'})); });
   const totales=[{l:'Gasto estimado (USD)', v:money2(e.totalUsd), big:true},
     {l:`En bolívares · BCV ${fmt(tasa)}`, v: tasa>0?bs(Math.round(e.totalUsd*tasa)):'—'}];
   const fecha='Semana '+new Date().toLocaleDateString('es-VE',{day:'numeric',month:'short'})+' · uso interno';
@@ -1434,19 +1474,19 @@ function empaqueDe(codigo){
   const p=state.productos.find(x=>String(x.codigo||'').trim()===cod);
   return Math.max(1, Number(p&&p.empaque)||1);
 }
-// uds que hay que reponer -> {emp, paq, uds} (redondea hacia arriba a empaques completos)
-// Orden inteligente: cuántos paquetes completos toca pedir esta semana.
-// acumNow = vendido desde acum_desde (incluye esta semana); udsSem = vendido esta semana.
-// paq = paquetes completados en esta semana; ret = unidades que quedan retenidas para el próximo paquete.
-function paqPedir(udsSem, emp, acumNow){
-  udsSem=Math.max(0,Number(udsSem)||0); emp=Math.max(1,Number(emp)||1);
-  if(emp<=1) return {emp, paq:udsSem, uds:udsSem, ret:0, faltan:0};
-  const now=Math.max(udsSem, Number(acumNow)||0), prev=Math.max(0, now-udsSem);
-  const paq=Math.floor(now/emp)-Math.floor(prev/emp);
-  const ret=now%emp;
-  return {emp, paq, uds:paq*emp, ret, faltan: ret>0? emp-ret : 0};
+// semanas de inventario objetivo por compra (Miguel compra semanal → 1)
+function coberturaSem(){ return Math.max(1, Number(state.cfg.coberturaSemanas)||1); }
+// Orden inteligente: pedir para cubrir la venta de la semana pasada, RESTANDO lo que ya hay en stock.
+// deficit = cobertura*vendido − existencia ; se redondea hacia ARRIBA a empaques completos.
+// paq = paquetes a pedir; uds = paq*emp; si deficit<=0 no se pide (el stock ya cubre).
+function pedirRepo(vend, emp, existencia, cover){
+  vend=Math.max(0,Number(vend)||0); emp=Math.max(1,Number(emp)||1);
+  existencia=Math.max(0,Number(existencia)||0); cover=Math.max(1,Number(cover)||1);
+  const deficit=Math.max(0, cover*vend - existencia);
+  if(deficit<=0) return {emp, paq:0, uds:0, vend, existencia, deficit:0};
+  const paq=Math.ceil(deficit/emp);
+  return {emp, paq, uds:paq*emp, vend, existencia, deficit};
 }
-function acumDe(d, codigo){ const a=(d&&d.acum)||{}; const r=a[String(codigo||'').trim()]; return r? Number(r.acum)||0 : 0; }
 
 /* ---------- impuestos sobre la venta (SEDEMAT + anticipo ISLR); el IVA NO entra en los cálculos ---------- */
 function impPct(){ return (Number(state.cfg.impSedemat)||0)+(Number(state.cfg.impIslr)||0); }
@@ -1457,11 +1497,15 @@ function impLabel(){ const c=state.cfg; return 'SEDEMAT '+pctStr(c.impSedemat)+'
 const IVA_CATS=['pepsi','coca','chuche'];
 function ivaCatGravada(cat){ return IVA_CATS.indexOf(cat)>=0; }
 function ivaRate(){ return Number(state.cfg.iva)||0; }
-// IVA contenido en un subtotal con precio IVA-incluido (se saca dividiendo entre 1+tasa)
-function ivaContenido(subtotalGravado){ const r=ivaRate(); return r>0 ? (Number(subtotalGravado)||0)*r/(100+r) : 0; }
+// IVA contenido en un monto con precio IVA-incluido (se saca dividiendo entre 1+tasa)
+function ivaContenido(monto){ const r=ivaRate(); return r>0 ? (Number(monto)||0)*r/(100+r) : 0; }
+// venta gravable (bebidas/chucherías) de las líneas de una factura
 function baseGravableLineas(lineas){ let s=0; (lineas||[]).forEach(l=>{ if(ivaCatGravada(l.cat)) s+=Number(l.subtotal)||0; }); return s; }
-// IVA a partir del desglose por categoría (cierre trae .monto; reporte_semana trae .venta)
-function ivaDePorCat(porCat){ let g=0; (porCat||[]).forEach(r=>{ if(ivaCatGravada(r.cat)) g+=Number(r.monto!=null?r.monto:r.venta)||0; }); return ivaContenido(g); }
+// costo gravable (bebidas/chucherías) de las líneas de una factura
+function costoGravableLineas(lineas){ let s=0; (lineas||[]).forEach(l=>{ if(ivaCatGravada(l.cat)) s+=Number(l.subtotal_costo)||0; }); return s; }
+// IVA sobre el MARGEN: el IVA que pagaste en el costo se cruza contra el de la venta,
+// así que solo queda IVA sobre lo que le agregaste (venta − costo). Solo bebidas y chucherías.
+function ivaMargen(ventaGravada, costoGravado){ return ivaContenido(Math.max(0,(Number(ventaGravada)||0)-(Number(costoGravado)||0))); }
 
 /* ---------- cálculos ---------- */
 function margenReal(p){return p.costo>0?(p.precio*factor()-p.costo)/p.costo:0}
@@ -1522,12 +1566,12 @@ async function loadHoyReal(){
     const tasa=Number(state.bcv)||0;
     S('#mCorteBs',bs(corteHoy*tasa));
     // Desglose del día: IVA (bebidas/chucherías) + impuestos sobre la venta y utilidad neta
-    window._hoyIva=ivaDePorCat(d.por_cat);
+    window._hoyIva=Number(d.iva_neto)||0;   // IVA sobre el margen (backend)
     window._hoyImp=impuestosDe(corteHoy);
     window._hoyUtilNeto=(Number(d.total_util)||0)-window._hoyIva-window._hoyImp;
     const ivi=$('#mCorteIva');
     if(ivi) ivi.innerHTML = corteHoy>0
-      ? `Mayra te pasa el total (<b>${money2(corteHoy)}</b>).`+(window._hoyIva>0?` IVA del día (${pctStr(ivaRate())}% en bebidas y chucherías): <b>${money2(window._hoyIva)}</b> ·`:'')+` impuestos (${impLabel()}): <b>${money2(window._hoyImp)}</b> · tu ganancia neta del día: <b>${money2(window._hoyUtilNeto)}</b>.`
+      ? `Mayra te pasa el total (<b>${money2(corteHoy)}</b>).`+(window._hoyIva>0?` IVA sobre el margen (${pctStr(ivaRate())}% de venta − costo, bebidas y chucherías): <b>${money2(window._hoyIva)}</b> ·`:'')+` impuestos (${impLabel()}): <b>${money2(window._hoyImp)}</b> · tu ganancia neta del día: <b>${money2(window._hoyUtilNeto)}</b>.`
       : '';
   }catch(e){ /* silencioso */ }
 }
