@@ -265,6 +265,19 @@
       <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="openEstimado()">💰 Estimado de compra (privado, con costos)</button></div>
       <div class="mini" id="anXlsMsg" style="margin-top:6px">Edilso recibe una orden por rubro (Pepsi, Coca-Cola y chucherías por separado, cada una para su proveedor). El estimado privado es solo para ti: te muestra cuánto gastarías, con el costo de cada producto y el total en $ y en Bs.</div>
     </div>
+    <div class="card" id="cardOrdenIA">
+      <h2>🧠 Orden inteligente para pedir</h2>
+      <div class="mini" style="margin-bottom:8px">Aprende de las últimas semanas para decirte <b>cuánto pedir de cada producto en paquetes completos</b>. Por producto ves lo que vendiste, lo que queda en stock y lo que hay que pedir.</div>
+      <div class="kpis">
+        <div class="kpi"><div class="l">A pedir</div><div class="v" id="oiPaq">0</div><div class="mini" id="oiPaqN">paquetes</div></div>
+        <div class="kpi"><div class="l">Gasto estimado</div><div class="v" id="oiGasto">$0</div><div class="mini" id="oiGastoBs">Bs 0</div></div>
+      </div>
+      <div id="oiResumen" class="mini" style="margin:8px 0"></div>
+      <div id="oiLista"><div class="mini">Cargando…</div></div>
+      <div class="btnrow" id="oiXlsRow" style="margin-top:10px;display:none">
+        <button class="btn" id="oiXls" onclick="descargarExcelOrden()">⬇️ Descargar lista en Excel</button>
+      </div>
+    </div>
     <div class="card">
       <div class="note">Las órdenes redondean hacia arriba a <b>empaques completos</b> (bolsas, cajas, bultos) según las "unidades por empaque" que pongas en cada producto. Las ventas por producto se ven en <b>🧮 Cierre</b>; las tasas y el capital en <b>💱 Dinero</b>.</div>
     </div>
@@ -487,7 +500,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v26 · 17/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v27 · 17/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -611,7 +624,7 @@ function go(tab){
   render(); window.scrollTo(0,0);
   if(tab==='hoy') loadHoyReal();
   if(tab==='cierre') loadCierre();
-  if(tab==='analisis'){ loadAnalisisSemana(); loadCongelado(); }
+  if(tab==='analisis'){ loadAnalisisSemana(); loadCongelado(); loadOrdenInteligente(); }
   if(tab==='semana'){ loadCambio(); loadMayra().then(loadCobros); }
 }
 let _semData=null;
@@ -1650,6 +1663,134 @@ function pedirRepo(vend, emp, existencia, cover){
   if(deficit<=0) return {emp, paq:0, uds:0, vend, existencia, deficit:0};
   const paq=Math.ceil(deficit/emp);
   return {emp, paq, uds:paq*emp, vend, existencia, deficit};
+}
+
+/* ---------- Orden de compra INTELIGENTE (aprende de las últimas semanas) ---------- */
+let _smartData=null, _smartRows=null, _smartSem=0;
+// Demanda semanal estimada: promedio ponderado dando más peso a lo reciente.
+// semanas[0] = semana más reciente. Devuelve el estimado + la última + el promedio simple.
+function _demandaInteligente(semanas){
+  const arr=(semanas||[]).map(x=>Math.max(0,Number(x)||0));
+  const n=arr.length;
+  if(!n) return {est:0, ult:0, prom:0, n:0};
+  const ult=arr[0];
+  const prom=Math.round(arr.reduce((a,b)=>a+b,0)/n);
+  let sw=0, sv=0;                       // pesos decrecientes: n, n-1, ..., 1
+  for(let i=0;i<n;i++){ const w=n-i; sw+=w; sv+=w*arr[i]; }
+  const est=Math.round(sv/sw);
+  return {est, ult, prom, n};
+}
+function _procSmart(items){
+  const cov=coberturaSem();
+  const rows=[];
+  (items||[]).forEach(it=>{
+    const dem=_demandaInteligente(it.semanas);
+    const emp=Math.max(1, Number(it.empaque)||empaqueDe(it.codigo)||1);
+    const ex=Number(it.existencia)||0;
+    const q=pedirRepo(dem.est, emp, ex, cov);
+    const costo=Number(it.costo)||0;
+    rows.push({codigo:it.codigo, descr:it.descr||it.codigo, cat:it.cat||'otros',
+      ult:dem.ult, prom:dem.prom, est:dem.est, n:dem.n, ex, emp, costo,
+      paq:q.paq, uds:q.uds, sub:(costo>0? costo*q.uds : 0), sinCosto:costo<=0});
+  });
+  return rows;
+}
+async function loadOrdenInteligente(){
+  if(!$('#oiLista')) return;
+  $('#oiLista').innerHTML='<div class="mini">Calculando con el historial…</div>';
+  $('#oiXlsRow').style.display='none';
+  try{
+    const d=await api('orden_inteligente',{semanas:4});
+    _smartData=d; _smartSem=Number(d.semanas_usadas)||0;
+    _smartRows=_procSmart((d&&d.items)||[]);
+    renderOrdenInteligente();
+  }catch(e){ if($('#oiLista')) $('#oiLista').innerHTML='<div class="note">No se pudo calcular la orden inteligente (revisa tu internet).</div>'; }
+}
+function renderOrdenInteligente(){
+  const rows=_smartRows||[];
+  const pedir=rows.filter(r=>r.paq>0);
+  const totPaq=pedir.reduce((a,r)=>a+r.paq,0);
+  const totUds=pedir.reduce((a,r)=>a+r.uds,0);
+  const totUsd=pedir.reduce((a,r)=>a+(r.sinCosto?0:r.sub),0);
+  const sinCosto=pedir.filter(r=>r.sinCosto).length;
+  const tasa=Number(state.bcv)||0;
+  S('#oiPaq',String(totPaq)); S('#oiPaqN',totPaq===1?'paquete · '+totUds+' uds':'paquetes · '+totUds+' uds');
+  S('#oiGasto',money2(totUsd)); S('#oiGastoBs', tasa>0? bs(Math.round(totUsd*tasa)) : 'Bs —');
+  const semTxt = _smartSem<=1 ? 'con la última semana (todavía no hay más historial)' : ('aprendiendo de las últimas '+_smartSem+' semanas');
+  S('#oiResumen','📚 Calculado '+semTxt+'. Cobertura: '+coberturaSem()+' semana(s). '+(sinCosto>0?('⚠ '+sinCosto+' sin costo cargado (no suman al gasto).'):''));
+  const box=$('#oiLista'); if(!box) return;
+  if(!pedir.length){ box.innerHTML='<div class="note">Por ahora no hay que pedir nada: el stock cubre lo que se está vendiendo. 👍</div>'; $('#oiXlsRow').style.display='none'; return; }
+  const orden=['pepsi','coca','chuche','medicina'];
+  const cats={}; pedir.forEach(r=>{ (cats[r.cat]=cats[r.cat]||[]).push(r); });
+  const keys=Object.keys(cats).sort((a,b)=>{const ia=orden.indexOf(a),ib=orden.indexOf(b);return (ia<0?9:ia)-(ib<0?9:ib);});
+  box.innerHTML=keys.map(c=>{
+    const items=cats[c].slice().sort((a,b)=>b.uds-a.uds);
+    const head=`<div style="margin:10px 0 2px;font-weight:700;color:#0a7d3b">${catLabel(c)||c}</div>`;
+    const list=items.map(r=>{
+      const empTxt = r.emp>1 ? (r.paq+(r.paq===1?' paquete':' paquetes')+' × '+r.emp+' = '+r.uds+' uds') : (r.uds+' uds');
+      const promTxt = r.n>1 ? (' · prom '+r.prom+'/sem') : '';
+      return `<div class="prod"><div><div class="nm">${esc(r.descr)}</div>
+        <div class="mt"><span class="chip ${catClass(r.cat)}">${catLabel(r.cat)}</span> vendió ${r.ult} sem. pasada${promTxt} · tienes ${r.ex} en stock</div></div>
+        <div class="rt"><b>${empTxt}</b>${r.sinCosto?'<span class="mini">sin costo</span>':('<span class="mini">'+money2(r.sub)+'</span>')}</div></div>`;
+    }).join('');
+    return head+list;
+  }).join('');
+  $('#oiXlsRow').style.display='';
+}
+async function descargarExcelOrden(){
+  if(typeof ExcelJS==='undefined'){ toast('Cargando Excel… intenta de nuevo en un momento'); return; }
+  const rows=(_smartRows||[]).filter(r=>r.paq>0);
+  if(!rows.length){ toast('No hay nada que pedir'); return; }
+  toast('Generando Excel…'); $('#oiXls').disabled=true;
+  try{
+    const GREEN='FF0A7D3B',GREEN2='FF12A150',HEAD='FF0E5A2B',ZEBRA='FFF3F8F5',GOLD='FFFFF4D6',GREY='FF667085',INK='FF0F2A1C',WHITE='FFFFFFFF',SUBBG='FFDCEEE3';
+    const MFMT='"$"#,##0.00',UFMT='#,##0';
+    const fill=c=>({type:'pattern',pattern:'solid',fgColor:{argb:c}});
+    const r2=x=>Number((Number(x)||0).toFixed(2));
+    const tasa=Number(state.bcv)||0;
+    const wb=new ExcelJS.Workbook(); wb.creator='Operación Reinversión'; wb.created=new Date();
+    const W=wb.addWorksheet('Orden inteligente',{views:[{state:'frozen',ySplit:2}]});
+    W.columns=[{width:38},{width:14},{width:12},{width:11},{width:12},{width:11},{width:12},{width:13}];
+    W.mergeCells('A1:H1'); let c=W.getCell('A1');
+    const semTxt=_smartSem<=1?'última semana':(_smartSem+' semanas');
+    c.value='Orden inteligente de compra · aprende de '+semTxt+' · cobertura '+coberturaSem()+' sem';
+    c.font={bold:true,size:14,color:{argb:WHITE}}; c.fill=fill(GREEN2); c.alignment={vertical:'middle',indent:1}; W.getRow(1).height=26;
+    const cols=['Producto','Categoría','Vendió sem. pasada','Prom/sem','Stock actual','Pedir (paq)','Pedir (uds)','Gasto $'];
+    const hr=W.getRow(2); hr.values=cols; for(let k=1;k<=8;k++){ const cc=hr.getCell(k); cc.font={bold:true,color:{argb:WHITE}}; cc.fill=fill(HEAD); cc.alignment={horizontal:k===1?'left':'center',wrapText:true}; } hr.height=30;
+    const orden=['pepsi','coca','chuche','medicina'];
+    const cats={}; rows.forEach(r=>{ (cats[r.cat]=cats[r.cat]||[]).push(r); });
+    const keys=Object.keys(cats).sort((a,b)=>{const ia=orden.indexOf(a),ib=orden.indexOf(b);return (ia<0?9:ia)-(ib<0?9:ib);});
+    let rIdx=3, i=0, totPaq=0, totUds=0, totUsd=0;
+    keys.forEach(cat=>{
+      const items=cats[cat].slice().sort((a,b)=>b.uds-a.uds);
+      W.mergeCells(`A${rIdx}:H${rIdx}`); const sc=W.getCell(`A${rIdx}`); sc.value=catLabel(cat)||cat;
+      sc.font={bold:true,color:{argb:INK}}; sc.fill=fill(SUBBG); sc.alignment={indent:1}; rIdx++;
+      items.forEach(r=>{
+        const rr=W.getRow(rIdx);
+        rr.values=[r.descr, catLabel(r.cat)||r.cat, r.ult, (r.n>1?r.prom:''), r.ex, r.paq, r.uds, (r.sinCosto?'':r2(r.sub))];
+        rr.getCell(3).numFmt=UFMT; if(r.n>1) rr.getCell(4).numFmt=UFMT; rr.getCell(5).numFmt=UFMT; rr.getCell(6).numFmt=UFMT; rr.getCell(7).numFmt=UFMT; if(!r.sinCosto) rr.getCell(8).numFmt=MFMT;
+        for(let k=2;k<=8;k++) rr.getCell(k).alignment={horizontal:k===2?'center':'right'};
+        rr.getCell(6).font={bold:true,color:{argb:GREEN}};
+        if(r.sinCosto) rr.getCell(8).value='sin costo', rr.getCell(8).font={italic:true,color:{argb:GREY}};
+        for(let k=1;k<=8;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; }
+        totPaq+=r.paq; totUds+=r.uds; if(!r.sinCosto) totUsd+=r.sub; i++; rIdx++;
+      });
+    });
+    const tr=W.getRow(rIdx); tr.values=['TOTAL A PEDIR','','','','',totPaq,totUds,r2(totUsd)];
+    tr.getCell(6).numFmt=UFMT; tr.getCell(7).numFmt=UFMT; tr.getCell(8).numFmt=MFMT;
+    for(let k=1;k<=8;k++){ const cc=tr.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(GOLD); cc.border={top:{style:'thin',color:{argb:GREEN}}}; cc.alignment={horizontal:k===1?'left':'right'}; }
+    rIdx++;
+    if(tasa>0){ const br=W.getRow(rIdx); br.getCell(1).value='En bolívares · BCV '+fmt(tasa); br.getCell(1).font={italic:true,color:{argb:GREY}};
+      W.mergeCells(`A${rIdx}:G${rIdx}`); br.getCell(8).value=bs(Math.round(totUsd*tasa)); br.getCell(8).alignment={horizontal:'right'}; br.getCell(8).font={bold:true,color:{argb:INK}}; rIdx++; }
+    const nr=rIdx+1; W.mergeCells(`A${nr}:H${nr}`); c=W.getCell(`A${nr}`);
+    c.value='Cantidad a pedir = estimado semanal (aprendido del historial) × cobertura, menos lo que ya tienes en stock, redondeado a empaques completos. Ajusta antes de comprar.';
+    c.font={italic:true,size:10,color:{argb:GREY}}; c.alignment={indent:1,wrapText:true}; W.getRow(nr).height=30;
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    await _shareOrDownload(blob,'Orden_inteligente_'+hoyStr()+'.xlsx');
+    toast('Excel listo ✓');
+  }catch(e){ console.error(e); toast('No se pudo generar el Excel'); }
+  finally{ $('#oiXls').disabled=false; }
 }
 
 /* ---------- impuestos sobre la venta (SEDEMAT + anticipo ISLR); el IVA NO entra en los cálculos ---------- */
