@@ -243,6 +243,7 @@
       <div class="btnrow" style="gap:6px;margin:2px 0 8px">
         <button class="btn" id="anPasada" onclick="setAnModo('pasada')">Semana pasada (para pedir)</button>
         <button class="btn sec" id="anCurso" onclick="setAnModo('curso')">Semana en curso</button>
+        <button class="btn sec" id="anHist" onclick="openHistorial()">🗂️ Historial</button>
       </div>
       <div class="mini" id="anSemRango" style="margin-bottom:6px">cargando…</div>
       <div class="note" style="margin-bottom:8px">Para decidir la compra usa <b>Semana pasada</b>: la orden se calcula con lo que se vendió la semana completa anterior, menos lo que ya tienes en stock.</div>
@@ -266,6 +267,21 @@
     </div>
     <div class="card">
       <div class="note">Las órdenes redondean hacia arriba a <b>empaques completos</b> (bolsas, cajas, bultos) según las "unidades por empaque" que pongas en cada producto. Las ventas por producto se ven en <b>🧮 Cierre</b>; las tasas y el capital en <b>💱 Dinero</b>.</div>
+    </div>
+    <div class="card" id="cardCongelado">
+      <h2>❄️ Stock congelado</h2>
+      <div class="mini" style="margin-bottom:8px">Dinero parado en inventario que casi no rota, comparado con las ventas de las últimas 4 semanas. La idea: dejar de comprar lo que sale aquí y moverlo.</div>
+      <div class="kpis">
+        <div class="kpi"><div class="l">🔴 Muerto</div><div class="v" id="cgMuerto">$0</div><div class="mini" id="cgMuertoN">0 productos</div></div>
+        <div class="kpi"><div class="l">🟠 Muy lento</div><div class="v" id="cgLento">$0</div><div class="mini" id="cgLentoN">0 productos</div></div>
+      </div>
+      <div class="kpis" style="margin-top:8px">
+        <div class="kpi"><div class="l">🟡 Lento (vigilar)</div><div class="v" id="cgVig">$0</div><div class="mini" id="cgVigN">0 productos</div></div>
+        <div class="kpi"><div class="l">Total a atacar</div><div class="v" id="cgTot">$0</div><div class="mini">muerto + muy lento</div></div>
+      </div>
+      <div id="cgLista" style="margin-top:10px"><div class="mini">Cargando…</div></div>
+      <div class="btnrow" style="margin-top:10px"><button class="btn" id="cgXls" onclick="descargarExcelCongelado()">⬇️ Descargar Excel de stock congelado</button></div>
+      <div class="note" style="margin-top:8px">🔴 <b>Muerto</b>: 0 ventas en 4 semanas. 🟠 <b>Muy lento</b>: más de 8 semanas de inventario. 🟡 <b>Lento</b>: 4 a 8 semanas (aquí caen algunos que aún rotan, solo vigilar). 🆕 Los productos con menos de 14 días desde que entraron al inventario quedan <b>en observación</b> (no se juzgan todavía). En pantalla se ven los peores; el Excel trae la lista completa.</div>
     </div>
   </section>
 
@@ -449,6 +465,15 @@
   </div>
 </div></dialog>
 
+<dialog id="dlgHist"><div class="dlg">
+  <h3>🗂️ Historial de semanas</h3>
+  <div class="mini" style="margin-bottom:8px">Cada semana va de martes a lunes (días completos). Toca una para verla y descargar su Excel.</div>
+  <div id="histLista"><div class="mini">Cargando…</div></div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn sec" onclick="closeDlg('dlgHist')">Cerrar</button>
+  </div>
+</div></dialog>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script>
 const $=(s)=>document.querySelector(s), $$=(s)=>document.querySelectorAll(s);
@@ -462,7 +487,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v23 · 17/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v26 · 17/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -586,22 +611,28 @@ function go(tab){
   render(); window.scrollTo(0,0);
   if(tab==='hoy') loadHoyReal();
   if(tab==='cierre') loadCierre();
-  if(tab==='analisis') loadAnalisisSemana();
+  if(tab==='analisis'){ loadAnalisisSemana(); loadCongelado(); }
   if(tab==='semana'){ loadCambio(); loadMayra().then(loadCobros); }
 }
 let _semData=null;
 let _anModo='pasada';   // 'pasada' = semana pasada completa (para pedir) · 'curso' = semana en curso
+let _anWeek=null;       // {desde,hasta} cuando se ve una semana específica del historial (null = pasada/curso)
+function _syncAnBtns(){
+  const bp=$('#anPasada'), bc=$('#anCurso');
+  if(bp) bp.className='btn'+((!_anWeek&&_anModo==='pasada')?'':' sec');
+  if(bc) bc.className='btn'+((!_anWeek&&_anModo==='curso')?'':' sec');
+}
 function setAnModo(m){
   _anModo = m==='curso' ? 'curso' : 'pasada';
-  const bp=$('#anPasada'), bc=$('#anCurso');
-  if(bp) bp.className='btn'+(_anModo==='pasada'?'':' sec');
-  if(bc) bc.className='btn'+(_anModo==='curso'?'':' sec');
+  _anWeek=null;         // salir del modo historial
+  _syncAnBtns();
   _semData=null;
   loadAnalisisSemana();
 }
 async function loadAnalisisSemana(){
   try{
-    const d=await api('reporte_semana_data',{semana:_anModo});
+    const d = _anWeek ? await api('reporte_semana_data',{desde:_anWeek.desde,hasta:_anWeek.hasta})
+                      : await api('reporte_semana_data',{semana:_anModo});
     _semData=d;
     S('#anSemEnt',(d.tot_ent_uds||0)+' uds');
     S('#anSemSal',(d.tot_sal_uds||0)+' uds');
@@ -614,9 +645,138 @@ async function loadAnalisisSemana(){
     const av=$('#anSemAviso');
     if(av){ if(Number(d.n_sin_costo)>0){ av.style.display=''; av.innerHTML='⚠ '+d.n_sin_costo+' producto(s) vendidos sin costo cargado ('+money2(d.venta_sin_costo)+' en ventas) — no cuentan en la ganancia hasta que les pongas el costo.'; } else { av.style.display='none'; } }
     const f=(iso)=>{const c=new Date(new Date(iso).getTime()-4*3600e3);const p=n=>String(n).padStart(2,'0');return p(c.getUTCDate())+'/'+p(c.getUTCMonth()+1);};
-    const etq = (d.semana||_anModo)==='curso' ? 'semana en curso' : 'semana pasada · para pedir';
-    if(d.desde&&d.hasta) S('#anSemRango','Del '+f(d.desde)+' al '+f(d.hasta)+' ('+etq+')');
+    const etq = _anWeek ? 'semana del historial'
+              : ((d.semana||_anModo)==='curso' ? 'semana en curso' : 'semana pasada · para pedir');
+    // en semanas completas el fin real es el lunes (hasta = inicio del siguiente martes)
+    const _fin = (d.semana==='curso') ? d.hasta : new Date(new Date(d.hasta).getTime()-86400e3).toISOString();
+    if(d.desde&&d.hasta) S('#anSemRango','Del '+f(d.desde)+' al '+f(_fin)+' ('+etq+')');
   }catch(e){ /* silencioso */ }
+}
+/* ---------- Historial de semanas: elegir y ver una semana específica ---------- */
+async function openHistorial(){
+  const box=$('#histLista'); if(box) box.innerHTML='<div class="mini">Cargando…</div>';
+  $('#dlgHist').showModal();
+  try{
+    const d=await api('semanas_reporte',{n:12});
+    const sem=(d&&d.semanas)||[];
+    if(!sem.length){ if(box) box.innerHTML='<div class="mini">No hay semanas disponibles.</div>'; return; }
+    // la primera (i=0) es la semana en curso; se muestra pero marcada como tal
+    if(box) box.innerHTML=sem.map(s=>{
+      const di=String(s.desde).slice(0,10), hf=new Date(new Date(s.hasta).getTime()-86400e3).toISOString().slice(0,10);
+      const rango=_diaCorto(di)+' → '+_diaCorto(hf);
+      const tag=s.en_curso?' <span class="mini">(en curso)</span>':'';
+      return '<button class="btn sec" style="width:100%;justify-content:flex-start;text-align:left;margin-bottom:6px" onclick="verSemanaHist('+"'"+s.desde+"','"+s.hasta+"'"+')">📅 '+rango+tag+'</button>';
+    }).join('');
+  }catch(e){ if(box) box.innerHTML='<div class="mini">No se pudo cargar el historial (revisa tu internet).</div>'; }
+}
+function verSemanaHist(desde,hasta){
+  _anWeek={desde,hasta};
+  _syncAnBtns();
+  _semData=null;
+  closeDlg('dlgHist');
+  S('#anSemRango','cargando…');
+  loadAnalisisSemana();
+  const card=$('#tab-analisis'); if(card) window.scrollTo(0,0);
+}
+/* ---------- Stock congelado / lento (dinero parado vs. ventas de 4 semanas) ---------- */
+let _congelado=null, _congNuevos={n:0,dinero:0}, _congHist=null;
+const CONG_MIN_DIAS=14;   // un producto debe llevar al menos 14 días en inventario antes de juzgarlo
+// tier: 3 = muerto (0 ventas), 2 = muy lento (>8 sem inv), 1 = lento (4–8 sem). Solo > 4 semanas entra.
+// Los productos que entraron hace menos de 14 días quedan "en observación" (no se juzgan todavía).
+function _procCongelado(items){
+  const rows=[]; let nuN=0, nuD=0, maxDias=null;
+  (items||[]).forEach(it=>{
+    const ex=Number(it.existencia)||0, vend=Number(it.vendido)||0, costo=Number(it.costo)||0;
+    const dinero = isFinite(Number(it.dinero)) ? Number(it.dinero) : Math.round(ex*costo*100)/100;
+    const dias = (it.dias_inv==null||it.dias_inv==='') ? null : Number(it.dias_inv);
+    if(dias!=null && (maxDias==null || dias>maxDias)) maxDias=dias;
+    if(ex<=0) return;
+    if(dias!=null && dias<CONG_MIN_DIAS){ nuN++; nuD+=dinero; return; }  // producto nuevo: en observación
+    if(!(ex>vend)) return;                           // solo más de 4 semanas de inventario (o 0 ventas)
+    const velSem=vend/4;                             // venta semanal promedio (4 semanas)
+    const semanas = vend>0 ? ex/velSem : Infinity;   // semanas de inventario
+    const tier = vend<=0 ? 3 : (ex>2*vend ? 2 : 1);
+    rows.push({nombre:it.nombre, cat:it.cat, ex, vend, velSem, semanas, costo, dinero, tier, dias});
+  });
+  rows.sort((a,b)=> b.tier-a.tier || b.dinero-a.dinero);
+  _congNuevos={n:nuN, dinero:Math.round(nuD*100)/100};
+  _congHist=maxDias;
+  return rows;
+}
+async function loadCongelado(){
+  if(!$('#cgLista')) return;
+  try{ const d=await api('stock_congelado'); _congelado=_procCongelado((d&&d.items)||[]); renderCongelado(); }
+  catch(e){ if($('#cgLista')) $('#cgLista').innerHTML='<div class="note">No se pudo cargar el stock congelado (revisa tu internet).</div>'; }
+}
+function renderCongelado(){
+  const rows=_congelado||[];
+  const sumT=t=>rows.filter(r=>r.tier===t).reduce((a,r)=>a+r.dinero,0);
+  const nT=t=>rows.filter(r=>r.tier===t).length;
+  const muerto=sumT(3), lento=sumT(2), vig=sumT(1);
+  S('#cgMuerto',money2(muerto)); S('#cgMuertoN',nT(3)+' producto'+(nT(3)===1?'':'s'));
+  S('#cgLento',money2(lento)); S('#cgLentoN',nT(2)+' producto'+(nT(2)===1?'':'s'));
+  S('#cgVig',money2(vig)); S('#cgVigN',nT(1)+' producto'+(nT(1)===1?'':'s'));
+  S('#cgTot',money2(muerto+lento));
+  const box=$('#cgLista'); if(!box) return;
+  const top=rows.filter(r=>r.tier>=2).slice(0,15);   // muerto + muy lento, los 15 con más plata parada
+  const nu=_congNuevos||{n:0,dinero:0};
+  const notaNuevos = nu.n>0 ? ('<div class="note" style="margin-top:8px">🆕 '+nu.n+' producto'+(nu.n===1?'':'s')+' nuevo'+(nu.n===1?'':'s')+' ('+money2(nu.dinero)+') con menos de '+CONG_MIN_DIAS+' días en inventario: están <b>en observación</b>, todavía no se pueden llamar lentos ni muertos.</div>') : '';
+  // si TODO el inventario es reciente, no hay suficiente historia para juzgar aún
+  if(_congHist!=null && _congHist<CONG_MIN_DIAS){
+    box.innerHTML='<div class="note">⏳ El inventario apenas tiene '+_congHist+' día'+(_congHist===1?'':'s')+' de historia. El análisis de stock congelado se vuelve confiable a partir de las 2–4 semanas; por ahora todos los productos están en observación.</div>'+notaNuevos;
+    return;
+  }
+  if(!top.length){ box.innerHTML='<div class="note">Nada congelado grave por ahora. 👍</div>'+notaNuevos; return; }
+  box.innerHTML=top.map(r=>{
+    const ic=r.tier===3?'🔴':'🟠';
+    const sem = r.semanas===Infinity ? 'sin ventas en 4 sem' : (Math.round(r.semanas)+' sem de inventario');
+    return `<div class="prod"><div><div class="nm">${ic} ${esc(r.nombre)}</div>
+      <div class="mt"><span class="chip ${catClass(r.cat)}">${catLabel(r.cat)}</span> ${r.ex} en stock · vende ${r.velSem.toFixed(1)}/sem · ${sem}</div></div>
+      <div class="rt"><b>${money2(r.dinero)}</b><span class="mini">parado</span></div></div>`;
+  }).join('')+notaNuevos;
+}
+async function descargarExcelCongelado(){
+  if(typeof ExcelJS==='undefined'){ toast('Cargando Excel… intenta de nuevo en un momento'); return; }
+  const rows=_congelado||[];
+  if(!rows.length){ toast('No hay stock congelado que exportar'); return; }
+  toast('Generando Excel…'); $('#cgXls').disabled=true;
+  try{
+    const GREEN='FF0A7D3B',GREEN2='FF12A150',HEAD='FF0E5A2B',ZEBRA='FFF3F8F5',GOLD='FFFFF4D6',RED='FFB42318',AMBER='FFB77500',GREY='FF667085',INK='FF0F2A1C',WHITE='FFFFFFFF';
+    const MFMT='"$"#,##0.00',UFMT='#,##0',DFMT='#,##0.0';
+    const fill=c=>({type:'pattern',pattern:'solid',fgColor:{argb:c}});
+    const r2=x=>Number((Number(x)||0).toFixed(2));
+    const wb=new ExcelJS.Workbook(); wb.creator='Operación Reinversión'; wb.created=new Date();
+    const W=wb.addWorksheet('Stock congelado',{views:[{state:'frozen',ySplit:2}]});
+    W.columns=[{width:12},{width:38},{width:12},{width:12},{width:11},{width:13},{width:12},{width:13}];
+    W.mergeCells('A1:H1'); let c=W.getCell('A1'); c.value='Stock congelado · dinero parado (vs. ventas de las últimas 4 semanas)';
+    c.font={bold:true,size:14,color:{argb:WHITE}}; c.fill=fill(GREEN2); c.alignment={vertical:'middle',indent:1}; W.getRow(1).height=26;
+    const cols=['Estado','Producto','Categoría','Existencia','Venta/sem','Semanas inv.','Costo unit $','$ parado'];
+    const hr=W.getRow(2); hr.values=cols; for(let k=1;k<=8;k++){ const cc=hr.getCell(k); cc.font={bold:true,color:{argb:WHITE}}; cc.fill=fill(HEAD); cc.alignment={horizontal:k===2?'left':'center',wrapText:true}; } hr.height=24;
+    const TL={3:'🔴 Muerto',2:'🟠 Muy lento',1:'🟡 Lento'};
+    rows.forEach((r,i)=>{
+      const rr=W.getRow(3+i);
+      const sem = r.semanas===Infinity? 999 : r2(r.semanas);
+      rr.values=[TL[r.tier], r.nombre, catLabel(r.cat), r.ex, r2(r.velSem), (r.semanas===Infinity?'sin ventas':sem), r2(r.costo), r2(r.dinero)];
+      rr.getCell(4).numFmt=UFMT; rr.getCell(5).numFmt=DFMT; if(r.semanas!==Infinity) rr.getCell(6).numFmt=DFMT; rr.getCell(7).numFmt=MFMT; rr.getCell(8).numFmt=MFMT;
+      for(let k=3;k<=8;k++) rr.getCell(k).alignment={horizontal:k===3?'center':'right'};
+      rr.getCell(1).alignment={horizontal:'left'};
+      rr.getCell(1).font={bold:true,color:{argb:r.tier===3?RED:(r.tier===2?AMBER:INK)}};
+      rr.getCell(8).font={bold:true,color:{argb:INK}};
+      for(let k=1;k<=8;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; }
+    });
+    const tot=rows.reduce((a,r)=>a+r.dinero,0), urg=rows.filter(r=>r.tier>=2).reduce((a,r)=>a+r.dinero,0);
+    const tr=W.getRow(3+rows.length); tr.values=['TOTAL','','','','','','',r2(tot)]; tr.getCell(8).numFmt=MFMT;
+    for(let k=1;k<=8;k++){ const cc=tr.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(GOLD); cc.border={top:{style:'thin',color:{argb:GREEN}}}; }
+    tr.getCell(8).alignment={horizontal:'right'};
+    const nr=3+rows.length+1; W.mergeCells(`A${nr}:H${nr}`); c=W.getCell(`A${nr}`);
+    c.value='A atacar primero (Muerto + Muy lento): '+money2(urg)+'.  Deja de comprar estos y trata de moverlos (ofertas, combos) para liberar ese dinero.';
+    c.font={italic:true,size:10,color:{argb:GREY}}; c.alignment={indent:1};
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    await _shareOrDownload(blob,'Stock_congelado_'+hoyStr()+'.xlsx');
+    toast('Excel listo ✓');
+  }catch(e){ console.error(e); toast('No se pudo generar el Excel'); }
+  finally{ $('#cgXls').disabled=false; }
 }
 /* ---------- Excel semanal bonito (ExcelJS: colores, totales, agotados y gráficos) ---------- */
 const _DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
@@ -679,8 +839,13 @@ async function descargarExcelSemana(){
   const GREEN='FF0A7D3B', GREEN2='FF12A150', HEAD='FF0E5A2B', ZEBRA='FFF3F8F5', TOTBG='FFE7F2EC',
         REDBG='FFFDEAEA', REDTX='FFB42318', GREY='FF667085', INK='FF0F2A1C';
   const MFMT='"$"#,##0.00', UFMT='#,##0';
+  const _modoTxt = (d.semana==='curso') ? 'semana en curso' : (d.semana==='especifica' ? 'semana del historial' : 'semana pasada');
+  const _dm=(iso)=>{ const s=String(iso).slice(0,10); return s.slice(8,10)+'-'+s.slice(5,7); };  // dd-mm para el nombre
+  // en semanas completas 'hasta' es el inicio del siguiente martes → el último día real es el lunes anterior
+  const _finISO = (d.semana==='curso') ? d.hasta : new Date(new Date(d.hasta).getTime()-86400e3).toISOString();
+  const nombreSem = (d.desde&&d.hasta) ? (_dm(d.desde)+'_al_'+_dm(_finISO)) : hoyStr();
   const rango = (d.desde&&d.hasta)
-    ? ('Del '+_diaLabel(String(d.desde).slice(0,10))+' al '+_diaLabel(String(d.hasta).slice(0,10))+'  (martes → hoy)')
+    ? ('Del '+_diaLabel(String(d.desde).slice(0,10))+' al '+_diaLabel(String(_finISO).slice(0,10))+'  ('+_modoTxt+')')
     : 'Semana en curso';
   try{
     const wb=new ExcelJS.Workbook();
@@ -856,7 +1021,7 @@ async function descargarExcelSemana(){
 
     const buf=await wb.xlsx.writeBuffer();
     const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    await _shareOrDownload(blob,'Analisis_Semana_Claret_'+hoyStr()+'.xlsx');
+    await _shareOrDownload(blob,'Semana_'+nombreSem+(d.semana==='curso'?'_en_curso':'')+'.xlsx');
     toast('Excel generado ✓');
   }catch(e){ console.error(e); toast('No se pudo generar el Excel'); }
 }
