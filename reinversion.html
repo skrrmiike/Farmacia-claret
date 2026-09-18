@@ -125,15 +125,6 @@
       <h2>Hoy · <span id="hoyFecha"></span></h2>
       <div class="big" id="hoyMonto">$0</div>
       <div class="sub">venta de hoy en vivo (desde A2) · <span id="hoyUnid">0</span> unidades</div>
-      <div class="note" style="margin-top:6px">Se toma solo del inventario de A2 a medida que vendes. Ya no hay que registrar nada a mano.</div>
-    </div>
-
-    <div class="card">
-      <h2>Corte para Mayra (automático)</h2>
-      <div class="big" id="mCorte">$0</div>
-      <div class="sub">lo que Mayra debe pasarte del día · <span id="mCorteBs">Bs 0</span></div>
-      <div class="note" id="mCorteIva" style="margin-top:6px"></div>
-      <div class="note" style="margin-top:4px">El corte se calcula solo con lo vendido, se carga a la cuenta de Mayra (en 💱 Dinero) y se le envía la factura por Telegram cada mañana a las 9. <b>Mayra paga en Bs a la tasa BCV del día.</b> El cobro y la cuenta de Mayra los llevas en la pestaña 💱 Dinero.</div>
     </div>
   </section>
 
@@ -190,23 +181,6 @@
       <div id="cobHist"><div class="mini">Cargando…</div></div>
     </div>
     <div class="card">
-      <h2>Cuenta con Mayra</h2>
-      <div class="big" id="myrSaldo">$0</div>
-      <div class="sub">saldo que Mayra debe · <span id="myrSaldoBs">Bs 0</span></div>
-      <div class="kpis" style="margin-top:12px">
-        <div class="kpi"><div class="l">Cortes (te debe)</div><div class="v" id="myrCargos">$0</div></div>
-        <div class="kpi"><div class="l">Pagos (abonó)</div><div class="v" id="myrAbonos">$0</div></div>
-      </div>
-      <div class="mini" id="myrNetoNota" style="margin-top:6px"></div>
-      <div class="btnrow"><button class="btn sec" onclick="openMov('pago')">+ Registrar pago de Mayra</button></div>
-      <div class="btnrow"><button class="btn sec" onclick="openMov('ajuste')">+ Ajuste manual</button></div>
-      <div class="note" style="margin-top:8px">El corte diario se carga <b>solo</b> aquí cada mañana (lo que Mayra te debe, calculado con lo vendido). Al registrar el cobro arriba, el saldo baja solo. También puedes registrar un <b>pago</b> suelto o un <b>ajuste</b> a mano. Toca un movimiento para ver su detalle o factura.</div>
-    </div>
-    <div class="card">
-      <h2>Movimientos con Mayra</h2>
-      <div id="myrLista"></div>
-    </div>
-    <div class="card">
       <h2>Reunir dólares · cambio Binance</h2>
       <div class="big" id="cbReunido">$0</div>
       <div class="sub">dólares reunidos esta semana · <span id="cbReunidoBs">Bs 0</span> (a tasa venta)</div>
@@ -219,20 +193,6 @@
         <button class="btn sec" onclick="openCambio('venta')">🔴 Vendí dólares</button>
       </div>
       <div class="note" id="cbSpreadNota" style="margin-top:8px"></div>
-    </div>
-    <div class="card">
-      <h2>Movimientos</h2>
-      <div id="cbLista"><div class="mini">Sin movimientos todavía.</div></div>
-    </div>
-    <div class="card">
-      <h2>El spread BCV → Binance</h2>
-      <div class="prod"><div class="nm">Tasa BCV</div><div class="rt"><b id="anBcv">—</b></div></div>
-      <div class="prod"><div><div class="nm">Binance — compra $</div><div class="mt">para acumular USDT</div></div><div class="rt"><b id="anBinanceC">—</b></div></div>
-      <div class="prod"><div><div class="nm">Binance — venta $</div><div class="mt">para pagar en Bs</div></div><div class="rt"><b id="anBinanceV">—</b></div></div>
-      <div class="prod"><div><div class="nm">Spread a tu favor</div><div class="mt">venta Binance vs BCV</div></div><div class="rt"><b id="anSpread" style="color:var(--ok)">—</b></div></div>
-      <div class="note" style="margin-top:8px">En Binance P2P hay dos tasas: <b>compra</b> (la que pagas al acumular dólares) y <b>venta</b> (la que te dan al vender tus dólares para tener Bs y pagar a proveedores). Como cobras a BCV (baja) y vendes tus dólares a Binance (alta), ese spread es tu ganancia cambiaria.</div>
-      <div class="btnrow" style="margin-top:8px"><button class="btn" onclick="traerTasasBinance()">🔄 Actualizar tasas Binance (Provincial)</button></div>
-      <div class="mini" id="anTasasTs" style="margin-top:6px"></div>
     </div>
   </section>
 
@@ -400,6 +360,8 @@
   </div>
   <div class="mini" style="margin-top:6px">La ganancia neta = utilidad bruta − estos dos porcentajes sobre la venta. El IVA no entra en los cálculos. Compra = tasa a la que compras dólares a diario; Venta = tasa a la que los vendes para pagar a proveedores.</div>
   <div class="mini" id="aSpread" style="margin-top:8px"></div>
+  <div class="btnrow" style="margin-top:8px"><button class="btn sec" onclick="refrescarTasasAjustes()">🔄 Traer tasas Binance (Provincial)</button></div>
+  <div class="mini" id="aTasasTs" style="margin-top:4px"></div>
   <div class="btnrow" style="margin-top:14px">
     <button class="btn sec" onclick="closeDlg('dlgAjustes')">Cerrar</button>
     <button class="btn" id="aGuardar" onclick="saveAjustes()">Guardar</button>
@@ -500,7 +462,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v27 · 17/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v29 · 18/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -2048,9 +2010,24 @@ function openAjustes(){
   $('#aBinance').oninput=showSpread;
 }
 function showSpread(){
-  const b=state.bcv||0, bi=parseFloat($('#aBinance').value)||0;
-  const sp=b>0?(bi/b-1)*100:0;
-  $('#aSpread').textContent=`Spread actual: ${sp.toFixed(1)}% — es lo que el cambio te resta del margen nominal.`;
+  const b=state.bcv||0, bi=parseFloat($('#aBinance').value)||0, bv=parseFloat($('#aBinanceV').value)||0;
+  const spCosto=b>0?(bi/b-1)*100:0;              // compra vs BCV: lo que el cambio te resta del margen
+  const spFavor=(bi>0&&bv>0)?(bv/bi-1)*100:0;    // venta vs compra: tu ganancia cambiaria
+  const el=$('#aSpread'); if(!el) return;
+  let t=`BCV Bs ${fmt(b)} · Binance compra Bs ${bi?fmt(bi):'—'} / venta Bs ${bv?fmt(bv):'—'}. `;
+  t+=`Spread de costo: ${spCosto.toFixed(1)}% (lo que el cambio te resta del margen)`;
+  if(spFavor>0) t+=` · spread a tu favor: ${spFavor.toFixed(1)}% (venta vs compra).`;
+  el.textContent=t;
+}
+// Trae las tasas de Binance y refresca los campos y el spread dentro de Ajustes.
+async function refrescarTasasAjustes(){
+  const ts=$('#aTasasTs'); if(ts) ts.textContent='Trayendo tasas de Binance…';
+  await traerTasasBinance();
+  const c=state.cfg;
+  if($('#aBinance')) $('#aBinance').value = c.binance||'';
+  if($('#aBinanceV')) $('#aBinanceV').value = c.binanceVenta||'';
+  showSpread();
+  if(ts) ts.textContent = _tasasTs? ('Actualizadas '+new Date(_tasasTs).toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit'})) : '';
 }
 function _pn(v){const x=parseFloat(v); return isNaN(x)?null:x;}
 async function saveAjustes(){
