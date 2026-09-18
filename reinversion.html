@@ -462,7 +462,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v29 · 18/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v30 · 18/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -1041,8 +1041,8 @@ async function loadCierre(){
     if($('#cieReparto')) $('#cieReparto').innerHTML = rep;
     // Notas + avisos
     let nota = (cieModo==='cerrado'
-      ? (d.cubre_finde ? 'Corte del lunes: cubre el fin de semana (viernes → lunes).' : 'Corte del día, ventana 9am a 9am.')
-      : 'Ventas de hoy, desde el último corte de las 9am hasta ahorita (en vivo).');
+      ? (d.cubre_finde ? 'Último día cerrado: el lunes cubre el fin de semana (viernes, sábado y domingo).' : 'Último día completo (00:00 a 00:00).')
+      : 'Ventas de hoy en vivo, desde las 00:00 hasta ahorita.');
     if(Number(d.venta_sin_costo)>0) nota += `<div class="mini" style="color:#c58a00;margin-top:4px">⚠ ${d.n_sin_costo} producto(s) sin costo cargado (${money2(d.venta_sin_costo)} en ventas) — no se cuentan en la utilidad todavía.</div>`;
     $('#cieNota').innerHTML = nota;
     const P=d.productos||[];
@@ -1101,6 +1101,13 @@ function _costoCorteId(id){ const f=_cobroFac[id]; return f? (Number(f.costo)||0
 // historial de cobros + set de cortes ya cobrados con esta herramienta
 let cobros=[];
 let cobradosIds=new Set();
+// Ventana de un corte para pedir su factura: cortes nuevos traen su ventana exacta (día calendario);
+// los viejos (9am→9am) solo tienen fecha y el backend reproduce esa ventana histórica.
+function _facParams(m){
+  return (m && m.cubre_desde && m.cubre_hasta)
+    ? { desde:m.cubre_desde, hasta:m.cubre_hasta }
+    : { fecha:String(m.fecha).slice(0,10) };
+}
 async function loadCobros(){
   if(!$('#cobroLista')) return;
   try{ const d=await api('mayra_cobros'); cobros=(d&&d.cobros)||[]; }
@@ -1124,7 +1131,7 @@ async function loadCobros(){
   // traer las facturas: IVA sobre el margen gravable (venta − costo de bebidas/chucherías) + costo total
   if(cortes.length){
     await Promise.all(cortes.map(async m=>{
-      try{ const d=await api('mayra_factura',{fecha:String(m.fecha).slice(0,10)});
+      try{ const d=await api('mayra_factura',_facParams(m));
         const lineas=(d&&d.lineas)||null;
         const taxable=(lineas&&lineas.length)? baseGravableLineas(lineas) : (Number(m.usd)||0);
         const costoTax=(lineas&&lineas.length)? costoGravableLineas(lineas) : 0;
@@ -1204,7 +1211,7 @@ async function excelCobro(){
   toast('Generando Excel…');
   $('#cobroXls').disabled=true;
   try{
-    const dets=await Promise.all(sel.map(async m=>{ try{ return await api('mayra_factura',{fecha:String(m.fecha).slice(0,10)}); }catch(e){ return null; } }));
+    const dets=await Promise.all(sel.map(async m=>{ try{ return await api('mayra_factura',_facParams(m)); }catch(e){ return null; } }));
     const tasa=Number(state.bcv)||0;
     const pS=Number(state.cfg.impSedemat)||0, pI=Number(state.cfg.impIslr)||0;
     const GREEN='FF0A7D3B', GREEN2='FF12A150', HEAD='FF0E5A2B', ZEBRA='FFF3F8F5', TOTBG='FFE7F2EC', GREY='FF667085', INK='FF0F2A1C', RED='FFB42318', GOLD='FFFFF4D6';
@@ -1234,7 +1241,8 @@ async function excelCobro(){
       // encabezado del corte
       W.mergeCells(`A${r}:I${r}`); const h=W.getCell(`A${r}`);
       const fd=String(m.fecha).slice(0,10);
-      h.value=(idx+1)+'.  Corte del '+_dowName(new Date(fd+'T12:00:00').getDay())+' '+fd.slice(8,10)+'/'+fd.slice(5,7)+'/'+fd.slice(0,4)+'   ·   '+money2(usd);
+      const etiq = m.concepto ? String(m.concepto) : ('Corte del '+_dowName(new Date(fd+'T12:00:00').getDay())+' '+fd.slice(8,10)+'/'+fd.slice(5,7)+'/'+fd.slice(0,4));
+      h.value=(idx+1)+'.  '+etiq+'   ·   '+money2(usd);
       h.font={bold:true,size:12,color:{argb:'FFFFFFFF'}}; h.fill=fill(HEAD); h.alignment={vertical:'middle',indent:1}; W.getRow(r).height=24; r++;
       if(m.concepto){ W.mergeCells(`A${r}:I${r}`); const hc=W.getCell(`A${r}`); hc.value=m.concepto+(m.ref?('  ·  Ref. '+m.ref):''); hc.font={italic:true,size:9,color:{argb:GREY}}; hc.alignment={indent:1}; W.getRow(r).height=16; r++; }
       const th=W.getRow(r); th.values=['Producto','Cant','Precio venta $','Venta $','Costo $','Utilidad $','IVA venta $','IVA costo $','IVA neto $'];
