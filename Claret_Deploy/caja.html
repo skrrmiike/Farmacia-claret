@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caja · Claret</title>
+<style>
+  :root{--acc:#1E38A6;--acc2:#2f52d0;--bg:#F6F7F9;--sur:#fff;--bd:#E7E9ED;--tx:#0B0D12;--mut:#858B96;--grn:#079455;--red:#B42318;--amb:#B54708;--sh1:0 1px 2px rgba(16,24,40,.05);--sh2:0 1px 2px rgba(16,24,40,.05),0 6px 16px -6px rgba(16,24,40,.10);--sh3:0 1px 2px rgba(16,24,40,.05),0 14px 32px -10px rgba(16,24,40,.16);--gloss:inset 0 1px 0 rgba(255,255,255,.9)}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:linear-gradient(180deg,#FBFBFC 0%,#F4F5F8 100%);background-attachment:fixed;color:var(--tx);-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+  .wrap{max-width:640px;margin:0 auto;padding:14px}
+  .card{background:linear-gradient(160deg,#fff,#FCFCFD);border:1px solid rgba(16,24,40,.07);border-radius:15px;padding:16px;margin-bottom:12px;box-shadow:var(--sh2),var(--gloss)}
+  input,select{font:inherit;padding:13px 14px;border:1px solid #E3E5EA;border-radius:10px;background:var(--sur);color:var(--tx);font-size:16px;width:100%;box-shadow:inset 0 1px 2px rgba(16,24,40,.035)}
+  input:focus,select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3.5px rgba(30,56,166,.13),inset 0 1px 2px rgba(16,24,40,.03)}
+  .btn{border:0;border-radius:11px;padding:13px 16px;font-weight:600;font-size:16px;cursor:pointer;letter-spacing:.1px;transition:transform .12s,box-shadow .16s,filter .16s}.btn:active{transform:scale(.985)}
+  .btn-acc{background:linear-gradient(180deg,#2B47C4,#1E38A6);color:#fff;box-shadow:0 3px 12px rgba(30,56,166,.34),inset 0 1px 0 rgba(255,255,255,.2)}
+  .btn-grn{background:linear-gradient(180deg,#0AA55F,#079455);color:#fff;box-shadow:0 3px 12px rgba(7,148,85,.32),inset 0 1px 0 rgba(255,255,255,.2)}
+  .btn-gh{background:linear-gradient(180deg,#fff,#FAFBFC);border:1px solid var(--bd);color:#414651;box-shadow:var(--sh1)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .ov{position:fixed;inset:0;background:linear-gradient(160deg,#0B1220,#131C33 55%,#1E2E52);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .ov .card{max-width:400px;width:100%;box-shadow:0 2px 4px rgba(0,0,0,.2),0 32px 70px -18px rgba(0,0,0,.6),inset 0 1px 0 #fff}
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:flex-end;justify-content:center;z-index:60}
+  .sheet{background:linear-gradient(180deg,#FBFBFC,#F4F5F8);width:100%;max-width:640px;border-radius:20px 20px 0 0;max-height:92vh;overflow:auto;padding:18px 16px 26px;box-shadow:0 -8px 40px rgba(11,18,32,.28)}
+  .pill{font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:999px;letter-spacing:.2px}
+  .p-abierto{background:#fef3c7;color:#92400e}.p-porc{background:#dbeafe;color:#1e40af}.p-cerr{background:#dcfce7;color:#166534}
+  .muted{color:var(--mut);font-size:13px}
+  .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mbtn{background:linear-gradient(160deg,#fff,#FCFCFD);border:1px solid rgba(16,24,40,.08);border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;font-weight:500;font-size:14px;box-shadow:var(--sh2),var(--gloss);transition:transform .13s,box-shadow .17s}.mbtn:active{transform:scale(.97)}
+  .mbtn .em{font-size:30px;display:block;margin-bottom:5px}
+  .mbtn{position:relative}
+  .mkey{position:absolute;top:7px;left:9px;width:20px;height:20px;border-radius:6px;background:var(--acc);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 2px 6px rgba(30,56,166,.3)}
+  label.fl{font-size:12px;color:var(--mut);font-weight:700;display:block;margin:10px 0 4px}
+</style>
+</head>
+<body>
+<div id="ver-badge" style="position:fixed;bottom:3px;right:6px;font-size:9px;color:#94a3b8;z-index:5;pointer-events:none;font-family:system-ui">v414</div>
+<div id="ov" class="ov">
+  <div class="card">
+    <div style="text-align:center;margin-bottom:14px"><div style="width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:inline-grid;place-items:center;color:#fff;font-size:26px">🧾</div><div style="font-weight:800;font-size:20px;margin-top:8px">Caja · Claret</div><div class="muted">Cierre de caja</div></div>
+    <label class="fl">¿Qué caja te tocó?</label>
+    <select id="e-caja" onchange="_fondoNote()"><option>Caja 1</option><option>Caja 2</option><option>Caja 3</option><option>Caja 4</option><option>Caja 5</option><option>Caja 6</option><option>YaPagué 1</option><option>YaPagué 2</option><option>YaPagué 3</option></select>
+    <label class="fl">Tu nombre</label>
+    <input id="e-nombre" list="cajeros-list" autocomplete="off" placeholder="Escribe o elige tu nombre" onkeydown="if(event.key==='Enter')entrar()">
+    <datalist id="cajeros-list"></datalist>
+    <div id="e-fondo-note" class="muted" style="font-size:12px;margin-top:8px;padding:8px 10px;background:var(--sur);border:1px solid var(--bd);border-radius:9px">💵 Fondo de caja: <b>Bs 3.000</b> (fijo, ya cargado). Se aparta: al cerrar cuenta SOLO la venta, sin el fondo.</div>
+    <button class="btn btn-acc" style="width:100%;margin-top:16px" onclick="entrar()">Entrar</button>
+    <div id="e-err" style="color:var(--red);font-size:13px;margin-top:10px;min-height:16px;text-align:center"></div>
+  </div>
+</div>
+<div id="sync-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:70;padding:9px 12px;font-size:12.5px;font-weight:700;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.18)"></div>
+<div class="wrap" id="app" style="display:none"></div>
+
+<script>
+var SUPA_URL='https://unuumkcapdtqmbwefbfg.supabase.co';
+var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVudXVta2NhcGR0cW1id2VmYmZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTgxMDUsImV4cCI6MjA5NTk5NDEwNX0.TMQ_YgWlNXrBboJcg5YfS6359Fhw6zv_N10K5m_xtrE';
+var TOKEN='caja_7k2m9x4p1q8w';
+var DENOM=[5,10,20,50,100,200,500];
+var FONDO_BS=3000;
+var BANCOS=['Mercantil','Provincial','Banesco','Banco del Tesoro','Bancaribe','BNC'];
+var METODOS=[
+ {k:'dolares',ic:'💲',n:'Dólares efectivo',mon:'$',firma:true,campos:[{k:'monto',t:'Monto en $',num:true,ph:'0'},{k:'fact',t:'Nº Factura (opcional)'}]},
+ {k:'zelle',ic:'📧',n:'Zelle',mon:'$',firma:true,campos:[{k:'titular',t:'Titular del Zelle'},{k:'monto',t:'Monto en $',num:true,ph:'0'}]},
+ {k:'transfer',ic:'🏦',n:'Pago móvil / Transferencia',mon:'Bs',firma:true,campos:[{k:'banco',t:'Banco',sel:BANCOS},{k:'ref',t:'Referencia'},{k:'monto',t:'Monto en Bs',num:true,ph:'0'}]},
+ {k:'gastos',ic:'🧾',n:'Gasto / salida',mon:'Bs',firma:false,campos:[{k:'concepto',t:'Concepto'},{k:'monto',t:'Monto en Bs',num:true,ph:'0'}]}
+];
+var C=null, FIRMAS=[], _saveT=null, _ver=0, _pollT=null, _saving=false, _dirty=false, _lastSaveOk=true;
+
+function HOY(){ return new Date(Date.now()-4*3600*1000).toISOString().slice(0,10); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function num(v){ v=(''+(v==null?'':v)).trim(); if(v.indexOf(',')>=0){ v=(v.indexOf('.')>=0)?v.replace(/\./g,'').replace(',','.'):v.replace(',','.'); } v=parseFloat(v.replace(/[^0-9.\-]/g,'')); return isNaN(v)?0:v; }
+document.addEventListener('keydown', function(ev){ try{ var t=ev.target; if(!t||t.tagName!=='INPUT'||t.type!=='number'||ev.key!==',') return; ev.preventDefault(); var v=String(t.value||''); if(v.indexOf('.')>=0) return; t.type='text'; t.inputMode='decimal'; var pos=(t.selectionStart!=null)?t.selectionStart:v.length; t.value=v.slice(0,pos)+'.'+v.slice(pos); try{ t.setSelectionRange(pos+1,pos+1); }catch(_e){} t.dispatchEvent(new Event('input',{bubbles:true})); }catch(_e){} }, true);
+function fmt(n){ return (Number(n)||0).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ return (''+(s==null?'':s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+var METODOS_LEG={efectivobs:{k:'efectivobs',ic:'💵',n:'Efectivo (Bs) · total A2',mon:'Bs',firma:false,campos:[{k:'monto',t:'Monto en Bs',num:true}]},debito:{k:'debito',ic:'💳',n:'T. Débito · total A2',mon:'Bs',firma:false,campos:[{k:'monto',t:'Monto en Bs',num:true}]},credito:{k:'credito',ic:'💳',n:'T. Crédito · total A2',mon:'Bs',firma:false,campos:[{k:'monto',t:'Monto en Bs',num:true}]}};
+function meta(k){ return METODOS.filter(function(m){return m.k===k;})[0]||METODOS_LEG[k]; }
+function toast(t){ var d=document.createElement('div'); d.textContent=t; d.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.3)'; document.body.appendChild(d); setTimeout(function(){d.style.opacity='0';d.style.transition='opacity .4s';setTimeout(function(){try{d.remove();}catch(e){}},400);},2200); }
+window.showToast=toast;
+
+function API(action,payload){ var body=Object.assign({action:action,token:TOKEN},payload||{}); return fetch(SUPA_URL+'/functions/v1/caja',{method:'POST',headers:{'Authorization':'Bearer '+ANON,'apikey':ANON,'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}); }
+function defData(){ return {tasa:0,fondo_bs:0,fondo_usd:0,efectivo:{},efectivobs:[],dolares:[],zelle:[],transfer:[],debito:[],credito:[],gastos:[]}; }
+function norm(c){ if(!c.data||typeof c.data!=='object')c.data=defData(); var d=c.data; if(!d.efectivo)d.efectivo={}; ['efectivobs','dolares','zelle','transfer','debito','credito','gastos'].forEach(function(k){ if(!Array.isArray(d[k]))d[k]=[]; }); return c; }
+
+function entrar(){
+  var caja=document.getElementById('e-caja').value;
+  var nombre=(document.getElementById('e-nombre').value||'').trim();
+  var fondo=/^yapag/i.test(caja)?0:FONDO_BS;
+  var fondoUsd=0;
+  var err=document.getElementById('e-err');
+  if(!nombre){ err.textContent='Escribe tu nombre'; return; }
+  err.textContent='Entrando…';
+  API('dia',{fecha:HOY(),empresa:'farmacia'}).then(function(res){
+    if(res.error){ err.textContent='Error: '+res.error; return; }
+    window._bancoPrior=res.banco_prior||''; window._bancoNota=res.banco_nota||'';
+    window._turneros=(res.turneros||[]);
+    window._diaCierres=res.cierres||[];
+    var mia=(res.cierres||[]).filter(function(c){ return c.caja===caja && (''+c.cajero).toLowerCase()===nombre.toLowerCase(); })[0];
+    if(mia){ C=norm(mia); _ver=C.ver||0; if(res.tasa!=null)C.data.tasa=res.tasa; if(C.data.fondo_bs==null && fondo>0){ C.data.fondo_bs=fondo; } if(C.data.fondo_usd==null && fondoUsd>0){ C.data.fondo_usd=fondoUsd; } FIRMAS=(res.firmas||[]).filter(function(f){return f.cierre_id===C.id;}); _restoreBk(); afterEnter(); if((fondo>0||fondoUsd>0) && !(mia.data&&(mia.data.fondo_bs>0||mia.data.fondo_usd>0))) scheduleSave(); }
+    else { var dd=defData(); dd.fondo_bs=fondo; dd.fondo_usd=fondoUsd; var payload={fecha:HOY(),caja:caja,cajero:nombre,empresa:'farmacia',data:dd}; var pendRelevo=(res.cierres||[]).filter(function(c){ return c.caja===caja && c.estado==='cerrado' && c.relevo===true && !c.entrega_recibida; }).sort(function(a,b){return (b.id||0)-(a.id||0);})[0]; if(pendRelevo){ if(confirm('La caja '+caja+' fue entregada por '+pendRelevo.cajero+' con Bs '+fmt(pendRelevo.entrega_efectivo)+' (relevo autorizado). ¿Recibes la caja con ese fondo?')){ payload.recibe_relevo_id=pendRelevo.id; } } API('nuevo',payload).then(function(r2){ if(r2.error){ err.textContent='Error: '+r2.error; return; } C=norm(r2.cierre); _ver=C.ver||1; if(r2.tasa!=null)C.data.tasa=r2.tasa; else if(res.tasa!=null)C.data.tasa=res.tasa; if(C.data.fondo_bs==null)C.data.fondo_bs=fondo; if(C.data.fondo_usd==null)C.data.fondo_usd=fondoUsd; FIRMAS=[]; afterEnter(); if(payload.recibe_relevo_id)toast('Recibiste la caja con Bs '+fmt(C.data.fondo_bs)+' de fondo'); }); }
+  }).catch(function(){
+    try{
+      var sn=JSON.parse(localStorage.getItem('caja_sesion')||'null');
+      if(sn && sn.fecha===HOY() && sn.caja===caja && (''+sn.cajero).toLowerCase()===nombre.toLowerCase() && sn.estado!=='cerrado'){
+        C=norm(sn); _ver=sn.ver||1; FIRMAS=[]; _restoreBk(); afterEnter();
+        toast('⚠ Sin internet: sigues trabajando con la última copia. Todo se enviará solo al volver la señal.');
+        _dirty=true; _syncUI(); return;
+      }
+    }catch(e){}
+    err.textContent='Sin conexión. Reintenta.';
+  });
+}
+var _idleT=null, _IDLE_MIN=15;
+function _resetIdle(){ if(_idleT)clearTimeout(_idleT); _idleT=setTimeout(_logoutIdle, _IDLE_MIN*60*1000); }
+function _logoutIdle(){ if(!C)return; try{ if(_dirty||_saving)flushSave(); }catch(e){} try{ if(_pollT)clearInterval(_pollT); _pollT=null; }catch(e){} try{ if(_idleT)clearTimeout(_idleT); _idleT=null; }catch(e){} C=null; FIRMAS=[]; var app=document.getElementById('app'); if(app){app.style.display='none';app.innerHTML='';} var ov=document.getElementById('ov'); if(ov)ov.style.display='flex'; var nm=document.getElementById('e-nombre'); if(nm)nm.value=''; var fo=document.getElementById('e-fondo'); if(fo)fo.value='0'; var fu=document.getElementById('e-fondo-usd'); if(fu)fu.value='0'; if(typeof toast==='function')toast('Sesión cerrada por inactividad. Vuelve a entrar.'); }
+['click','keydown','touchstart','mousemove'].forEach(function(ev){ document.addEventListener(ev,function(){ if(C)_resetIdle(); },{passive:true}); });
+document.addEventListener('keydown', function(ev){
+  var tag=(ev.target&&ev.target.tagName)||'';
+  var typing=(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA');
+  var modal=document.getElementById('modal');
+  if(document.getElementById('voz-mic')){ if(ev.key==='Enter'){ ev.preventDefault(); vozTerminar(); return; } if(ev.key==='Escape'){ ev.preventDefault(); vozParar(); return; } }
+  if(ev.key==='Escape'){ if(modal){ ev.preventDefault(); cerrarModal(); } return; }
+  if(ev.key==='Enter' && modal && typing){
+    var list=[].slice.call(modal.querySelectorAll('input,select')).filter(function(x){ return !x.disabled && x.offsetParent!==null; });
+    var idx=list.indexOf(ev.target);
+    if(idx>=0){ ev.preventDefault();
+      if(idx<list.length-1){ var nx=list[idx+1]; nx.focus(); try{ if(nx.select)nx.select(); }catch(e){} }
+      else { var btn=modal.querySelector('.btn-grn'); if(btn && !btn.disabled) btn.click(); }
+    }
+    return;
+  }
+  if(!C || modal) return;
+  if(!ev.altKey || ev.ctrlKey || ev.metaKey) return;
+  if(ev.key>='1' && ev.key<='4'){
+    var k=(METODOS[parseInt(ev.key)-1]||{}).k;
+    if(k && C.estado==='abierto'){ ev.preventDefault(); abrirAgregar(); setTimeout(function(){ formPago(k); },40); }
+  } else if((ev.key||'').toLowerCase()==='c' && C.estado==='abierto'){ ev.preventDefault(); abrirCierre(); }
+  else if((ev.key||'').toLowerCase()==='r' && C.estado==='abierto'){ ev.preventDefault(); abrirRelevo(); }
+  else if((ev.key||'').toLowerCase()==='v' && C.estado==='abierto'){ ev.preventDefault(); vozIniciar(); }
+});
+function _loadCajeros(){ try{ API('cajeros',{empresa:'farmacia'}).then(function(r){ var dl=document.getElementById('cajeros-list'); if(!dl||!r||!r.cajeros)return; dl.innerHTML=r.cajeros.map(function(n){return '<option value="'+(''+n).replace(/"/g,'')+'"></option>';}).join(''); }).catch(function(){}); }catch(e){} }
+function _fondoNote(){ var el=document.getElementById('e-fondo-note'); if(!el)return; var cj=(document.getElementById('e-caja')||{}).value||''; if(/^yapag/i.test(cj)){ el.innerHTML='💳 YaPagué: <b>sin fondo de efectivo</b> (arranca en 0).'; } else { el.innerHTML='💵 Fondo de caja: <b>Bs 3.000</b> (fijo, ya cargado). Se descuenta al cerrar para no inflar la venta.'; } }
+_loadCajeros(); _fondoNote();
+function afterEnter(){ try{ localStorage.setItem('caja_sesion', JSON.stringify({id:C.id,caja:C.caja,cajero:C.cajero,fecha:C.fecha,estado:C.estado,data:C.data,ver:_ver})); }catch(e){} document.getElementById('ov').style.display='none'; document.getElementById('app').style.display='block'; render(); if(_pollT)clearInterval(_pollT); _pollT=setInterval(poll,5000); _resetIdle(); }
+function poll(){ if(!C)return; API('dia',{fecha:C.fecha,empresa:'farmacia'}).then(function(res){ if(!res||res.error)return; if(res.cierres)window._diaCierres=res.cierres; if(res.banco_prior!==undefined && res.banco_prior!==window._bancoPrior){ window._bancoPrior=res.banco_prior||''; window._bancoNota=res.banco_nota||''; if(!document.getElementById('modal'))render(); } if(res.turneros)window._turneros=res.turneros; var srv=(res.cierres||[]).filter(function(x){return x.id===C.id;})[0]; if(!srv)return; var ch=false; if(res.tasa!=null && num(res.tasa)!==num(C.data.tasa)){ C.data.tasa=res.tasa; ch=true; } if(srv.estado!==C.estado){ C.estado=srv.estado; ch=true; } var nf=(res.firmas||[]).filter(function(f){return f.cierre_id===C.id;}); if(nf.length!==FIRMAS.length)ch=true; FIRMAS=nf; if((srv.ver||0)>_ver && !_saving && !_dirty){ C.data=norm(srv).data; _ver=srv.ver; ch=true; } if(_dirty&&!_saving)flushSave(); if(ch && !document.getElementById('modal'))render(); }).catch(function(){}); }
+function firmada(id){ return FIRMAS.some(function(f){return f.linea_id===id;}); }
+function firmaDe(id){ return FIRMAS.filter(function(f){return f.linea_id===id;})[0]||null; }
+
+function tot(){ var d=C.data, tasa=num(d.tasa); var efBs=0; DENOM.forEach(function(dn){ efBs+=dn*num((d.efectivo||{})[dn]); });
+  var dolUsd=(d.dolares||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var zelUsd=(d.zelle||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var transBs=(d.transfer||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var debBs=(d.debito||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var credBs=(d.credito||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var gastosBs=(d.gastos||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var ventaEf=(d.efectivobs||[]).reduce(function(a,x){return a+num(x.monto);},0);
+  var fondo=num(d.fondo_bs); var esperado=ventaEf; var descuadre=(efBs>0)?(efBs-esperado):0;
+  var totalBs=ventaEf+transBs+debBs+credBs; var totalUsd=dolUsd+zelUsd; var total=totalBs;
+  var dolBs=dolUsd*tasa, zelBs=zelUsd*tasa;
+  var fiscalVN=num(d.fiscal_ventas_netas)+num(d.fiscal_ventas_netas2), fiscalCR=num(d.fiscal_creditos), fiscalREP=num(d.fiscal_reposicion);
+  var fiscalTotalCaja=efBs+debBs+transBs+credBs+dolBs+zelBs+gastosBs;
+  var fiscalCuadre=fiscalVN-fiscalCR; var fiscalDif=fiscalTotalCaja-fiscalCuadre-fiscalREP;
+  return {efBs:efBs,fondo:fondo,ventaEf:ventaEf,esperado:esperado,descuadre:descuadre,total:totalBs,totalBs:totalBs,totalUsd:totalUsd,gastosBs:gastosBs,fiscalVN:fiscalVN,fiscalCR:fiscalCR,fiscalREP:fiscalREP,fiscalTotalCaja:fiscalTotalCaja,fiscalCuadre:fiscalCuadre,fiscalDif:fiscalDif}; }
+function turVerifica(k,i){
+  if(!esTurnero()||!C)return; var rec=(C.data[k]||[])[i]; if(!rec||firmada(rec.id))return;
+  var det=(k==='transfer')?('Pago móvil Bs '+fmt(rec.monto)+'\nBanco: '+(rec.banco||'—')+'\nRef: '+(rec.ref||'—')):(meta(k).n+' '+meta(k).mon+' '+fmt(rec.monto));
+  if(!confirm('🌙 VERIFICA AHORA en el teléfono/app del banco:\n\n'+det+'\n\n¿Confirmas que el pago SÍ llegó?\n(Aceptar = llegó, se firma)'))return;
+  API('firma_turnero',{id:C.id,fecha:C.fecha,cajero:C.cajero,linea_id:rec.id,tipo:k,monto:num(rec.monto)}).then(function(r){ if(r&&r.ok){ FIRMAS.push({cierre_id:C.id,linea_id:rec.id,firmado_por:'🌙 '+C.cajero+' (turno noche)'}); toast('🌙 Verificado y firmado'); render(); } else { toast('No se pudo firmar: '+((r&&r.error)||'')); } });
+}
+function esTurnero(){ try{ return C && (window._turneros||[]).indexOf((''+C.cajero).toLowerCase().trim())>=0; }catch(e){ return false; } }
+function pendientes(){ var d=C.data,n=0; ['zelle','transfer','dolares'].forEach(function(k){ (d[k]||[]).forEach(function(x){ if(num(x.monto)>0 && !firmada(x.id))n++; }); }); return n; }
+function ind(txt,col){ var e=document.getElementById('save-ind'); if(e){ e.textContent=txt; e.style.color=col||'var(--mut)'; } }
+
+function render(){
+  var app=document.getElementById('app'); if(!C)return;
+  var t=tot(); var cerr=(C.estado==='cerrado'); var esp=(C.estado==='por_confirmar');
+  var pill=cerr?'<span class="pill p-cerr">✓ Cerrada</span>':(esp?'<span class="pill p-porc">Esperando visto bueno</span>':'<span class="pill p-abierto">Abierta</span>');
+  var items=[];
+  ['efectivobs','dolares','zelle','transfer','debito','credito','gastos'].forEach(function(k){ (C.data[k]||[]).forEach(function(x,i){ items.push({k:k,i:i,x:x}); }); });
+  items.reverse();
+  var lista=items.map(function(it){ var m=meta(it.k); var x=it.x; var det=x.titular||x.banco||x.concepto||x.fact||''; var fdo=(m.firma&&firmada(x.id));
+    var right = m.firma ? (fdo?'<span style="color:var(--grn);font-weight:800;font-size:12px">✓ Firmado</span>':(esTurnero()?'<button class="btn btn-grn" style="padding:5px 10px;font-size:11px" onclick="turVerifica(\''+it.k+'\','+it.i+')">🌙 Verificar y firmar</button>':(x.solic?'<span style="color:var(--amb);font-weight:700;font-size:12px">🔔 Esperando firma</span>':'<span style="color:var(--mut);font-size:12px">sin firmar</span>'))) : '';
+    return '<div style="display:flex;align-items:center;gap:11px;padding:11px 4px;border-top:1px solid var(--bd)">'+
+      '<span style="font-size:22px">'+m.ic+'</span>'+
+      '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">'+m.mon+' '+fmt(x.monto)+(it.k==='gastos'?' (gasto)':'')+'</div>'+(det?'<div class="muted" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(det)+'</div>':'')+'</div>'+
+      right+(cerr?'':'<button onclick="delPago(\''+it.k+'\','+it.i+')" style="border:0;background:none;color:var(--red);font-size:20px;cursor:pointer;margin-left:4px">×</button>')+
+    '</div>';
+  }).join('');
+  var efLine='';
+  if(!lista && !efLine) lista='<div class="muted" style="text-align:center;padding:20px">Aún no has registrado pagos.</div>';
+  lista=efLine+lista;
+
+  var acc='';
+  if(cerr){ acc='<div class="card" style="text-align:center;color:var(--grn);font-weight:800">✓ Caja cerrada y confirmada.</div>'; }
+  else if(esp){ acc='<div class="card" style="text-align:center"><div style="font-weight:800;color:var(--acc)">⏳ Esperando el visto bueno del supervisor</div><div class="muted" style="margin-top:4px">Cuando confirme, la caja queda cerrada.</div></div>'; }
+  else { acc='<div style="display:flex;gap:8px"><button class="btn btn-gh" style="flex:1;padding:14px;font-size:15px" onclick="abrirRelevo()">🔄 Entregar (relevo)</button><button class="btn btn-grn" style="flex:1;padding:14px;font-size:15px" onclick="abrirCierre()">🔒 Cerrar caja</button></div>'; }
+
+  app.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><div style="font-weight:800;font-size:19px">'+esc(C.caja)+' · '+esc(C.cajero)+'</div><div style="text-align:right">'+pill+'<div id="save-ind" class="muted" style="font-size:11px;margin-top:4px"></div></div></div>'+
+    '<div class="card" style="text-align:center;background:linear-gradient(140deg,#1E2E52,#1E38A6 55%,#2B47C4);color:#fff;border:0;box-shadow:0 2px 6px rgba(30,56,166,.25),0 18px 40px -14px rgba(30,56,166,.55),inset 0 1px 0 rgba(255,255,255,.14)"><div style="font-size:13px;opacity:.9;font-weight:600">TOTAL DEL DÍA</div><div style="display:flex;justify-content:center;align-items:baseline;gap:18px;flex-wrap:wrap"><div><div style="font-size:31px;font-weight:900;line-height:1.1">Bs '+fmt(t.totalBs)+'</div><div style="font-size:10px;opacity:.8;letter-spacing:.4px">BOLÍVARES</div></div><div><div style="font-size:31px;font-weight:900;line-height:1.1">$ '+fmt(t.totalUsd)+'</div><div style="font-size:10px;opacity:.8;letter-spacing:.4px">DÓLARES</div></div></div>'+(t.gastosBs?('<div style="font-size:12px;opacity:.85">(−) gastos: Bs '+fmt(t.gastosBs)+'</div>'):'')+'<div style="font-size:11px;opacity:.8;margin-top:4px">Tasa del día: Bs '+(num(C.data.tasa)?fmt(C.data.tasa):'—')+' / $ · desde Central</div>'+((num(C.data.fondo_bs)>0||t.ventaEf>0)?('<div style="font-size:11px;opacity:.85;margin-top:2px">Fondo: Bs '+fmt(t.fondo)+(' · Venta efectivo: Bs '+fmt(t.ventaEf))+'</div>'):'')+((num(C.data.fondo_usd)>0)?('<div style="font-size:11px;opacity:.85">Fondo en dólares: $ '+fmt(C.data.fondo_usd)+' · el efectivo en $ va a la caja roja</div>'):'')+'</div>'+
+    (esTurnero()?('<div style="background:linear-gradient(140deg,#312e81,#4338ca);color:#fff;border-radius:14px;padding:10px 14px;margin-bottom:12px"><b>🌙 Turno noche activo</b><div style="font-size:11.5px;opacity:.9">Dólares/Zelle se firman solos · el pago móvil lo VERIFICAS tú antes de firmar · cierra antes de las 12 y vuelve a entrar después de las 12 para abrir el día nuevo.</div></div>'):'')+
+    (window._bancoPrior?('<div style="background:linear-gradient(140deg,#065f46,#079455);color:#fff;border-radius:14px;padding:12px 14px;margin-bottom:12px;box-shadow:0 2px 6px rgba(7,148,85,.25),0 12px 26px -12px rgba(7,148,85,.5)"><div style="font-size:11px;font-weight:700;opacity:.85;letter-spacing:.5px">🏦 BANCO PRIORITARIO HOY</div><div style="font-size:20px;font-weight:900;margin-top:2px">'+esc(window._bancoPrior)+'</div><div style="font-size:11.5px;opacity:.9;margin-top:2px">'+(window._bancoNota?esc(window._bancoNota):'Recibe los pagos móviles / transferencias por este banco')+'</div></div>'):'')+
+    (cerr||esp?'':'<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-acc" style="flex:1;padding:16px;font-size:18px" onclick="abrirAgregar()">➕ Registrar pago</button><button class="btn btn-gh" style="width:64px;padding:16px;font-size:22px" title="Dictar por voz (Alt+V)" onclick="vozIniciar()">🎤</button></div>')+
+    (cerr||esp||!/^yapag/i.test(C.caja||'')?'':'<div style="text-align:center;margin:-4px 0 12px"><button onclick="ypAbrir(window._ypUltPre||{})" style="border:0;background:none;color:var(--mut);font-size:12px;cursor:pointer;text-decoration:underline">🛵 ¿Se cerró el pedido Ya Pagué? Tócame para volver a abrirlo</button></div>')+
+    '<div style="margin-bottom:12px"><button class="btn btn-gh" style="width:100%;padding:12px;font-size:15px;font-weight:700" onclick="buscarMedAbrir()">🔎 Buscar medicamento</button></div>'+
+    '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><span style="font-weight:800;font-size:14px">Pagos de hoy</span><span class="muted" style="font-size:10.5px">⌨ Alt+1-4 método · Alt+V voz · Alt+C cierre · Alt+R relevo</span></div>'+lista+'</div>'+
+    acc;
+}
+function delPago(k,i){ if(!C)return; var arr=C.data[k]; var real=arr[i]; if(!real)return; var mt=meta(k); if(real.solic&&firmada(real.id)){ toast('Ya está firmado, no se puede borrar.'); return; } var eraSolic=!!(real.solic&&!firmada(real.id)); if(!confirm(eraSolic?'Este pago está esperando firma. Si lo borras, se le avisará al supervisor y quedará registrado. ¿Borrar?':'¿Borrar este pago?'))return; arr.splice(i,1); scheduleSave(); render(); if(eraSolic){ try{ API('evento',{cierre_id:C.id,fecha:C.fecha,caja:C.caja,cajero:C.cajero,tipo:'borrado',metodo:(mt?mt.n:k),moneda:(mt?mt.mon:''),monto:num(real.monto),detalle:(real.titular||real.banco||real.concepto||real.ref||'')}); }catch(e){} toast('Pago borrado · se avisó al supervisor'); } }
+
+function cerrarModal(){ var m=document.getElementById('modal'); if(m)m.remove(); }
+// ── Buscar medicamento (inventario · ignora existencia 0 · recomienda por principio activo) ──
+function buscarMedAbrir(){
+  var m=document.createElement('div'); m.id='modal'; m.className='modal'; m.onclick=function(e){ if(e.target===m)cerrarModal(); };
+  m.innerHTML='<div class="sheet">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-weight:800;font-size:18px">🔎 Buscar medicamento</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div>'+
+    '<input id="bm-q" type="text" inputmode="search" placeholder="Nombre o principio activo… (ej. diclofenac)" oninput="bmBuscar(this.value)" style="width:100%;box-sizing:border-box;padding:12px;font-size:16px;border:1.5px solid var(--bd);border-radius:12px;margin-bottom:6px">'+
+    '<div class="muted" style="font-size:11px;margin-bottom:8px">Inventario <b>EN VIVO</b> de A2 — se actualiza solo cada 10 minutos. Muestra lo que hay <b>en existencia</b> y agrupa por <b>principio activo</b> para ofrecer alternativas.</div>'+
+    '<div id="bm-res" style="min-height:60px"></div></div>';
+  document.body.appendChild(m);
+  setTimeout(function(){ var f=document.getElementById('bm-q'); if(f)f.focus(); },80);
+}
+var _bmT=null, _bmSeq=0;
+function bmBuscar(v){
+  v=(''+(v||'')).trim();
+  var res=document.getElementById('bm-res'); if(!res)return;
+  if(_bmT)clearTimeout(_bmT);
+  if(v.length<2){ res.innerHTML='<div class="muted" style="font-size:13px;padding:10px 2px">Escribe al menos 2 letras…</div>'; return; }
+  res.innerHTML='<div class="muted" style="font-size:13px;padding:10px 2px">Buscando…</div>';
+  var seq=++_bmSeq;
+  _bmT=setTimeout(function(){
+    fetch(SUPA_URL+'/functions/v1/buscar_med',{method:'POST',headers:{'Authorization':'Bearer '+ANON,'apikey':ANON,'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,q:v})}).then(function(r){return r.json();}).then(function(d){
+      if(seq!==_bmSeq)return;
+      if(d&&d.error){ res.innerHTML='<div style="color:#b91c1c;font-size:13px;padding:10px 2px">No se pudo buscar: '+esc(d.error)+'</div>'; return; }
+      bmRender((d&&d.items)||[]);
+    }).catch(function(){ if(seq===_bmSeq)res.innerHTML='<div style="color:#b91c1c;font-size:13px;padding:10px 2px">Sin conexión. Reintenta.</div>'; });
+  },260);
+}
+function bmHace(ts){ if(!ts)return ''; var m=Math.floor((Date.now()-new Date(ts).getTime())/60000); if(m<1)return 'hace un momento'; if(m<60)return 'hace '+m+' min'; var h=Math.floor(m/60); return h<48?('hace '+h+' h'):('hace '+Math.floor(h/24)+' días'); }
+function bmPpio(desc){ var d=(''+(desc||'')).toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ0-9 ]/g,' ').replace(/\s+/g,' ').trim(); var t=d.split(' '); var stop={SOL:1,SOLUCION:1,TAB:1,TABLETA:1,CAP:1,CAPSULA:1,JBE:1,JARABE:1,SUSP:1,AMP:1,FCO:1,GRAGEA:1,CREMA:1,GEL:1,X:1,MG:1,ML:1,GR:1,UI:1}; for(var i=0;i<t.length;i++){ if(t[i]&&!stop[t[i]]&&t[i].length>=3&&!/^\d+$/.test(t[i]))return t[i]; } return t[0]||'—'; }
+function bmRender(items){
+  var res=document.getElementById('bm-res'); if(!res)return;
+  if(!items.length){ res.innerHTML='<div class="muted" style="font-size:13px;padding:14px 2px">Nada en existencia coincide con eso. Puede estar en 0 o escrito distinto — prueba con otra palabra o la marca.</div>'; return; }
+  var groups={}, order=[];
+  items.forEach(function(it){ var p=bmPpio(it.descripcion); if(!groups[p]){ groups[p]=[]; order.push(p); } groups[p].push(it); });
+  var html=order.map(function(p){
+    var lst=groups[p];
+    var rows=lst.map(function(it){ var ex=num(it.existencia_actual); return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--bd)"><div style="min-width:0"><div style="font-size:13px;font-weight:600">'+esc(it.descripcion)+'</div>'+((it.codigo||it.marca)?('<div class="muted" style="font-size:10.5px">'+[it.marca?esc(it.marca):null,it.codigo?('cód. '+esc(it.codigo)):null,it.empaque?('empaque '+it.empaque):null].filter(Boolean).join(' · ')+'</div>'):'')+'</div><div style="text-align:right;flex:none"><div style="font-size:15px;font-weight:800;color:#166534">'+fmt(ex)+'</div><div class="muted" style="font-size:9.5px">en existencia</div></div></div>'; }).join('');
+    return '<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:800;color:#1E38A6;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">💊 '+esc(p)+' <span class="muted" style="font-weight:600;text-transform:none">· '+lst.length+' opción'+(lst.length===1?'':'es')+' en existencia</span></div>'+rows+'</div>';
+  }).join('');
+  var _bmTs=''; items.forEach(function(it){ if(it.actualizado_en&&it.actualizado_en>_bmTs)_bmTs=it.actualizado_en; });
+  res.innerHTML='<div class="muted" style="font-size:11px;margin-bottom:6px">'+items.length+' resultado(s) · alternativas por principio activo'+(_bmTs?(' · inventario actualizado '+bmHace(_bmTs)):'')+'</div>'+html;
+}
+// ── Pedido Ya Pagué: se registra aquí y aparece solo en el módulo Ya Pagué ──
+function ypAbrir(pre){
+  pre=pre||{};
+  var m=document.createElement('div'); m.id='modal'; m.className='modal'; m.onclick=function(e){ if(e.target===m)cerrarModal(); };
+  var inp='width:100%;box-sizing:border-box;padding:11px;border:1.5px solid var(--bd);border-radius:10px;font-size:15px;margin-top:3px';
+  var lb=function(t,inner){ return '<label style="display:block;font-size:11px;font-weight:700;color:var(--mut);margin-bottom:8px">'+t+inner+'</label>'; };
+  var sec=function(t){ return '<div style="font-size:10.5px;font-weight:800;letter-spacing:.6px;color:var(--mut);text-transform:uppercase;margin:12px 0 7px;border-top:1px solid var(--bd);padding-top:10px">'+t+'</div>'; };
+  m.innerHTML='<div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-weight:800;font-size:18px">🛵 Pedido Ya Pagué</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div>'+
+    ((pre.monto||pre.ref)?'<div style="font-size:12px;background:#f0fdf4;color:#166534;border-radius:10px;padding:7px 10px;margin-bottom:8px">✓ Pago guardado. Ahora los datos del pedido — si esto <b>no</b> era un pedido Ya Pagué, cierra con la ×.</div>':(pre.credito?'<div style="font-size:12px;background:#fdf4ff;color:#86198f;border-radius:10px;padding:7px 10px;margin-bottom:8px">💳 Venta a CRÉDITO: no se registra pago en la caja, la factura cae en la cuenta de la empresa.</div>':''))+
+    '<div style="display:flex;gap:8px;margin-bottom:10px"><button id="yp-t-pickup" class="btn btn-acc" style="flex:1;padding:11px" onclick="ypTipo(\'pickup\')">🏪 Pickup</button><button id="yp-t-delivery" class="btn btn-gh" style="flex:1;padding:11px" onclick="ypTipo(\'delivery\')">🛵 Delivery</button></div>'+
+    sec('Cliente')+
+    lb('Nombre','<input id="ypc-cliente" style="'+inp+'" placeholder="nombre del cliente">')+
+    lb('Teléfono','<input id="ypc-tel" style="'+inp+'" placeholder="0414…" inputmode="tel">')+
+    '<div id="yp-f-dir" style="display:none">'+sec('Delivery')+
+      lb('Dirección','<input id="ypc-dir" style="'+inp+'" placeholder="sector / calle">')+
+      lb('Costo del viaje $ (lo que cobra Ridery)','<input id="ypc-costo" type="number" step="0.01" style="'+inp+'" placeholder="1.71">')+
+      lb('Envío','<select id="ypc-envio" style="'+inp+'"><option value="pago">Incluido en lo que pagó el cliente</option><option value="gratis">Gratis (lo asume la farmacia)</option></select>')+
+    '</div>'+
+    sec('Facturación')+
+    '<label style="display:flex;align-items:flex-start;gap:10px;background:#fff7ed;border:1.5px solid #fdba74;border-radius:12px;padding:11px 12px;margin:0 0 10px;cursor:pointer">'+
+      '<input type="checkbox" id="ypc-porllegar" style="width:20px;height:20px;flex:none;margin-top:1px" onchange="ypPorLlegar(this.checked)">'+
+      '<span style="font-size:13px;line-height:1.35">🚚 <b>El producto está POR LLEGAR</b><br><span style="font-size:11.5px;color:#9a3412">Aún no se factura: el nº de factura se le pone en el módulo Ya Pagué cuando llegue.</span></span></label>'+
+    '<div id="yp-f-fact">'+lb('Nº factura / presupuesto','<input id="ypc-fact" style="'+inp+'" placeholder="para saber qué contiene la orden">')+'</div>'+
+    '<div id="yp-f-comp" style="display:none">'+
+      lb('Comprobante del pago (referencia)','<input id="ypc-comp" style="'+inp+'" placeholder="ref. del pago del cliente">')+
+      lb('¿De dónde viene el producto?','<input id="ypc-origen" style="'+inp+'" placeholder="proveedor / droguería">')+
+    '</div>'+
+    lb('Monto total $','<input id="ypc-monto" type="number" step="0.01" style="'+inp+'" placeholder="0.00">')+
+    lb('¿Cómo paga?','<select id="ypc-cred" style="'+inp+'"><option value="">Contado (ya pagó)</option><option value="MARA">Crédito · MARA</option><option value="NIVAR">Crédito · NIVAR</option></select>')+
+    lb('Empresa','<select id="ypc-emp" style="'+inp+'" onchange="if(this.value===\'DROGUERIA\')ypTipo(\'delivery\')"><option value="FARMACIA">Farmacia</option><option value="DROGUERIA">Droguería (solo delivery)</option></select>')+
+    lb('Descripción (opcional)','<input id="ypc-desc" style="'+inp+'" placeholder="detalle corto del pedido">')+
+    '<button class="btn btn-acc" style="width:100%;padding:14px;font-size:16px;margin-top:4px" onclick="ypEnviar(this)">Registrar pedido</button></div>';
+  document.body.appendChild(m); window._ypTipoSel='pickup';
+  try{
+    if(pre.monto){ var e1=document.getElementById('ypc-monto'); if(e1)e1.value=pre.monto; }
+    if(pre.cliente){ var e2=document.getElementById('ypc-cliente'); if(e2)e2.value=pre.cliente; }
+    if(pre.ref){ window._ypRefPago=pre.ref; } else { window._ypRefPago=''; }
+    if(pre.credito){ var e4=document.getElementById('ypc-cred'); if(e4)e4.value='MARA'; }
+  }catch(e){}
+}
+function ypPorLlegar(on){
+  var f=document.getElementById('yp-f-fact'), c=document.getElementById('yp-f-comp');
+  if(f)f.style.display=on?'none':'block';
+  if(c)c.style.display=on?'block':'none';
+  if(on&&window._ypRefPago){ var e=document.getElementById('ypc-comp'); if(e&&!e.value)e.value=window._ypRefPago; }
+}
+function ypTipo(t){
+  var emp=document.getElementById('ypc-emp');
+  if(t==='pickup'&&emp&&emp.value==='DROGUERIA'){ emp.value='FARMACIA'; toast('El pickup es solo en la Farmacia'); }
+  window._ypTipoSel=t;
+  var bp=document.getElementById('yp-t-pickup'), bd=document.getElementById('yp-t-delivery'), fd=document.getElementById('yp-f-dir');
+  if(bp)bp.className='btn '+(t==='pickup'?'btn-acc':'btn-gh'); if(bd)bd.className='btn '+(t==='delivery'?'btn-acc':'btn-gh');
+  if(fd)fd.style.display=(t==='delivery')?'block':'none';
+}
+function ypEnviar(btn){
+  var g=function(id){ var el=document.getElementById(id); return el?(''+(el.value||'')).trim():''; };
+  var tipo=window._ypTipoSel||'pickup';
+  var cliente=g('ypc-cliente'); if(!cliente){ toast('Escribe el nombre del cliente'); return; }
+  if(tipo==='pickup'&&g('ypc-emp')==='DROGUERIA'){ toast('El pickup es solo en la Farmacia; la Droguería solo envía deliveries'); return; }
+  var porLlegar=!!(document.getElementById('ypc-porllegar')||{}).checked;
+  var cred=g('ypc-cred'); var monto=num(g('ypc-monto'));
+  if(cred&&monto<=0){ toast('Si es a crédito, escribe el monto total'); return; }
+  if(tipo==='delivery'&&!g('ypc-dir')){ toast('Escribe la dirección del delivery'); return; }
+  if(tipo==='delivery'&&num(g('ypc-costo'))<=0){ toast('Escribe el costo del viaje (lo que cobra Ridery)'); return; }
+  if(porLlegar&&!g('ypc-comp')){ toast('Anota el comprobante del pago del cliente'); return; }
+  if(!porLlegar&&!g('ypc-fact')){ toast('Anota el nº de factura o presupuesto'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='Registrando…'; }
+  API('yp_pedido',{ tipo:tipo, empresa:g('ypc-emp'), cliente:cliente, telefono:g('ypc-tel'), direccion:g('ypc-dir'),
+    descripcion:g('ypc-desc'), factura:(porLlegar?'':g('ypc-fact')), comprobante:g('ypc-comp')||window._ypRefPago||'', origen:g('ypc-origen'),
+    monto:monto||null, credito:cred||null, por_llegar:porLlegar, envio:g('ypc-envio')||'pago', costo:num(g('ypc-costo'))||0,
+    caja:C?C.caja:'', cajero:C?C.cajero:'' }).then(function(r){
+    if(btn){ btn.disabled=false; btn.textContent='Registrar pedido'; }
+    if(!r||!r.ok){ toast('No se pudo registrar: '+((r&&r.error)||'')); return; }
+    cerrarModal();
+    if(tipo==='pickup'&&r.codigo){
+      var m2=document.createElement('div'); m2.id='modal'; m2.className='modal'; m2.onclick=function(e){ if(e.target===m2)cerrarModal(); };
+      m2.innerHTML='<div class="sheet" style="text-align:center"><div style="font-size:15px;font-weight:700;margin-bottom:6px">✅ Pedido registrado</div>'+
+        '<div style="font-size:12px;color:var(--mut)">Código de retiro — escríbelo en el ticket del cliente:</div>'+
+        '<div style="font-size:44px;font-weight:900;letter-spacing:3px;margin:12px 0;color:#1E38A6">'+r.codigo+'</div>'+
+        (porLlegar?'<div style="font-size:12.5px;background:#fff7ed;border-radius:10px;padding:8px">🚚 Quedó como <b>POR LLEGAR</b>: se factura en el módulo cuando llegue el producto.</div>':'')+
+        '<button class="btn btn-acc" style="width:100%;padding:13px;margin-top:12px" onclick="cerrarModal()">Listo</button></div>';
+      document.body.appendChild(m2);
+    } else {
+      toast('✅ Pedido registrado en Ya Pagué'+(porLlegar?' (por llegar)':''));
+    }
+  }).catch(function(){ if(btn){ btn.disabled=false; btn.textContent='Registrar pedido'; } toast('Error de red'); });
+}
+function abrirAgregar(){
+  var m=document.createElement('div'); m.id='modal'; m.className='modal'; m.onclick=function(e){ if(e.target===m)cerrarModal(); };
+  var grid=METODOS.map(function(mt,ix){ return '<div class="mbtn" onclick="formPago(\''+mt.k+'\')"><span class="mkey">'+(ix+1)+'</span><span class="em">'+mt.ic+'</span>'+mt.n+'</div>'; }).join('');
+  if(C&&/^yapag/i.test(C.caja||'')) grid+='<div class="mbtn" onclick="cerrarModal();ypAbrir({credito:1})"><span class="em">💳</span>Crédito MARA / NIVAR</div>';
+  m.innerHTML='<div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:800;font-size:18px">¿Qué recibiste?</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div><div class="mgrid">'+grid+'</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">⌨ <b>Alt + 1-4</b> elige el método · <b>Enter</b> pasa al siguiente campo y guarda · <b>Esc</b> cancela</div></div>';
+  document.body.appendChild(m);
+}
+function formPago(k){
+  var mt=meta(k); var m=document.getElementById('modal'); if(!m)return;
+  var campos=mt.campos.map(function(c){ if(c.sel){ return '<label class="fl">'+c.t+'</label><select id="f-'+c.k+'"><option value="">— elige —</option>'+c.sel.map(function(b){return '<option>'+b+'</option>';}).join('')+'</select>'; } return '<label class="fl">'+c.t+'</label><input id="f-'+c.k+'" type="'+(c.num?'number':'text')+'" '+(c.num?'inputmode="decimal" ':'')+'placeholder="'+(c.ph||'')+'">'; }).join('');
+  m.querySelector('.sheet').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-weight:800;font-size:18px">'+mt.ic+' '+mt.n+'</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div>'+campos+(mt.firma?'<div class="muted" style="margin-top:8px">Al guardar, se le pide la firma al supervisor.</div>':'')+'<button class="btn btn-grn" style="width:100%;margin-top:16px;padding:15px" onclick="guardarPago(\''+k+'\')">Guardar</button>';
+  setTimeout(function(){ var f=document.getElementById('f-'+mt.campos[0].k); if(f)f.focus(); if(k==='transfer'&&window._bancoPrior){ var fb=document.getElementById('f-banco'); if(fb&&!fb.value){ fb.value=window._bancoPrior; fb.style.borderColor='#079455'; fb.style.boxShadow='0 0 0 3px rgba(7,148,85,.18)'; var lb=fb.previousElementSibling; if(lb)lb.innerHTML='Banco <span style="color:#079455;font-weight:800">· prioritario: '+esc(window._bancoPrior)+'</span>'; } } },80);
+}
+
+function _ctVal(k){ if(!C)return ''; var a=(C.data&&C.data[k])||[]; if(!a.length)return ''; var t=0; a.forEach(function(x){t+=num(x.monto);}); return t||''; }
+function _cierreTot(k,v){ if(!C)return; var n=num(v); C.data[k]=(n>0)?[{id:'a2_'+k,monto:n,a2:true}]:[]; scheduleSave(); if(document.getElementById('ct-ef')){ var foco=(document.activeElement&&document.activeElement.id)||''; cerrarModal(); abrirCierre(); if(foco){ var f=document.getElementById(foco); if(f)f.focus(); } } }
+
+function ypChain(k,rec){
+  try{
+    if(!C||!/^yapag/i.test(C.caja||''))return;
+    var m=num(rec.monto), usd=m;
+    if(k==='transfer'||k==='efectivobs'){ var t=num(C.data&&C.data.tasa); usd=(t>0)?(m/t):0; }
+    window._ypUltPre={monto:(usd>0?usd.toFixed(2):''), cliente:(rec.titular||''), ref:(rec.ref||'')};
+    setTimeout(function(){ if(document.getElementById('modal'))return;
+      ypAbrir(window._ypUltPre); },650);
+  }catch(e){}
+}
+// Detecta si una referencia de transferencia ya fue registrada HOY en cualquier caja (incluida la propia)
+function _refNorm(s){ return (''+(s==null?'':s)).toLowerCase().replace(/[^0-9a-z]/g,''); }
+function _refDup(ref){
+  var q=_refNorm(ref); if(!q||q.length<3)return null;
+  var list=(window._diaCierres||[]);
+  for(var i=0;i<list.length;i++){ var cc=list[i]; if(!cc||!cc.data)continue; var trs=cc.data.transfer||[];
+    for(var j=0;j<trs.length;j++){ if(_refNorm(trs[j].ref)===q) return {caja:cc.caja,cajero:cc.cajero,monto:num(trs[j].monto),banco:trs[j].banco,mismaCaja:!!(C&&cc.id===C.id)}; } }
+  if(C&&C.data&&C.data.transfer){ for(var m=0;m<C.data.transfer.length;m++){ if(_refNorm(C.data.transfer[m].ref)===q) return {caja:C.caja,cajero:C.cajero,monto:num(C.data.transfer[m].monto),banco:C.data.transfer[m].banco,mismaCaja:true}; } }
+  return null;
+}
+function guardarPago(k){
+  var mt=meta(k); var rec={id:uid()};
+  mt.campos.forEach(function(c){ var el=document.getElementById('f-'+c.k); rec[c.k]=el?el.value.trim():''; });
+  if(num(rec.monto)<=0){ toast('Escribe el monto'); return; }
+  if(k==='zelle' && !rec.titular){ toast('Falta el titular del Zelle'); return; }
+  if(k==='transfer' && !rec.banco){ toast('Falta el banco'); return; }
+  if(k==='transfer' && !rec.ref){ toast('Falta la referencia / nº de operación'); return; }
+  if(k==='transfer'){ var _dup=_refDup(rec.ref); if(_dup){ var _quien=_dup.mismaCaja?('ESTA misma caja ('+esc(_dup.cajero||'')+')'):(esc(_dup.caja||'')+' · '+esc(_dup.cajero||'')); if(!confirm('⚠️ La referencia '+rec.ref+' YA fue registrada hoy en '+_quien+(_dup.monto?(' por Bs '+fmt(_dup.monto)):'')+(_dup.banco?(' ('+_dup.banco+')'):'')+'.\n\nPodría ser un pago duplicado. Verifica con esa caja antes de continuar.\n\n¿Registrarla de todos modos?')) return; try{ API('evento',{cierre_id:(C?C.id:null),fecha:(C?C.fecha:HOY()),caja:(C?C.caja:''),cajero:(C?C.cajero:''),tipo:'ref_duplicada',metodo:'Transferencia',moneda:'Bs',monto:num(rec.monto),detalle:'Ref '+rec.ref+' repetida (ya en '+(_dup.caja||'')+' · '+(_dup.cajero||'')+'). Registrada igual.'}); }catch(e){} } }
+  if((k==='dolares'||k==='zelle'||k==='transfer') && num(rec.monto)>100000){ if(!confirm('Monto alto ('+fmt(rec.monto)+'). ¿Es correcto?'))return; }
+  if(mt.firma){ rec.solic=true; rec.solic_at=new Date().toISOString(); }
+  C.data[k].push(rec); saveNow();
+  if(mt.firma && esTurnero()){
+    if(k==='transfer'){
+      cerrarModal(); render();
+      toast('🌙 Guardado · verifica en el teléfono que LLEGÓ y tócalo para firmar');
+      setTimeout(function(){ turVerifica(k, C.data[k].length-1); }, 350);
+      return;
+    }
+    API('firma_turnero',{id:C.id,fecha:C.fecha,cajero:C.cajero,linea_id:rec.id,tipo:k,monto:num(rec.monto)}).then(function(r){ if(r&&r.ok){ FIRMAS.push({cierre_id:C.id,linea_id:rec.id,firmado_por:'🌙 '+C.cajero+' (turno noche)'}); toast('🌙 Guardado y autofirmado (turno noche)'); render(); } else { toast('Guardado · pide firma en la mañana'); } });
+    cerrarModal(); render(); ypChain(k,rec); return;
+  }
+  if(mt.firma){ try{ API('pedir_firma',{caja:C.caja,cajero:C.cajero,tipo:k,monto:num(rec.monto),detalle:(rec.titular||rec.banco||'')}); }catch(e){} }
+  cerrarModal(); render(); toast(mt.firma?'Guardado · firma solicitada':'Pago guardado');
+  ypChain(k,rec);
+}
+function formEfectivo(){
+  var m=document.getElementById('modal'); if(!m)return; var d=C.data;
+  var rows=DENOM.map(function(dn){ var c=num((d.efectivo||{})[dn]); return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:70px;font-weight:700">Bs '+dn+'</span><input type="number" inputmode="numeric" id="ef-'+dn+'" value="'+(c||'')+'" placeholder="0" style="flex:1" oninput="efLive()"><span id="eft-'+dn+'" style="width:90px;text-align:right;font-weight:600" class="muted">'+fmt(dn*c)+'</span></div>'; }).join('');
+  m.querySelector('.sheet').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-weight:800;font-size:18px">💵 Contar efectivo (Bs)</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div><div class="muted" style="margin-bottom:10px">¿Cuántos billetes de cada uno? <b>Sin contar el fondo</b> (los Bs '+fmt(num(C.data.fondo_bs))+' se apartan)</div>'+rows+'<div style="text-align:right;font-weight:800;font-size:16px;margin-top:6px;color:var(--grn)">Total: Bs <span id="ef-total">'+fmt(tot().efBs)+'</span></div><button class="btn btn-grn" style="width:100%;margin-top:14px;padding:15px" onclick="guardarEfectivo()">Guardar conteo</button>';
+}
+function efLive(){ var s=0; DENOM.forEach(function(dn){ var v=num((document.getElementById('ef-'+dn)||{}).value); var c=document.getElementById('eft-'+dn); if(c)c.textContent=fmt(dn*v); s+=dn*v; }); var tt=document.getElementById('ef-total'); if(tt)tt.textContent=fmt(s); }
+function guardarEfectivo(){ if(!C)return; DENOM.forEach(function(dn){ var v=num((document.getElementById('ef-'+dn)||{}).value); if(v>0)C.data.efectivo[dn]=v; else delete C.data.efectivo[dn]; }); saveNow(); cerrarModal(); render(); toast('Efectivo guardado'); }
+
+function abrirCierre(){
+  var m=document.createElement('div'); m.id='modal'; m.className='modal'; m.onclick=function(e){ if(e.target===m)cerrarModal(); };
+  var t=tot(); var pend=pendientes(); var d=C.data;
+  m.innerHTML='<div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-weight:800;font-size:18px">🔒 Cerrar caja</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div>'+
+    '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between"><span>Ventas en Bs</span><b>Bs '+fmt(t.totalBs)+'</b></div><div style="display:flex;justify-content:space-between"><span>Ventas en $</span><b>$ '+fmt(t.totalUsd)+'</b></div><div style="display:flex;justify-content:space-between"><span class="muted">Venta en efectivo (registrada)</span><span class="muted">Bs '+fmt(t.ventaEf)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Fondo inicial</span><span class="muted">Bs '+fmt(t.fondo)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Debe haber contado (venta del día)</span><span class="muted">Bs '+fmt(t.esperado)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Efectivo contado (arqueo)</span><span class="muted">Bs '+fmt(t.efBs)+'</span></div>'+(t.efBs>0?('<div style="display:flex;justify-content:space-between;font-weight:800;color:'+(Math.abs(t.descuadre)<0.5?'var(--grn)':'var(--red)')+'"><span>Descuadre</span><span>'+(Math.abs(t.descuadre)<0.5?'✓ cuadra':((t.descuadre>0?'+':'')+fmt(t.descuadre)))+'</span></div>'):'')+'</div>'+
+    '<div class="card" style="margin-bottom:12px"><div style="font-weight:800;margin-bottom:8px">🧾 Reporte fiscal (Z)</div><label class="fl">Ventas Netas (del ticket Z)</label><input type="number" inputmode="decimal" id="fz-vn" value="'+(num(d.fiscal_ventas_netas)||d.fiscal_ventas_netas?d.fiscal_ventas_netas:'')+'" placeholder="0" oninput="fzLive()" onchange="fzSet(\'fiscal_ventas_netas\',this.value)"><label class="fl">Ventas Netas 2º reporte Z (solo si hubo dos)</label><input type="number" inputmode="decimal" id="fz-vn2" value="'+(num(d.fiscal_ventas_netas2)||d.fiscal_ventas_netas2?d.fiscal_ventas_netas2:'')+'" placeholder="0" oninput="fzLive()" onchange="fzSet(&#39;fiscal_ventas_netas2&#39;,this.value)"><label class="fl">Créditos (ventas a crédito, si aplica)</label><input type="number" inputmode="decimal" id="fz-cr" value="'+(num(d.fiscal_creditos)||d.fiscal_creditos?d.fiscal_creditos:'')+'" placeholder="0" oninput="fzLive()" onchange="fzSet(\'fiscal_creditos\',this.value)"><div id="fz-resumen" style="margin-top:10px;font-size:13px"><div style="display:flex;justify-content:space-between"><span class="muted">Total caja (fiscal)</span><span>Bs '+fmt(t.fiscalTotalCaja)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Total cuadre</span><span>Bs '+fmt(t.fiscalCuadre)+'</span></div><div style="display:flex;justify-content:space-between;font-weight:800;color:'+(t.fiscalVN?(Math.abs(t.fiscalDif)<0.5?'var(--grn)':'var(--red)'):'var(--mut)')+'"><span>Diferencia</span><span>'+(t.fiscalVN?(Math.abs(t.fiscalDif)<0.5?'✓ cuadra':((t.fiscalDif>0?'+':'')+fmt(t.fiscalDif))):'—')+'</span></div></div></div>'+
+    '<div class="card" style="margin-bottom:12px"><div style="font-weight:800;margin-bottom:2px">💳 Totales del cuadre (A2)</div><div class="muted" style="font-size:11.5px;margin-bottom:8px">Copia estos tres del cuadre de caja de A2 al cerrar.</div>'+
+    '<label class="fl">Efectivo en Bs (venta del día)</label><input type="number" inputmode="decimal" id="ct-ef" value="'+(_ctVal('efectivobs')||'')+'" placeholder="0" onchange="_cierreTot(&#39;efectivobs&#39;,this.value)">'+
+    '<label class="fl">Tarjeta de débito (total Bs)</label><input type="number" inputmode="decimal" id="ct-deb" value="'+(_ctVal('debito')||'')+'" placeholder="0" onchange="_cierreTot(&#39;debito&#39;,this.value)">'+
+    '<label class="fl">Tarjeta de crédito (total Bs)</label><input type="number" inputmode="decimal" id="ct-cred" value="'+(_ctVal('credito')||'')+'" placeholder="0" onchange="_cierreTot(&#39;credito&#39;,this.value)"></div>'+
+    '<button class="btn btn-gh" style="width:100%;margin-bottom:10px" onclick="diagDescuadre()">🔍 ¿Por qué no cuadra? (diagnóstico)</button>'+(t.efBs<=0?'<button class="btn btn-gh" style="width:100%;margin-bottom:10px" onclick="formEfectivo()">💵 Falta contar el efectivo</button>':'')+
+    (pend>0?('<div style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412;border-radius:12px;padding:12px;font-weight:700;margin-bottom:12px">Faltan '+pend+' pago(s) por firmar. El supervisor debe firmarlos antes de cerrar.</div>'):'<div style="background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:12px;padding:12px;font-weight:700;margin-bottom:12px">✓ Todo firmado.</div>')+
+    '<button class="btn btn-grn" style="width:100%;padding:15px" '+(pend>0?'disabled':'')+' onclick="pedirCierre()">Pedir cierre al supervisor</button>'+
+    '<div class="muted" style="text-align:center;margin-top:8px">El supervisor dará el visto bueno final.</div></div>';
+  document.body.appendChild(m);
+}
+function fzLive(){
+  var vn=num((document.getElementById('fz-vn')||{}).value)+num((document.getElementById('fz-vn2')||{}).value);
+  var cr=num((document.getElementById('fz-cr')||{}).value);
+  var t=tot(); var cuadre=vn-cr; var dif=t.fiscalTotalCaja-cuadre-t.fiscalREP;
+  var elVn=document.getElementById('fz-vn'); var hasVN=(elVn&&elVn.value!=='');
+  var el=document.getElementById('fz-resumen'); if(!el)return;
+  el.innerHTML='<div style="display:flex;justify-content:space-between"><span class="muted">Total caja (fiscal)</span><span>Bs '+fmt(t.fiscalTotalCaja)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Total cuadre</span><span>Bs '+fmt(cuadre)+'</span></div><div style="display:flex;justify-content:space-between;font-weight:800;color:'+(hasVN?(Math.abs(dif)<0.5?'var(--grn)':'var(--red)'):'var(--mut)')+'"><span>Diferencia</span><span>'+(hasVN?(Math.abs(dif)<0.5?'✓ cuadra':((dif>0?'+':'')+fmt(dif))):'—')+'</span></div>';
+}
+function fzSet(k,v){ if(!C)return; C.data[k]=v; scheduleSave(); }
+function diagDescuadre(){
+  if(!C)return; var t=tot(); var L=[];
+  var dEf=t.efBs-t.ventaEf;
+  if(t.efBs<=0) L.push('• No has contado el efectivo (arqueo en 0).');
+  else if(Math.abs(dEf)>=1) L.push('• Efectivo: contaste Bs '+fmt(t.efBs)+' pero declaraste Bs '+fmt(t.ventaEf)+' ('+(dEf>0?'sobran':'faltan')+' Bs '+fmt(Math.abs(dEf))+'). ¿Contaste el fondo por error? ¿Vuelto mal dado?');
+  var dif=t.fiscalDif;
+  if(t.fiscalVN>0 && Math.abs(dif)>=1){
+    L.push('• Cuadre fiscal: diferencia de '+(dif>0?'+':'')+fmt(dif)+' Bs contra el reporte Z.');
+    var candidatos=[];
+    (C.data.transfer||[]).forEach(function(x){ candidatos.push({n:'pago móvil ref '+(x.ref||'—'),m:num(x.monto)}); });
+    (C.data.dolares||[]).forEach(function(x){ candidatos.push({n:'dólares $'+fmt(x.monto),m:num(x.monto)*num(C.data.tasa)}); });
+    (C.data.zelle||[]).forEach(function(x){ candidatos.push({n:'zelle $'+fmt(x.monto),m:num(x.monto)*num(C.data.tasa)}); });
+    (C.data.gastos||[]).forEach(function(x){ candidatos.push({n:'gasto '+(x.concepto||''),m:num(x.monto)}); });
+    candidatos.forEach(function(c){ if(Math.abs(Math.abs(dif)-c.m)<1) L.push('  ↳ La diferencia coincide con: '+c.n+' (Bs '+fmt(c.m)+'). ¿Se registró doble, no se entregó, o falta en el Z?'); });
+    if(num(C.data.fiscal_ventas_netas2)===0) L.push('  ↳ ¿Hubo un 2º reporte Z sin sumar? Hay campo para agregarlo.');
+  }
+  if(!L.length){ toast('Todo cuadra ✓'); return; }
+  var texto=L.join('\n');
+  alert('🔍 DIAGNÓSTICO DEL DESCUADRE\n\n'+texto+'\n\nEste diagnóstico queda guardado para control interno.');
+  try{ API('evento',{cierre_id:C.id,fecha:C.fecha,caja:C.caja,cajero:C.cajero,tipo:'descuadre_diag',metodo:'',moneda:'Bs',monto:Math.round((Math.abs(dEf)+Math.abs(t.fiscalVN>0?dif:0))*100)/100,detalle:texto.slice(0,480)}); }catch(e){}
+}
+/* ===== Dictado por voz guiado (sin IA: Web Speech API + reglas) ===== */
+var _vozRec=null,_vozActivo=false,_vozFinal='',_vozPaso=-1,_vozK=null,_vozVals={};
+function vozSoporta(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
+function vozNorm(t){ return (''+t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function vozNum(t){
+  var s=vozNorm(t);
+  s=s.replace(/(\d+(?:[.,]\d+)?)\s*mil(?:\s+(\d{1,3}))?/g,function(_,a,b){ var base=parseFloat((''+a).replace(/\./g,'').replace(',','.'))*1000; if(b)base+=parseFloat(b); return ' '+base+' '; });
+  s=s.replace(/\bmil\b(?:\s+(\d{1,3}))?/g,function(_,b){ return ' '+(1000+(b?parseFloat(b):0))+' '; });
+  s=s.replace(/(\d+)\s+con\s+(\d+)/g,'$1.$2');
+  var m=s.match(/(\d+(?:[.,]\d+)*)/); if(!m)return 0;
+  var raw=m[1];
+  if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(raw)){ raw=raw.replace(/\./g,'').replace(',','.'); }
+  else if(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(raw)){ raw=raw.replace(/,/g,''); }
+  else { raw=raw.replace(',','.'); }
+  var v=parseFloat(raw); return isNaN(v)?0:v;
+}
+function vozMetodo(t){
+  var s=vozNorm(t);
+  if(/zell|sell|cell|selle|zele|\bsele\b|\bcel\b|\bsel\b|\bzel\b/.test(s))return 'zelle';
+  if(/dolar|divisa|verde/.test(s))return 'dolares';
+  if(/transferencia|pago movil|pagomovil|movil|transfiere/.test(s))return 'transfer';
+  if(/gasto/.test(s))return 'gastos';
+  return null;
+}
+function vozBanco(t){ var s=vozNorm(t); var hit=null; (BANCOS||[]).forEach(function(b){ if(s.indexOf(vozNorm(b))>=0)hit=b; }); if(!hit){ var AL={'tesoro':'Banco del Tesoro','caribe':'Bancaribe','nacional de credito':'BNC'}; Object.keys(AL).forEach(function(k){ if(!hit && s.indexOf(k)>=0 && BANCOS.indexOf(AL[k])>=0)hit=AL[k]; }); } return hit; }
+function vozEsSaltar(t){ return /\b(omitir|saltar|siguiente|ninguno|ninguna|no hay|nada)\b/.test(vozNorm(t)); }
+function vozRef(t){ var d=(''+t).replace(/[^0-9]/g,''); return d||(''+t).trim(); }
+function vozTitulo(t){ return (''+t).trim().replace(/[.,;]+$/,'').split(/\s+/).map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' '); }
+function vozCampoActual(){ if(_vozPaso<0||!_vozK)return null; var mt=meta(_vozK); return mt.campos[_vozPaso]||null; }
+function vozPregunta(){
+  if(_vozPaso<0)return {q:'¿Cuál es el método de pago?',hint:'Di: <b>"dólares"</b> · <b>"zelle"</b> · <b>"pago móvil"</b> · <b>"gasto"</b><br><span style="opacity:.8">Efectivo, débito y crédito van como totales al cerrar la caja</span>'};
+  var c=vozCampoActual(); if(!c)return null;
+  var mt=meta(_vozK); var opc=/opcional/i.test(c.t);
+  if(c.k==='monto')return {q:'¿Cuál es el monto en '+mt.mon+'?',hint:'Di el número: <b>"350"</b> · <b>"13 mil 500"</b> · <b>"15 con 50"</b>'};
+  if(c.k==='banco')return {q:'¿De qué banco?',hint:(window._bancoPrior?('🏦 Hoy se prioriza <b>'+esc(window._bancoPrior)+'</b><br>'):'')+'<b>"Mercantil"</b> · <b>"Provincial"</b> · <b>"Banesco"</b> · <b>"Tesoro"</b> · <b>"Bancaribe"</b> · <b>"BNC"</b>'};
+  if(c.k==='ref')return {q:'¿Número de referencia'+(opc?' (o di "omitir")':'')+'?',hint:'Dicta los números: <b>"8 8 3 7 4 6"</b>'+(opc?' · o di <b>"omitir"</b>':'')};
+  if(c.k==='titular')return {q:'¿Quién es el titular del Zelle?',hint:'Di el nombre: <b>"Juan Pérez"</b>'};
+  if(c.k==='fact')return {q:'¿Nº de factura (o di "omitir")?',hint:'Dicta el número · o di <b>"omitir"</b>'};
+  if(c.k==='concepto')return {q:'¿Cuál es el concepto del gasto?',hint:'P. ej.: <b>"almuerzo del personal"</b>'};
+  return {q:c.t+'?',hint:''};
+}
+function vozResumen(){
+  if(!_vozK)return '';
+  var mt=meta(_vozK); var partes=['<b>'+mt.ic+' '+mt.n+'</b>'];
+  mt.campos.forEach(function(c,i){ if(i<_vozPaso && _vozVals[c.k]!==undefined){ partes.push(c.k==='monto'?(mt.mon+' '+fmt(_vozVals[c.k])):(_vozVals[c.k]===''?'(omitido)':esc(''+_vozVals[c.k]))); } });
+  return partes.join(' · ');
+}
+function vozPintar(){
+  var p=vozPregunta(); if(!p){ vozFinalizar(); return; }
+  var qEl=document.getElementById('voz-q'), hEl=document.getElementById('voz-hint'), rEl=document.getElementById('voz-res'), tEl=document.getElementById('voz-txt');
+  if(qEl)qEl.innerHTML=p.q; if(hEl)hEl.innerHTML=p.hint;
+  if(rEl){ var r=vozResumen(); rEl.innerHTML=r; rEl.style.display=r?'block':'none'; }
+  if(tEl){ tEl.textContent='Te escucho…'; tEl.classList.add('muted'); }
+  var c=vozCampoActual(); var sk=document.getElementById('voz-skip');
+  if(sk)sk.style.display=(c&&/opcional/i.test(c.t))?'block':'none';
+}
+function vozIniciar(){
+  if(!C||C.estado!=='abierto')return;
+  if(!vozSoporta()){ toast('Este navegador no soporta dictado. Usa Chrome.'); return; }
+  cerrarModal();
+  _vozPaso=-1; _vozK=null; _vozVals={}; _vozFinal='';
+  var m=document.createElement('div'); m.id='modal'; m.className='modal'; m.onclick=function(e){ if(e.target===m)vozParar(); };
+  m.innerHTML='<div class="sheet" style="text-align:center">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-weight:800;font-size:18px">🎤 Dictar pago</div><button onclick="vozParar()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div>'+
+    '<div id="voz-res" style="display:none;background:#eef2ff;color:#1e38a6;border-radius:10px;padding:7px 10px;font-size:12.5px;font-weight:600;margin-bottom:8px"></div>'+
+    '<div id="voz-q" style="font-weight:800;font-size:17px;margin:4px 0 2px"></div>'+
+    '<div id="voz-mic" style="width:72px;height:72px;margin:10px auto;border-radius:50%;background:linear-gradient(140deg,#B42318,#e0492e);display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;box-shadow:0 0 0 0 rgba(180,35,24,.45);animation:vozpulse 1.4s infinite">🎤</div>'+
+    '<div id="voz-txt" class="muted" style="min-height:40px;font-weight:700;font-size:16px;padding:2px">Te escucho…</div>'+
+    '<div id="voz-hint" class="muted" style="font-size:12px;line-height:1.6;margin-top:4px"></div>'+
+    '<button class="btn btn-grn" style="width:100%;margin-top:12px;padding:13px;font-size:15px" onclick="vozTerminar()">✓ Responder (Enter)</button>'+
+    '<button id="voz-skip" class="btn btn-gh" style="width:100%;margin-top:8px;padding:11px;display:none" onclick="vozSaltar()">Omitir este dato</button>'+
+    '<button class="btn btn-gh" style="width:100%;margin-top:8px;padding:11px" onclick="vozParar()">Cancelar (Esc)</button></div>';
+  document.body.appendChild(m);
+  if(!document.getElementById('voz-css')){ var st=document.createElement('style'); st.id='voz-css'; st.textContent='@keyframes vozpulse{0%{box-shadow:0 0 0 0 rgba(180,35,24,.45)}70%{box-shadow:0 0 0 18px rgba(180,35,24,0)}100%{box-shadow:0 0 0 0 rgba(180,35,24,0)}}'; document.head.appendChild(st); }
+  vozPintar();
+  vozArrancar();
+}
+function vozArrancar(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  try{ if(_vozRec){_vozRec.onend=null;_vozRec.stop();} }catch(e){}
+  _vozRec=new SR(); _vozRec.lang='es-VE'; _vozRec.continuous=true; _vozRec.interimResults=true; _vozRec.maxAlternatives=1; _vozActivo=true;
+  _vozRec.onresult=function(ev){
+    var fin='',inter='';
+    for(var i=ev.resultIndex;i<ev.results.length;i++){ var r=ev.results[i]; if(r.isFinal)fin+=r[0].transcript+' '; else inter+=r[0].transcript; }
+    if(fin){ _vozFinal=(_vozFinal+' '+fin).replace(/\s+/g,' ').trim(); }
+    var el=document.getElementById('voz-txt'); if(el){ var txt=(_vozFinal+' '+inter).trim(); if(txt){ el.textContent='“'+txt+'”'; el.classList.remove('muted'); } }
+    if(fin && _vozFinal){ vozRespuesta(_vozFinal); }
+  };
+  _vozRec.onerror=function(e){
+    if(e.error==='no-speech'||e.error==='aborted')return;
+    var el=document.getElementById('voz-txt');
+    if(e.error==='not-allowed'){ _vozActivo=false; if(el)el.textContent='⚠ Permite el micrófono en el navegador'; var mic=document.getElementById('voz-mic'); if(mic)mic.style.animation='none'; }
+  };
+  _vozRec.onend=function(){
+    if(_vozActivo && document.getElementById('voz-mic')){ setTimeout(function(){ try{ if(_vozRec&&_vozActivo)_vozRec.start(); }catch(e){} },120); }
+  };
+  try{ _vozRec.start(); }catch(e){}
+}
+function vozDetener(){ _vozActivo=false; try{ if(_vozRec){_vozRec.onend=null;_vozRec.stop();} }catch(e){} _vozRec=null; }
+function vozParar(){ vozDetener(); cerrarModal(); }
+function vozError(msg){ var el=document.getElementById('voz-txt'); if(el){ el.innerHTML='<span style="color:var(--red);font-size:13.5px">'+msg+'</span>'; } _vozFinal=''; }
+function vozTerminar(){
+  var el=document.getElementById('voz-txt');
+  var vivo=(el&&el.textContent&&el.textContent.indexOf('“')===0)?el.textContent.replace(/[“”]/g,''):'';
+  var txt=(_vozFinal||vivo||'').trim();
+  if(!txt){ vozError('No escuché nada. Habla y vuelve a intentar.'); return; }
+  vozRespuesta(txt);
+}
+function vozSaltar(){ var c=vozCampoActual(); if(!c)return; _vozVals[c.k]=''; _vozFinal=''; _vozPaso++; vozPintar(); }
+function vozRespuesta(txt){
+  _vozFinal='';
+  if(_vozPaso<0){
+    var k=vozMetodo(txt);
+    if(!k){ vozError('No entendí el método. Di p. ej. <b>"dólares"</b> o <b>"pago móvil"</b>'); return; }
+    _vozK=k; _vozPaso=0; vozPintar(); return;
+  }
+  var c=vozCampoActual(); if(!c){ vozFinalizar(); return; }
+  var opc=/opcional/i.test(c.t);
+  if(opc && vozEsSaltar(txt)){ _vozVals[c.k]=''; _vozPaso++; vozPintar(); return; }
+  if(c.k==='monto'){ var n=vozNum(txt); if(n<=0){ vozError('No entendí el monto. Di el número, p. ej. <b>"350"</b>'); return; } _vozVals.monto=n; }
+  else if(c.k==='banco'){ var b=vozBanco(txt); if(!b){ vozError('No reconocí el banco. Di p. ej. <b>"Banesco"</b> o <b>"Mercantil"</b>'); return; } _vozVals.banco=b; }
+  else if(c.k==='ref'||c.k==='fact'){ _vozVals[c.k]=vozRef(txt); }
+  else if(c.k==='titular'){ _vozVals.titular=vozTitulo(txt); }
+  else { _vozVals[c.k]=(''+txt).trim(); }
+  _vozPaso++; vozPintar();
+}
+function vozFinalizar(){
+  var k=_vozK, vals=_vozVals;
+  vozDetener(); cerrarModal();
+  abrirAgregar();
+  setTimeout(function(){
+    formPago(k);
+    setTimeout(function(){
+      var mt=meta(k);
+      mt.campos.forEach(function(c){ var el=document.getElementById('f-'+c.k); if(el && vals[c.k]!==undefined && vals[c.k]!=='')el.value=vals[c.k]; });
+      var sheet=document.querySelector('#modal .sheet');
+      if(sheet){ var tag=document.createElement('div'); tag.style.cssText='background:#eef2ff;color:#1e38a6;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:700;margin-top:8px'; var det=mt.campos.filter(function(c){return c.k!=='monto'&&vals[c.k];}).map(function(c){return vals[c.k];}).join(' · '); tag.textContent='🎤 Entendí: '+mt.n+' · '+mt.mon+' '+fmt(vals.monto||0)+(det?(' · '+det):'')+' — revisa y confirma'; sheet.insertBefore(tag, sheet.children[1]); }
+      var fm=document.getElementById('f-monto'); if(fm){ fm.focus(); try{fm.select();}catch(e){} }
+      toast('Revisa los datos y guarda con Enter');
+    },90);
+  },40);
+}
+function pedirCierre(){ if(!C)return; if(pendientes()>0){ toast('Faltan firmas'); return; } scheduleSave(); (function espera(n){ if(_dirty||_saving){ if(n<=0){ toast('Guardando… intenta de nuevo en un momento'); return; } setTimeout(function(){espera(n-1);},500); return; } API('pedir_cierre',{id:C.id,por:C.cajero,turnero:esTurnero()}).then(function(r){ if(r&&r.cerrado){ C.estado='cerrado'; cerrarModal(); render(); toast('🌙 Turno cerrado. Después de las 12 entra de nuevo para abrir el día siguiente.'); return; } if(r.error==='faltan_firmas'){ toast('Faltan '+(r.pend||'')+' firmas'); return; } if(r.error){ toast('Error: '+r.error); return; } C.estado='por_confirmar'; cerrarModal(); render(); }).catch(function(){ toast('Sin conexión. Reintenta.'); }); })(12); }
+
+function _bk(){ return 'caja_bk_'+((C&&C.id)||'x'); }
+function _writeBk(dirty){ if(!C)return; try{ localStorage.setItem(_bk(), JSON.stringify({data:C.data,ver:_ver,dirty:!!dirty,ts:Date.now()})); }catch(e){} }
+function _restoreBk(){ try{ if(!C)return; var raw=localStorage.getItem(_bk()); if(!raw)return; var bk=JSON.parse(raw); if(bk&&bk.dirty&&bk.data&&(Number(bk.ver)||0)>=_ver){ C.data=norm({id:C.id,data:bk.data}).data; _ver=Math.max(_ver,Number(bk.ver)||0); _dirty=true; if(typeof toast==='function')toast('Recuperé cambios sin guardar'); setTimeout(flushSave,400); } }catch(e){} }
+function _syncUI(){ var b=document.getElementById('sync-banner'); if(!b)return; if(_saving||_dirty){ b.style.display='block'; if(_lastSaveOk){ b.textContent='Guardando cambios…'; b.style.background='#fef9c3'; b.style.color='#854d0e'; } else { b.textContent='⚠ Sin conexión. Tus datos están guardados en este equipo y se enviarán solos al volver la señal. No cierres la caja.'; b.style.background='#fee2e2'; b.style.color='#991b1b'; } } else { b.style.display='none'; } }
+function scheduleSave(){ if(!C)return; _dirty=true; _writeBk(true); try{ localStorage.setItem('caja_sesion', JSON.stringify({id:C.id,caja:C.caja,cajero:C.cajero,fecha:C.fecha,estado:C.estado,data:C.data,ver:_ver})); }catch(e){} _syncUI(); if(!_saving)flushSave(); }
+function flushSave(){ if(!C||_saving||!_dirty)return; _saving=true; _dirty=false; var ver=_ver+1; var snap=JSON.parse(JSON.stringify(C.data)); ind('Guardando…'); API('guardar',{id:C.id,data:snap,ver:ver}).then(function(r){ _saving=false; if(r&&r.ok){ _ver=r.ver||ver; _lastSaveOk=true; try{ localStorage.setItem(_bk(),JSON.stringify({data:snap,ver:_ver,dirty:false,ts:Date.now()})); }catch(e){} ind('✓ Guardado','var(--grn)'); _syncUI(); if(_dirty)flushSave(); } else { _dirty=true; _lastSaveOk=false; ind('⚠ reintentando…','var(--red)'); _syncUI(); setTimeout(flushSave,2000); } }).catch(function(){ _saving=false; _dirty=true; _lastSaveOk=false; ind('⚠ sin conexión','var(--red)'); _syncUI(); setTimeout(flushSave,3000); }); }
+function abrirRelevo(){
+  var m=document.createElement('div'); m.id='modal'; m.className='modal'; m.onclick=function(e){ if(e.target===m)cerrarModal(); };
+  var t=tot(); var pend=pendientes();
+  m.innerHTML='<div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-weight:800;font-size:18px">🔄 Entregar caja (relevo)</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div>'+
+    '<div class="muted" style="margin-bottom:10px">El supervisor verifica tu efectivo y autoriza el relevo. La siguiente persona recibe la caja con lo que dejas.</div>'+
+    '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between"><span>Efectivo a entregar</span><b>Bs '+fmt(t.efBs)+'</b></div><div style="display:flex;justify-content:space-between"><span class="muted">Fondo con el que abriste</span><span class="muted">Bs '+fmt(t.fondo)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Tu venta en efectivo</span><span class="muted">Bs '+fmt(t.ventaEf)+'</span></div></div>'+
+    (t.efBs<=0?'<button class="btn btn-gh" style="width:100%;margin-bottom:10px" onclick="formEfectivo()">💵 Cuenta el efectivo antes de entregar</button>':'')+
+    (pend>0?('<div style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412;border-radius:12px;padding:12px;font-weight:700;margin-bottom:12px">Faltan '+pend+' firma(s). Deben firmarse antes del relevo.</div>'):'<div style="background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:12px;padding:12px;font-weight:700;margin-bottom:12px">✓ Todo firmado.</div>')+
+    '<button class="btn btn-grn" style="width:100%;padding:15px" '+((pend>0||t.efBs<=0)?'disabled':'')+' onclick="pedirRelevo()">Entregar al supervisor</button>'+
+    '<div class="muted" style="text-align:center;margin-top:8px">El supervisor da el visto bueno para el relevo.</div></div>';
+  document.body.appendChild(m);
+}
+function pedirRelevo(){ if(!C)return; if(pendientes()>0){ toast('Faltan firmas'); return; } var t=tot(); if(t.efBs<=0){ toast('Cuenta el efectivo primero'); return; } scheduleSave(); (function esp(n){ if(_dirty||_saving){ if(n<=0){ toast('Guardando… reintenta'); return; } setTimeout(function(){esp(n-1);},500); return; } API('pedir_cierre',{id:C.id,por:C.cajero,relevo:true,entrega_efectivo:t.efBs}).then(function(r){ if(r.error==='faltan_firmas'){ toast('Faltan '+(r.pend||'')+' firmas'); return; } if(r.error){ toast('Error: '+r.error); return; } C.estado='por_confirmar'; C.relevo=true; cerrarModal(); render(); toast('Entregado. Esperando visto bueno del supervisor.'); }).catch(function(){ toast('Sin conexión. Reintenta.'); }); })(12); }
+function saveNow(){ scheduleSave(); }
+try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); }catch(e){}
+window.addEventListener('beforeunload',function(){ if(_dirty||_saving)_writeBk(true); });
+window.addEventListener('online',function(){ if(_dirty&&!_saving)flushSave(); if(typeof toast==='function')toast('Conexión restablecida'); });
+</script>
+</body>
+</html>
