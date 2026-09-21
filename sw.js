@@ -1,5 +1,5 @@
 /* Service Worker · Claret — push + soporte offline (red primero, caché de respaldo) */
-var CACHE = 'claret-v311';
+var CACHE = 'claret-v315';
 self.addEventListener('install', function (e) {
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(['./caja.html']).catch(function(){}); }));
