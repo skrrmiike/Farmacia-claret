@@ -738,6 +738,7 @@ function _cbRepaint(){ var el=document.getElementById('concil-cajas-content'); i
 function renderConcilCajas(){ var el=document.getElementById('concil-cajas-content'); if(!el)return; el.innerHTML='<div style="padding:16px;color:var(--muted)">Cargando…</div>'; if(!_cbMes){ var h=new Date(); _cbMes=h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0'); } _cbCargarGuardado(function(){ var e2=document.getElementById('concil-cajas-content'); if(e2)e2.innerHTML=_cbHTML(); }); }
 function renderTab(tab) {
   if (tab==='inicio') renderInicio();
+  else if (tab==='ventasvivo') renderVentasVivo();
   else if (tab==='panel')      renderPanel();
   else if (tab==='bancos')     renderBancos();
   else if (tab==='bancos-hist') renderBancosHist();

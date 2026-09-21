@@ -30,6 +30,7 @@ const USERS = {
 };
 
 const TAB_ROLES = {
+  'ventasvivo':['gerente','admin'],
   'inicio':['gerente','mayra','grismar','ines','angelica','supervisor','reto','compras','admin'],
   'vencimientos':['gerente','mayra','grismar','ines','angelica','supervisor','reto','compras','admin'],
   'mensajes':['ventas','supervisor','gerente','admin'],
