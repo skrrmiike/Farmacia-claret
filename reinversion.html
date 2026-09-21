@@ -678,7 +678,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v39 · 21/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v43 · 21/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -1518,23 +1518,24 @@ async function excelCobro(){
 
     /* ===== HOJA 2: RESUMEN POR CORTE ===== */
     const R2=wb.addWorksheet('Resumen por corte',{views:[{state:'frozen',ySplit:2}]});
-    R2.columns=[{width:15},{width:20},{width:11},{width:11},{width:11},{width:12},{width:12},{width:11},{width:13}];
-    R2.mergeCells('A1:I1'); c=R2.getCell('A1'); c.value='Cortes cobrados · '+fechaLarga; c.font={bold:true,size:14,color:{argb:'FFFFFFFF'}}; c.fill=fill(GREEN2); c.alignment={vertical:'middle',indent:1}; R2.getRow(1).height=28;
-    const cols=['Fecha','Concepto','Venta $','Costo $','Utilidad $','IVA margen $','Impuestos $','Neto $','Neto Bs'];
-    const hr=R2.getRow(2); hr.values=cols; for(let k=1;k<=9;k++){ const cc=hr.getCell(k); cc.font={bold:true,color:{argb:'FFFFFFFF'}}; cc.fill=fill(HEAD); cc.alignment={horizontal:k<=2?'left':'center',wrapText:true}; } hr.height=24;
+    R2.columns=[{width:8},{width:15},{width:20},{width:11},{width:11},{width:13},{width:12},{width:12},{width:11},{width:13},{width:13}];
+    R2.mergeCells('A1:K1'); c=R2.getCell('A1'); c.value='Cortes cobrados · '+fechaLarga; c.font={bold:true,size:14,color:{argb:'FFFFFFFF'}}; c.fill=fill(GREEN2); c.alignment={vertical:'middle',indent:1}; R2.getRow(1).height=28;
+    const cols=['Cierre','Fecha','Concepto','Venta $','Costo $','Utilidad bruta $','IVA margen $','Impuestos $','Neto $','Ganancia real $','Neto Bs'];
+    const hr=R2.getRow(2); hr.values=cols; for(let k=1;k<=11;k++){ const cc=hr.getCell(k); cc.font={bold:true,color:{argb:'FFFFFFFF'}}; cc.fill=fill(HEAD); cc.alignment={horizontal:(k===1?'center':(k<=3?'left':'center')),wrapText:true}; } hr.height=24;
     sel.forEach((m,i)=>{ const usd=r2(m.usd), im=r2(impuestosDe(usd));
       const d=dets[i]; const lineas=(d&&d.lineas)||null;
       const vt=(lineas&&lineas.length)? baseGravableLineas(lineas) : usd;
       const ct=(lineas&&lineas.length)? costoGravableLineas(lineas) : 0;
       const co=r2((d&&d.total_costo)||0), util=r2(usd-co);
-      const iv=r2(ivaMargen(vt,ct)); const ne=r2(usd-iv-im);
-      const rr=R2.getRow(3+i); rr.values=[_dowName(new Date(String(m.fecha).slice(0,10)+'T12:00:00').getDay())+' '+String(m.fecha).slice(8,10)+'/'+String(m.fecha).slice(5,7), m.concepto||'Corte', usd, co, util, -iv, -im, ne, Math.round(ne*tasa)];
-      for(let k=3;k<=8;k++) rr.getCell(k).numFmt=MFMT; rr.getCell(9).numFmt=BSFMT;
-      rr.getCell(4).font={color:{argb:GREY}}; rr.getCell(5).font={color:{argb:GREEN}}; rr.getCell(6).font={color:{argb:RED}}; rr.getCell(7).font={color:{argb:RED}}; rr.getCell(8).font={bold:true,color:{argb:GREEN}};
-      for(let k=1;k<=9;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:'FFFFFFFF'); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; } });
-    const tr=R2.getRow(3+sel.length); tr.values=['TOTAL','',bruto,costoTot,r2(bruto-costoTot),-ivaMar,-imp,neto,Math.round(neto*tasa)];
-    for(let k=3;k<=8;k++) tr.getCell(k).numFmt=MFMT; tr.getCell(9).numFmt=BSFMT;
-    for(let k=1;k<=9;k++){ const cc=tr.getCell(k); cc.font={bold:true,color:{argb:k===8?GREEN:INK}}; cc.fill=fill(GOLD); cc.border={top:{style:'thin',color:{argb:GREEN}}}; }
+      const iv=r2(ivaMargen(vt,ct)); const ne=r2(usd-iv-im); const gr=r2(ne-co);
+      const rr=R2.getRow(3+i); rr.values=[i+1, _dowName(new Date(String(m.fecha).slice(0,10)+'T12:00:00').getDay())+' '+String(m.fecha).slice(8,10)+'/'+String(m.fecha).slice(5,7), m.concepto||'Corte', usd, co, util, -iv, -im, ne, gr, Math.round(ne*tasa)];
+      for(let k=4;k<=10;k++) rr.getCell(k).numFmt=MFMT; rr.getCell(11).numFmt=BSFMT;
+      rr.getCell(1).font={bold:true,color:{argb:INK}}; rr.getCell(1).alignment={horizontal:'center'};
+      rr.getCell(5).font={color:{argb:GREY}}; rr.getCell(6).font={color:{argb:INK}}; rr.getCell(7).font={color:{argb:RED}}; rr.getCell(8).font={color:{argb:RED}}; rr.getCell(9).font={color:{argb:GREEN}}; rr.getCell(10).font={bold:true,color:{argb:GREEN}};
+      for(let k=1;k<=11;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:'FFFFFFFF'); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; } });
+    const tr=R2.getRow(3+sel.length); tr.values=['','TOTAL','',bruto,costoTot,r2(bruto-costoTot),-ivaMar,-imp,neto,r2(neto-costoTot),Math.round(neto*tasa)];
+    for(let k=4;k<=10;k++) tr.getCell(k).numFmt=MFMT; tr.getCell(11).numFmt=BSFMT;
+    for(let k=1;k<=11;k++){ const cc=tr.getCell(k); cc.font={bold:true,color:{argb:k===10?GREEN:INK}}; cc.fill=fill(GOLD); cc.border={top:{style:'thin',color:{argb:GREEN}}}; }
 
     const buf=await wb.xlsx.writeBuffer();
     const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -1859,11 +1860,13 @@ let _smartData=null, _smartRows=null;
 // % de crecimiento sobre lo vendido (pedir un poquito más para probar el techo). Ajustable en Ajustes.
 function crecimientoPct(){ const v=Number(state.cfg.crecimientoPct); return isFinite(v)&&v>=0 ? v : 15; }
 // Demanda semanal estimada a partir de ventas RODANTES: v7 = últimos 7 días, v28 = últimos 28.
-// base = lo más reciente (v7) o el promedio de 4 semanas, lo que sea mayor → cacha lo que está despegando.
+// prom = v28 dividido entre las SEMANAS REALES con datos (sem, tope 4) → no lo diluye cuando la
+// operación es joven (ej: 2 semanas). base = lo más reciente (v7) o ese promedio, lo que sea mayor.
 // est = base + % de crecimiento (pedir un poquito más).
-function _demandaInteligente(v7, v28){
+function _demandaInteligente(v7, v28, sem){
   v7=Math.max(0,Number(v7)||0); v28=Math.max(0,Number(v28)||0);
-  const prom=v28/4;                       // promedio semanal (4 semanas)
+  let s=Number(sem); if(!isFinite(s)||s<1) s=4; if(s>4) s=4;   // semanas reales con datos (1–4)
+  const prom=v28/s;                       // promedio semanal (según semanas con datos)
   const base=Math.max(v7, prom);          // usa lo reciente si vende más ahora
   const est=Math.round(base*(1+crecimientoPct()/100));
   return {est, v7, prom:Math.round(prom*10)/10, base};
@@ -1873,7 +1876,7 @@ function _procSmart(items){
   const rows=[];
   (items||[]).forEach(it=>{
     const v7=Number(it.v7)||0, v28=Number(it.v28)||0;
-    const dem=_demandaInteligente(v7, v28);
+    const dem=_demandaInteligente(v7, v28, it.sem);
     const emp=Math.max(1, Number(it.empaque)||empaqueDe(it.codigo)||1);
     const ex=Number(it.existencia)||0;
     const q=pedirRepo(dem.est, emp, ex, cov);
@@ -1908,7 +1911,7 @@ function renderOrdenInteligente(){
   const tasa=Number(state.bcv)||0;
   S('#oiPaq',String(totPaq)); S('#oiPaqN',totPaq===1?'paquete · '+totUds+' uds':'paquetes · '+totUds+' uds');
   S('#oiGasto',money2(totUsd)); S('#oiGastoBs', tasa>0? bs(Math.round(totUsd*tasa)) : 'Bs —');
-  S('#oiResumen','📚 Usa la venta reciente (últimos 7 días) o el promedio de 4 semanas, lo que sea mayor, y pide '+crecimientoPct()+'% de más para crecer. Cobertura '+coberturaSem()+' sem.'+(nAcab>0?(' ⚠️ '+nAcab+' por acabarse.'):'')+(sinCosto>0?(' '+sinCosto+' sin costo (no suman al gasto).'):''));
+  S('#oiResumen','📚 Usa la venta reciente (últimos 7 días) o el promedio semanal (según las semanas que llevamos vendiendo cada producto), lo que sea mayor, y pide '+crecimientoPct()+'% de más para crecer. Cobertura '+coberturaSem()+' sem.'+(nAcab>0?(' ⚠️ '+nAcab+' por acabarse.'):'')+(sinCosto>0?(' '+sinCosto+' sin costo (no suman al gasto).'):''));
   const box=$('#oiLista'); if(!box) return;
   if(!pedir.length){ box.innerHTML='<div class="note">Por ahora no hay que pedir nada: el stock cubre lo que se está vendiendo. 👍</div>'; $('#oiXlsRow').style.display='none'; return; }
   const orden=['pepsi','coca','chuche','medicina'];
@@ -1916,7 +1919,10 @@ function renderOrdenInteligente(){
   const keys=Object.keys(cats).sort((a,b)=>{const ia=orden.indexOf(a),ib=orden.indexOf(b);return (ia<0?9:ia)-(ib<0?9:ib);});
   box.innerHTML=keys.map(c=>{
     const items=cats[c].slice().sort((a,b)=>(b.porAcabarse-a.porAcabarse)||(b.uds-a.uds));
-    const head=`<div style="margin:10px 0 2px;font-weight:700;color:#0a7d3b">${catLabel(c)||c}</div>`;
+    const gPaq=items.reduce((a,r)=>a+r.paq,0);
+    const gUds=items.reduce((a,r)=>a+r.uds,0);
+    const gUsd=items.reduce((a,r)=>a+(r.sinCosto?0:r.sub),0);
+    const head=`<div style="margin:12px 0 2px;font-weight:700;color:#0a7d3b;font-size:15px">${catLabel(c)||c} <span style="font-weight:600;color:#667085;font-size:12px">· ${items.length} ${items.length===1?'producto':'productos'}</span></div>`;
     const list=items.map(r=>{
       const empTxt = r.emp>1 ? (r.paq+(r.paq===1?' paquete':' paquetes')+' × '+r.emp+' = '+r.uds+' uds') : (r.uds+' uds');
       const acab = r.porAcabarse ? ' <span class="pill warn" style="font-size:9px">⚠️ por acabarse</span>' : '';
@@ -1924,7 +1930,10 @@ function renderOrdenInteligente(){
         <div class="mt"><span class="chip ${catClass(r.cat)}">${catLabel(r.cat)}</span> vendió ${r.v7} (últ. 7 días) · prom ${r.prom}/sem · tienes ${r.ex}</div></div>
         <div class="rt"><b>${empTxt}</b>${r.sinCosto?'<span class="mini">sin costo</span>':('<span class="mini">'+money2(r.sub)+'</span>')}</div></div>`;
     }).join('');
-    return head+list;
+    const sub=`<div style="display:flex;justify-content:space-between;align-items:center;margin:2px 0 4px;padding:7px 10px;background:#eef7f1;border-radius:8px;font-size:12px;color:#0f2a1c">
+        <span>Subtotal ${catLabel(c)||c}: <b>${gPaq}</b> ${gPaq===1?'paquete':'paquetes'} · ${gUds} uds</span>
+        <b>${money2(gUsd)}</b></div>`;
+    return head+list+sub;
   }).join('');
   $('#oiXlsRow').style.display='';
 }
@@ -1955,6 +1964,7 @@ async function descargarExcelOrden(){
       const items=cats[cat].slice().sort((a,b)=>b.uds-a.uds);
       W.mergeCells(`A${rIdx}:H${rIdx}`); const sc=W.getCell(`A${rIdx}`); sc.value=catLabel(cat)||cat;
       sc.font={bold:true,color:{argb:INK}}; sc.fill=fill(SUBBG); sc.alignment={indent:1}; rIdx++;
+      let gPaq=0, gUds=0, gUsd=0;
       items.forEach(r=>{
         const rr=W.getRow(rIdx);
         rr.values=[r.descr+(r.porAcabarse?' ⚠️':''), catLabel(r.cat)||r.cat, r.v7, r.prom, r.ex, r.paq, r.uds, (r.sinCosto?'':r2(r.sub))];
@@ -1963,8 +1973,16 @@ async function descargarExcelOrden(){
         rr.getCell(6).font={bold:true,color:{argb:GREEN}};
         if(r.sinCosto) rr.getCell(8).value='sin costo', rr.getCell(8).font={italic:true,color:{argb:GREY}};
         for(let k=1;k<=8;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; }
+        gPaq+=r.paq; gUds+=r.uds; if(!r.sinCosto) gUsd+=r.sub;
         totPaq+=r.paq; totUds+=r.uds; if(!r.sinCosto) totUsd+=r.sub; i++; rIdx++;
       });
+      // Subtotal por categoría
+      const sr=W.getRow(rIdx);
+      sr.values=['Subtotal '+(catLabel(cat)||cat),'','','','',gPaq,gUds,r2(gUsd)];
+      sr.getCell(6).numFmt=UFMT; sr.getCell(7).numFmt=UFMT; sr.getCell(8).numFmt=MFMT;
+      for(let k=1;k<=8;k++){ const cc=sr.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(SUBBG); cc.alignment={horizontal:k===1?'left':'right'}; cc.border={top:{style:'hair',color:{argb:GREEN}}}; }
+      sr.getCell(1).alignment={horizontal:'left',indent:1};
+      rIdx++;
     });
     const tr=W.getRow(rIdx); tr.values=['TOTAL A PEDIR','','','','',totPaq,totUds,r2(totUsd)];
     tr.getCell(6).numFmt=UFMT; tr.getCell(7).numFmt=UFMT; tr.getCell(8).numFmt=MFMT;
@@ -1973,7 +1991,7 @@ async function descargarExcelOrden(){
     if(tasa>0){ const br=W.getRow(rIdx); br.getCell(1).value='En bolívares · BCV '+fmt(tasa); br.getCell(1).font={italic:true,color:{argb:GREY}};
       W.mergeCells(`A${rIdx}:G${rIdx}`); br.getCell(8).value=bs(Math.round(totUsd*tasa)); br.getCell(8).alignment={horizontal:'right'}; br.getCell(8).font={bold:true,color:{argb:INK}}; rIdx++; }
     const nr=rIdx+1; W.mergeCells(`A${nr}:H${nr}`); c=W.getCell(`A${nr}`);
-    c.value='Cantidad a pedir = (venta reciente o promedio de 4 semanas, lo que sea mayor) + '+crecimientoPct()+'% de crecimiento × cobertura, menos tu stock, redondeado a empaques completos. Incluye lo que está por acabarse (⚠️). Ajusta antes de comprar.';
+    c.value='Cantidad a pedir = (venta reciente o promedio semanal según las semanas con datos de cada producto, lo que sea mayor) + '+crecimientoPct()+'% de crecimiento × cobertura, menos tu stock, redondeado a empaques completos. Incluye lo que está por acabarse (⚠️). Ajusta antes de comprar.';
     c.font={italic:true,size:10,color:{argb:GREY}}; c.alignment={indent:1,wrapText:true}; W.getRow(nr).height=34;
     const buf=await wb.xlsx.writeBuffer();
     const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -2335,7 +2353,8 @@ async function loadGuardStock(){
     let cons=0, low=0;
     items.forEach(it=>{
       const v7=Math.max(0,Number(it.v7)||0), v28=Math.max(0,Number(it.v28)||0);
-      const base=Math.max(v7, v28/4);
+      let s=Number(it.sem); if(!isFinite(s)||s<1) s=4; if(s>4) s=4;
+      const base=Math.max(v7, v28/s);
       if(base>0){ cons++; const ex=Number(it.existencia)||0; if(ex<base) low++; }
     });
     updGuardianStock(cons>0 ? Math.round((1-low/cons)*100) : null);
