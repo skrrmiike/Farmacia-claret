@@ -155,6 +155,22 @@
   .cft{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;opacity:.95;animation:cft linear forwards}
   @keyframes cft{0%{transform:translateY(-10px) rotate(0)}100%{transform:translateY(240px) rotate(540deg)}}
   @media (prefers-reduced-motion:reduce){ .guardian,.dTail,.gEye,.gSpark,.gZzz,.vGlow{animation:none!important} .cft{animation-duration:1.4s!important} }
+  /* ===== Gráficos del histórico ===== */
+  .grafKpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .grafKpi{background:var(--chip);border-radius:11px;padding:9px 11px}
+  .grafKpi .l{font-size:10.5px;color:var(--muted)}
+  .grafKpi .v{font-size:18px;font-weight:800;letter-spacing:-.4px;margin-top:1px}
+  .grafBlock{margin:0 0 14px}
+  .grafHd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .grafHd b{font-size:12.5px}
+  .grafSeg{width:auto;background:var(--chip);border-radius:9px;padding:2px}
+  .grafSeg button{padding:5px 9px;font-size:11px}
+  .grafSvg svg{display:block;width:100%;height:auto;overflow:visible}
+  .gbar{transition:opacity .15s}
+  .gbar:hover{opacity:.75;cursor:default}
+  .gaxis{stroke:var(--line)}
+  .gtxt{fill:var(--muted);font-size:8px}
+  .gval{fill:var(--ink);font-size:8px;font-weight:700}
 </style>
 </head>
 <body>
@@ -371,8 +387,11 @@
       </div>
       <div class="note" id="anSemAviso" style="margin-top:8px;display:none"></div>
       <div class="btnrow" style="margin-top:12px"><button class="btn" id="anBtnXls" onclick="descargarExcelSemana()">⬇️ Descargar Excel de la semana</button></div>
-      <div class="btnrow" style="margin-top:8px"><button class="btn sec" id="anBtnHist" onclick="descargarExcelHistorico()">📊 Descargar histórico (todo junto)</button></div>
-      <div class="mini" id="anXlsMsg" style="margin-top:6px">El Excel de la semana es para revisar esa semana. El histórico junta toda la operación: venta y ganancia acumuladas, la tendencia semana a semana y los productos que más han vendido.</div>
+      <div class="btnrow" style="margin-top:8px;gap:6px">
+        <button class="btn" id="anBtnGraf" onclick="openGraficos()">📈 Ver gráficos</button>
+        <button class="btn sec" id="anBtnHist" onclick="descargarExcelHistorico()">📊 Excel histórico</button>
+      </div>
+      <div class="mini" id="anXlsMsg" style="margin-top:6px">Los gráficos muestran la venta día a día, la ganancia y qué se vende más. El Excel junta toda la operación para verla con calma.</div>
     </div>
     <div class="card" id="cardOrdenIA">
       <h2>🧠 Orden inteligente para pedir</h2>
@@ -618,6 +637,34 @@
   </div>
 </div></dialog>
 
+<dialog id="dlgGraf"><div class="dlg">
+  <h3>📈 Histórico · gráficos</h3>
+  <div id="grafKpis" class="grafKpis"></div>
+  <div class="grafBlock">
+    <div class="grafHd"><b id="grafDiaTit">Venta por día</b>
+      <div class="seg grafSeg">
+        <button type="button" class="on" data-metric="venta" onclick="grafSetMetric('venta')">Venta</button>
+        <button type="button" data-metric="util" onclick="grafSetMetric('util')">Ganancia</button>
+        <button type="button" data-metric="uds" onclick="grafSetMetric('uds')">Unidades</button>
+      </div>
+    </div>
+    <div id="grafDia" class="grafSvg"></div>
+    <div class="mini" id="grafDiaSub" style="margin-top:2px"></div>
+  </div>
+  <div class="grafBlock">
+    <div class="grafHd"><b>Venta por categoría</b></div>
+    <div id="grafCat" class="grafSvg"></div>
+  </div>
+  <div class="grafBlock">
+    <div class="grafHd"><b>Top productos (por venta)</b></div>
+    <div id="grafTop" class="grafSvg"></div>
+  </div>
+  <div class="btnrow" style="margin-top:12px;gap:6px">
+    <button class="btn sec" onclick="closeDlg('dlgGraf')">Cerrar</button>
+    <button class="btn" onclick="descargarExcelHistorico()">⬇️ Excel</button>
+  </div>
+</div></dialog>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script>
 const $=(s)=>document.querySelector(s), $$=(s)=>document.querySelectorAll(s);
@@ -631,7 +678,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v36 · 21/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v38 · 21/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -1198,15 +1245,17 @@ async function loadCierre(){
     // Reinversión, Utilidad bruta, IVA (bebidas/chucherías), Impuestos (SEDEMAT + ISLR), Utilidad neta
     const reinv=Number(d.total_reinv)||0, util=Number(d.total_util)||0;
     const iva=Number(d.iva_neto)||0, imp=impuestosDe(d.total_monto||0), utilNeto=util-iva-imp;   // IVA sobre el margen (backend)
+    const impTot=iva+imp;
     if($('#cieUtil')) $('#cieUtil').innerHTML =
         `<div class="kpi"><div class="l">Reinversión</div><div class="v">${money2(reinv)}</div><div class="mini">reponer lo vendido</div></div>`
-      + `<div class="kpi"><div class="l">Utilidad bruta</div><div class="v">${money2(util)}</div><div class="mini">venta − costo</div></div>`;
+      + `<div class="kpi"><div class="l">Impuestos</div><div class="v" style="color:var(--bad)">${money2(impTot)}</div><div class="mini">IVA + SEDEMAT + ISLR</div></div>`
+      + `<div class="kpi" style="grid-column:1/-1"><div class="l">Ganancia neta</div><div class="v" style="color:var(--ok)">${money2(utilNeto)}</div><div class="mini">lo que te queda después de impuestos</div></div>`;
     // Desglose: IVA incluido (bebidas/chucherías) + impuestos sobre la venta
-    let rep = `<div class="note"><b>Tu ganancia después de IVA e impuestos</b>`
-        + `<div class="mini">Venta ${money2(d.total_monto)} − Reinversión ${money2(reinv)} = Utilidad bruta <b>${money2(util)}</b></div>`
+    let rep = `<div class="note"><b>Cómo se calcula tu ganancia neta</b>`
+        + `<div class="mini">Venta ${money2(d.total_monto)} − Reinversión ${money2(reinv)} = <b>${money2(util)}</b> (antes de impuestos)</div>`
         + (iva>0?`<div class="mini">IVA sobre el margen (${pctStr(ivaRate())}% de venta − costo, bebidas y chucherías): <b>−${money2(iva)}</b></div>`:'')
         + `<div class="mini">Impuestos (${impLabel()} sobre la venta): <b>−${money2(imp)}</b></div>`
-        + `<div class="mini">Ganancia neta (lo que te queda): <b>${money2(utilNeto)}</b></div>`
+        + `<div class="mini">= Ganancia neta (lo que te queda): <b style="color:var(--ok)">${money2(utilNeto)}</b></div>`
         + `</div>`;
     if($('#cieReparto')) $('#cieReparto').innerHTML = rep;
     // Notas + avisos
@@ -1934,6 +1983,91 @@ async function descargarExcelOrden(){
   finally{ $('#oiXls').disabled=false; }
 }
 /* ---------- Histórico / big picture (Excel): acumulado + tendencia por semana + top productos ---------- */
+/* ---------- Gráficos del histórico (SVG, sin librerías) ---------- */
+let _grafData=null, _grafMetric='venta';
+const GRAF={venta:{color:'#2b7a8f',lbl:'Venta por día',money:true},
+            util:{color:'#0f9d58',lbl:'Ganancia por día',money:true},
+            uds:{color:'#7a8791',lbl:'Unidades por día',money:false}};
+const CATCOL={pepsi:'#2b6cb0',coca:'#d64545',chuche:'#e8a020',medicina:'#8a5cd6'};
+function _gm(v,isMoney){ return isMoney ? money2(v) : String(Math.round(v)); }
+function _diaCorto(iso){ const p=String(iso).split('-'); return p[2]+'/'+p[1]; }
+async function openGraficos(){
+  const dlg=$('#dlgGraf'); if(!dlg) return;
+  $('#grafKpis').innerHTML='<div class="mini">Cargando…</div>';
+  $('#grafDia').innerHTML=''; $('#grafCat').innerHTML=''; $('#grafTop').innerHTML='';
+  dlg.showModal();
+  try{
+    const d=await api('historico');
+    if(!d || !d.tot_venta){ $('#grafKpis').innerHTML='<div class="note">Aún no hay datos para graficar.</div>'; return; }
+    _grafData=d;
+    renderGraficos();
+  }catch(e){ $('#grafKpis').innerHTML='<div class="note">No se pudieron cargar los gráficos (revisa tu internet).</div>'; }
+}
+function grafSetMetric(m){
+  _grafMetric=GRAF[m]?m:'venta';
+  $$('#dlgGraf .grafSeg button').forEach(b=>b.classList.toggle('on',b.dataset.metric===_grafMetric));
+  if(_grafData) grafRenderDia();
+}
+function renderGraficos(){
+  const d=_grafData; if(!d) return;
+  const dias=(d.por_dia||[]);
+  const nd=dias.length||1;
+  const promV=(Number(d.tot_venta)||0)/nd;
+  let mejor={venta:0,dia:''}; dias.forEach(x=>{ if((Number(x.venta)||0)>mejor.venta) mejor={venta:Number(x.venta)||0,dia:x.dia}; });
+  $('#grafKpis').innerHTML=
+    _kpi('Venta total',money2(d.tot_venta))+
+    _kpi('Ganancia total',money2(d.tot_util))+
+    _kpi('Promedio por día',money2(promV))+
+    _kpi('Mejor día',mejor.dia?(money2(mejor.venta)+' · '+_diaCorto(mejor.dia)):'—');
+  grafRenderDia();
+  $('#grafCat').innerHTML=grafHBars((d.por_cat||[]).map(c=>({lbl:catLabel(c.cat)||c.cat,val:Number(c.venta)||0,color:CATCOL[c.cat]||'#2b7a8f'})),true);
+  $('#grafTop').innerHTML=grafHBars((d.top||[]).slice(0,8).map(t=>({lbl:t.nombre,val:Number(t.venta)||0,color:CATCOL[t.cat]||'#2b7a8f'})),true);
+}
+function _kpi(l,v){ return '<div class="grafKpi"><div class="l">'+l+'</div><div class="v">'+v+'</div></div>'; }
+function grafRenderDia(){
+  const d=_grafData; if(!d) return;
+  const g=GRAF[_grafMetric];
+  $('#grafDiaTit').textContent=g.lbl;
+  const dias=(d.por_dia||[]).slice(-30);
+  const box=$('#grafDia'); if(!box) return;
+  if(!dias.length){ box.innerHTML='<div class="mini">Sin datos.</div>'; return; }
+  const W=320,H=132, padL=6,padR=6,padT=16,padB=16;
+  const n=dias.length, iw=W-padL-padR, ih=H-padT-padB;
+  const max=Math.max(1,...dias.map(x=>Number(x[_grafMetric])||0));
+  const bw=Math.min(22, iw/n*0.72), gap=iw/n;
+  const lastI=n-1;
+  let bars='', labs='';
+  dias.forEach((x,i)=>{
+    const v=Number(x[_grafMetric])||0;
+    const bh=Math.max(v>0?2:0, ih*v/max);
+    const cx=padL+gap*i+gap/2, bx=cx-bw/2, by=padT+ih-bh;
+    bars+='<rect class="gbar" x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="3" fill="'+g.color+'"><title>'+_diaCorto(x.dia)+': '+_gm(v,g.money)+'</title></rect>';
+    // etiqueta de día cada ~4 y siempre el último
+    if(i%Math.ceil(n/7)===0 || i===lastI) labs+='<text class="gtxt" x="'+cx.toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle">'+_diaCorto(x.dia)+'</text>';
+    // valor sobre el máximo y el último
+    if((v===max || i===lastI) && v>0) labs+='<text class="gval" x="'+cx.toFixed(1)+'" y="'+(by-3).toFixed(1)+'" text-anchor="middle">'+_gm(v,g.money)+'</text>';
+  });
+  box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img"><line class="gaxis" x1="'+padL+'" y1="'+(padT+ih)+'" x2="'+(W-padR)+'" y2="'+(padT+ih)+'"/>'+bars+labs+'</svg>';
+  const tot=dias.reduce((a,x)=>a+(Number(x[_grafMetric])||0),0);
+  $('#grafDiaSub').textContent='Últimos '+n+' días · total '+_gm(tot,g.money)+(g.money?'':' uds');
+}
+function grafHBars(rows,isMoney){
+  rows=(rows||[]).filter(r=>r.val>0);
+  if(!rows.length) return '<div class="mini">Sin datos.</div>';
+  const max=Math.max(1,...rows.map(r=>r.val));
+  const rowH=22, W=320, labW=112, barMax=W-labW-52;
+  const H=rows.length*rowH+4;
+  let out='';
+  rows.forEach((r,i)=>{
+    const y=i*rowH+2, bw=Math.max(2, barMax*r.val/max);
+    const nm=(r.lbl||'').length>20 ? r.lbl.slice(0,19)+'…' : r.lbl;
+    out+='<text class="gtxt" x="0" y="'+(y+rowH/2+3)+'">'+esc(nm)+'</text>';
+    out+='<rect class="gbar" x="'+labW+'" y="'+(y+3)+'" width="'+bw.toFixed(1)+'" height="'+(rowH-8)+'" rx="3" fill="'+(r.color||'#2b7a8f')+'"><title>'+esc(r.lbl)+': '+_gm(r.val,isMoney)+'</title></rect>';
+    out+='<text class="gval" x="'+(labW+bw+5).toFixed(1)+'" y="'+(y+rowH/2+3)+'">'+_gm(r.val,isMoney)+'</text>';
+  });
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img">'+out+'</svg>';
+}
+
 async function descargarExcelHistorico(){
   if(typeof ExcelJS==='undefined'){ toast('Cargando Excel… intenta de nuevo en un momento'); return; }
   toast('Generando histórico…'); const bt=$('#anBtnHist'); if(bt) bt.disabled=true;
