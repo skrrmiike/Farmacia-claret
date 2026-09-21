@@ -8,6 +8,7 @@
   var _vvData = null, _vvMetric = 'uds';
 
   function _vvNum(n){ return (Number(n)||0).toLocaleString('es-VE'); }
+  function _vvUSD(n){ return '$'+(Math.round(Number(n)||0)).toLocaleString('es-VE'); }
   function _vvEsc(s){ return String(s==null?'':s).replace(/[<>&"']/g,function(c){return({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'})[c];}); }
   function _vvDia(iso){ var s=String(iso||'').slice(0,10); return s.slice(8,10)+'/'+s.slice(5,7); }
 
@@ -42,9 +43,10 @@
   ].join(''); }
 
   /* barras verticales (por día) */
-  function _vvBars(dias, key, color){
+  function _vvBars(dias, key, color, money){
     dias = dias||[];
     if(!dias.length) return '<div class="vv-note">Sin datos.</div>';
+    var fmt=money?_vvUSD:_vvNum;
     var W=340,H=140,padL=6,padR=6,padT=16,padB=16;
     var n=dias.length, iw=W-padL-padR, ih=H-padT-padB;
     var mx=1; dias.forEach(function(x){ mx=Math.max(mx,Number(x[key])||0); });
@@ -53,9 +55,9 @@
     dias.forEach(function(x,i){
       var v=Number(x[key])||0, bh=Math.max(v>0?2:0, ih*v/mx);
       var cx=padL+gap*i+gap/2, bx=cx-bw/2, by=padT+ih-bh;
-      bars+='<rect class="vv-bar" x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="3" fill="'+color+'"><title>'+_vvDia(x.dia)+': '+_vvNum(v)+'</title></rect>';
+      bars+='<rect class="vv-bar" x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="3" fill="'+color+'"><title>'+_vvDia(x.dia)+': '+fmt(v)+'</title></rect>';
       if(i%step===0 || i===last) labs+='<text class="vv-tx" x="'+cx.toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle">'+_vvDia(x.dia)+'</text>';
-      if((v===mx || i===last) && v>0) labs+='<text class="vv-vl" x="'+cx.toFixed(1)+'" y="'+(by-3).toFixed(1)+'" text-anchor="middle">'+_vvNum(v)+'</text>';
+      if((v===mx || i===last) && v>0) labs+='<text class="vv-vl" x="'+cx.toFixed(1)+'" y="'+(by-3).toFixed(1)+'" text-anchor="middle">'+fmt(v)+'</text>';
     });
     return '<div class="vv-svg"><svg viewBox="0 0 '+W+' '+H+'" role="img"><line class="vv-ax" x1="'+padL+'" y1="'+(padT+ih)+'" x2="'+(W-padR)+'" y2="'+(padT+ih)+'"/>'+bars+labs+'</svg></div>';
   }
@@ -67,10 +69,11 @@
     var rowH=22, W=340, labW=150, barMax=W-labW-46, H=rows.length*rowH+4, out='';
     rows.forEach(function(r,i){
       var y=i*rowH+2, bw=Math.max(2, barMax*(Number(r.val)||0)/mx);
-      var nm=(r.lbl||''); if(nm.length>26) nm=nm.slice(0,25)+'…';
+      var nm=(r.warn?'⚠️ ':'')+(r.lbl||''); if(nm.length>26) nm=nm.slice(0,25)+'…';
+      var lab=(r.txt!=null?r.txt:_vvNum(r.val));
       out+='<text class="vv-tx" x="0" y="'+(y+rowH/2+3)+'">'+_vvEsc(nm)+'</text>';
-      out+='<rect class="vv-bar" x="'+labW+'" y="'+(y+3)+'" width="'+bw.toFixed(1)+'" height="'+(rowH-8)+'" rx="3" fill="'+color+'"><title>'+_vvEsc(r.lbl)+': '+_vvNum(r.val)+'</title></rect>';
-      out+='<text class="vv-vl" x="'+(labW+bw+5).toFixed(1)+'" y="'+(y+rowH/2+3)+'">'+_vvNum(r.val)+'</text>';
+      out+='<rect class="vv-bar" x="'+labW+'" y="'+(y+3)+'" width="'+bw.toFixed(1)+'" height="'+(rowH-8)+'" rx="3" fill="'+color+'"><title>'+_vvEsc(r.lbl)+': '+_vvEsc(lab)+'</title></rect>';
+      out+='<text class="vv-vl" x="'+(labW+bw+5).toFixed(1)+'" y="'+(y+rowH/2+3)+'">'+_vvEsc(lab)+'</text>';
     });
     return '<div class="vv-svg"><svg viewBox="0 0 '+W+' '+H+'" role="img">'+out+'</svg></div>';
   }
@@ -80,33 +83,64 @@
     var dias=d.por_dia||[];
     var mejor={uds:0,dia:''}; dias.forEach(function(x){ if((Number(x.uds)||0)>mejor.uds) mejor={uds:Number(x.uds)||0,dia:x.dia}; });
     var nd=d.n_dias||dias.length||1, prom=Math.round((Number(d.tot_uds)||0)/nd);
+    var byUds=function(a,b){ return (Number(b.uds)||0)-(Number(a.uds)||0); };
     var html='<div class="vv-wrap"><style>'+_vvCSS()+'</style>';
     html+='<div class="vv-h">Ventas en Vivo · Farmacia</div>';
     html+='<div class="vv-sub">Unidades vendidas (datos de A2) · del '+_vvDia(d.desde)+' al '+_vvDia(d.hasta)+'</div>';
+    html+='<div style="margin:0 0 12px"><button onclick="_vvExcel()" style="background:#16a34a;color:#fff;border:none;border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer">⬇️ Excel completo</button></div>';
     html+='<div class="vv-kpis">'+
-      _vvKpi('Unidades vendidas', _vvNum(d.tot_uds))+
-      _vvKpi('Promedio por día', _vvNum(prom))+
-      _vvKpi('Mejor día', mejor.dia?(_vvNum(mejor.uds)+' · '+_vvDia(mejor.dia)):'—')+
-      _vvKpi('Días con datos', _vvNum(nd))+
+      _vvKpi('Vendido hoy', _vvNum(d.hoy_uds)+' u')+
+      _vvKpi('Unidades (período)', _vvNum(d.tot_uds))+
+      _vvKpi('Promedio por día', _vvNum(prom)+' u')+
+      _vvKpi('Mejor día', mejor.dia?(_vvNum(mejor.uds)+' u · '+_vvDia(mejor.dia)):'—')+
     '</div>';
-    // Ventas por día
+    // Top 25 de hoy (en vivo) — ordenado por unidades
+    var th=(d.top_hoy||[]).slice().sort(byUds);
+    html+='<div class="vv-card"><h3>Top 25 de hoy (en vivo)</h3>'+
+      (th.length? _vvHBars(th.slice(0,25).map(function(t){return {lbl:t.descr,val:Number(t.uds)||0,txt:_vvNum(t.uds)+' u'};}),'#7c3aed') : '<div class="vv-note">Todavía no hay ventas registradas hoy.</div>')+'</div>';
+    // Ventas por día (unidades)
     html+='<div class="vv-card"><h3>Ventas por día (unidades)</h3>'+_vvBars(dias.slice(-30),'uds','#2563eb')+'</div>';
-    // Top productos
+    // Top productos — ordenado por unidades
+    var tp=(d.top||[]).slice().sort(byUds);
     html+='<div class="vv-card"><h3>Top productos</h3>'+
-      _vvHBars((d.top||[]).slice(0,12).map(function(t){return {lbl:t.descr,val:Number(t.uds)||0};}),'#0ea5e9')+'</div>';
-    // Por categoría
+      _vvHBars(tp.slice(0,12).map(function(t){return {lbl:t.descr,val:Number(t.uds)||0,txt:_vvNum(t.uds)+' u'};}),'#0ea5e9')+'</div>';
+    // Por categoría — ordenado por unidades
+    var pc=(d.por_cat||[]).slice().sort(byUds);
     html+='<div class="vv-card"><h3>Por categoría</h3>'+
-      _vvHBars((d.por_cat||[]).map(function(c){return {lbl:c.cat,val:Number(c.uds)||0};}),'#16a34a')+'</div>';
+      _vvHBars(pc.map(function(c){return {lbl:c.cat,val:Number(c.uds)||0,txt:_vvNum(c.uds)+' u'};}),'#16a34a')+'</div>';
     // General de los días (tabla)
     var filas=dias.slice().reverse().map(function(x){
       return '<tr><td>'+_vvDia(x.dia)+'</td><td>'+_vvNum(x.uds)+'</td><td>'+_vvNum(x.skus)+'</td></tr>';
     }).join('');
     html+='<div class="vv-card"><h3>General de los días</h3>'+
       '<table class="vv-tbl"><thead><tr><th>Día</th><th>Unidades</th><th>Productos</th></tr></thead><tbody>'+filas+'</tbody></table></div>';
-    html+='<div class="vv-note">Muestra el movimiento de inventario de A2 en unidades. Los primeros días pueden incluir la carga inicial del inventario. El dinero por producto se podrá agregar cuando esté listo el puente de A2 con precios.</div>';
+    html+='<div class="vv-note">Movimiento de inventario de A2 en unidades. Los primeros días pueden incluir la carga inicial del inventario. El detalle en dólares está en el botón «Excel completo».</div>';
     html+='</div>';
     box.innerHTML=html;
   }
+
+  function _vvExcel(){
+    var d=_vvData; if(!d) return;
+    if(typeof XLSX==='undefined'){ alert('No se pudo preparar el Excel ahora. Reintenta en un momento.'); return; }
+    try{
+      var wb=XLSX.utils.book_new();
+      var aoaDia=[['Día','Venta US$','Unidades','Productos distintos']];
+      (d.por_dia||[]).slice().reverse().forEach(function(x){ aoaDia.push([_vvDia(x.dia), Number(x.venta)||0, Number(x.uds)||0, Number(x.skus)||0]); });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoaDia), 'Día a día');
+      var aoaHoy=[['#','Producto','Unidades hoy','Venta US$','Sin precio']];
+      (d.top_hoy||[]).forEach(function(t,i){ aoaHoy.push([i+1, t.descr, Number(t.uds)||0, t.sp?'':Number(t.venta)||0, t.sp?'⚠️ sin precio':'']); });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoaHoy), 'Top de hoy');
+      var aoaTop=[['#','Producto','Venta US$','Unidades','Sin precio']];
+      (d.top||[]).forEach(function(t,i){ aoaTop.push([i+1, t.descr, t.sp?'':Number(t.venta)||0, Number(t.uds)||0, t.sp?'⚠️ sin precio':'']); });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoaTop), 'Top productos');
+      var aoaCat=[['Categoría','Venta US$','Unidades']];
+      (d.por_cat||[]).forEach(function(c){ aoaCat.push([c.cat, Number(c.venta)||0, Number(c.uds)||0]); });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoaCat), 'Por categoría');
+      var hoy=new Date().toISOString().slice(0,10);
+      XLSX.writeFile(wb, 'Ventas_Farmacia_'+hoy+'.xlsx');
+    }catch(e){ alert('No se pudo generar el Excel.'); }
+  }
+  window._vvExcel=_vvExcel;
 
   window.renderVentasVivo = async function(){
     var box=document.getElementById('ventasvivo-content'); if(!box) return;
