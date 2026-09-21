@@ -678,7 +678,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v38 · 21/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v39 · 21/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -2084,6 +2084,8 @@ async function descargarExcelHistorico(){
     const totImp=totVenta*impPctV/100, totNeto=totUtil-totIva-totImp;
     const wb=new ExcelJS.Workbook(); wb.creator='Operación Reinversión'; wb.created=new Date();
     const _dm=(iso)=>{ const s=String(iso).slice(0,10); return s.slice(8,10)+'/'+s.slice(5,7); };
+    const BARC='FF12A150';
+    const _bar=(v,mx,w)=>{ v=Math.max(0,Number(v)||0); mx=Math.max(1e-9,Number(mx)||1); const nn=Math.max(v>0?1:0,Math.round(v/mx*(w||20))); return '█'.repeat(nn); };
 
     /* ---- Hoja 1: Resumen ---- */
     const R=wb.addWorksheet('Resumen',{views:[{showGridLines:false}]});
@@ -2096,7 +2098,7 @@ async function descargarExcelHistorico(){
       ['Venta total', totVenta, MFMT],
       ['Unidades vendidas', Number(d.tot_uds)||0, UFMT],
       ['Reinversión (costo)', Number(d.tot_costo)||0, MFMT],
-      ['Utilidad bruta (venta − costo)', totUtil, MFMT],
+      ['Utilidad antes de impuestos (venta − costo)', totUtil, MFMT],
       ['IVA sobre el margen', totIva, MFMT],
       ['Impuestos ('+impLabel()+')', totImp, MFMT],
       ['GANANCIA NETA', totNeto, MFMT],
@@ -2109,30 +2111,78 @@ async function descargarExcelHistorico(){
       rr.getCell(2).alignment={horizontal:'right'}; r++; });
     if(tasa>0){ const rr=R.getRow(r); rr.getCell(1).value='Ganancia neta en Bs · BCV '+fmt(tasa); rr.getCell(1).font={italic:true,color:{argb:GREY}}; rr.getCell(2).value=bs(Math.round(totNeto*tasa)); rr.getCell(2).alignment={horizontal:'right'}; rr.getCell(2).font={bold:true,color:{argb:INK}}; }
 
-    /* ---- Hoja 2: Tendencia por semana ---- */
-    const T=wb.addWorksheet('Por semana',{views:[{state:'frozen',ySplit:1}]});
-    T.columns=[{width:16},{width:12},{width:14},{width:14},{width:14},{width:14}];
-    const th=T.getRow(1); th.values=['Semana (desde)','Uds','Venta','Costo','Utilidad','Ganancia neta'];
-    for(let k=1;k<=6;k++){ const cc=th.getCell(k); cc.font={bold:true,color:{argb:WHITE}}; cc.fill=fill(HEAD); cc.alignment={horizontal:k===1?'left':'center'}; } th.height=22;
-    (d.por_semana||[]).forEach((s,i)=>{
-      const venta=Number(s.venta)||0, util=Number(s.util)||0, iva=Number(s.iva)||0;
-      const neta=util-iva-(venta*impPctV/100);
-      const rr=T.getRow(2+i);
-      rr.values=[_dm(s.semana), Number(s.uds)||0, r2(venta), r2(s.costo), r2(util), r2(neta)];
-      rr.getCell(2).numFmt=UFMT; for(let k=3;k<=6;k++) rr.getCell(k).numFmt=MFMT;
-      for(let k=1;k<=6;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(k).alignment={horizontal:k===1?'left':'right'}; }
+    // encabezado reutilizable
+    const _hd=(ws,labels,leftCols)=>{ const hr=ws.getRow(1); hr.values=labels; labels.forEach((_,k)=>{ const cc=hr.getCell(k+1); cc.font={bold:true,color:{argb:WHITE}}; cc.fill=fill(HEAD); cc.alignment={horizontal:(k<leftCols?'left':'center')}; }); hr.height=22; };
+
+    /* ---- Hoja: Día a día (detallado + gráfico) ---- */
+    const dias=(d.por_dia||[]);
+    const maxVD=Math.max(1,...dias.map(x=>Number(x.venta)||0));
+    const DD=wb.addWorksheet('Día a día',{views:[{state:'frozen',ySplit:1}]});
+    DD.columns=[{width:11},{width:7},{width:12},{width:12},{width:12},{width:10},{width:11},{width:12},{width:24}];
+    _hd(DD,['Fecha','Uds','Venta','Costo','Ganancia','IVA','Impuestos','Neta','Venta ▐'],1);
+    dias.forEach((x,i)=>{
+      const venta=Number(x.venta)||0, util=Number(x.util)||0, iva=Number(x.iva)||0, imp=venta*impPctV/100, neta=util-iva-imp;
+      const rr=DD.getRow(2+i);
+      rr.values=[_dm(x.dia), Number(x.uds)||0, r2(venta), r2(x.costo), r2(util), r2(iva), r2(imp), r2(neta), _bar(venta,maxVD,20)];
+      rr.getCell(2).numFmt=UFMT; for(let k=3;k<=8;k++) rr.getCell(k).numFmt=MFMT;
+      for(let k=1;k<=8;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(k).alignment={horizontal:k===1?'left':'right'}; }
+      rr.getCell(8).font={bold:true,color:{argb:GREEN}};
+      rr.getCell(9).font={color:{argb:BARC}}; rr.getCell(9).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(9).alignment={horizontal:'left'};
     });
 
-    /* ---- Hoja 3: Top productos (acumulado) ---- */
-    const P=wb.addWorksheet('Productos',{views:[{state:'frozen',ySplit:1}]});
-    P.columns=[{width:40},{width:12},{width:10},{width:14},{width:14}];
-    const ph=P.getRow(1); ph.values=['Producto','Categoría','Uds','Venta','Utilidad'];
-    for(let k=1;k<=5;k++){ const cc=ph.getCell(k); cc.font={bold:true,color:{argb:WHITE}}; cc.fill=fill(HEAD); cc.alignment={horizontal:k===1?'left':'center'}; } ph.height=22;
-    (d.top||[]).forEach((t,i)=>{
+    /* ---- Hoja: Tendencia por semana (con gráfico) ---- */
+    const T=wb.addWorksheet('Por semana',{views:[{state:'frozen',ySplit:1}]});
+    T.columns=[{width:14},{width:8},{width:13},{width:13},{width:13},{width:14},{width:24}];
+    _hd(T,['Semana','Uds','Venta','Costo','Utilidad','Ganancia neta','Venta ▐'],1);
+    const sems=(d.por_semana||[]); const maxVS=Math.max(1,...sems.map(s=>Number(s.venta)||0));
+    sems.forEach((s,i)=>{
+      const venta=Number(s.venta)||0, util=Number(s.util)||0, iva=Number(s.iva)||0, neta=util-iva-(venta*impPctV/100);
+      const rr=T.getRow(2+i);
+      rr.values=[_dm(s.semana), Number(s.uds)||0, r2(venta), r2(s.costo), r2(util), r2(neta), _bar(venta,maxVS,20)];
+      rr.getCell(2).numFmt=UFMT; for(let k=3;k<=6;k++) rr.getCell(k).numFmt=MFMT;
+      for(let k=1;k<=6;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(k).alignment={horizontal:k===1?'left':'right'}; }
+      rr.getCell(7).font={color:{argb:BARC}}; rr.getCell(7).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(7).alignment={horizontal:'left'};
+    });
+
+    /* ---- Hoja: Por categoría (con gráfico) ---- */
+    const CA=wb.addWorksheet('Por categoría',{views:[{showGridLines:false}]});
+    CA.columns=[{width:16},{width:8},{width:13},{width:10},{width:13},{width:24}];
+    _hd(CA,['Categoría','Uds','Venta','% venta','Utilidad','Venta ▐'],1);
+    const cats2=(d.por_cat||[]); const maxVC=Math.max(1,...cats2.map(c=>Number(c.venta)||0));
+    cats2.forEach((cc2,i)=>{
+      const venta=Number(cc2.venta)||0;
+      const rr=CA.getRow(2+i);
+      rr.values=[catLabel(cc2.cat)||cc2.cat, Number(cc2.uds)||0, r2(venta), totVenta>0?venta/totVenta:0, r2(cc2.util), _bar(venta,maxVC,20)];
+      rr.getCell(2).numFmt=UFMT; rr.getCell(3).numFmt=MFMT; rr.getCell(4).numFmt='0.0%'; rr.getCell(5).numFmt=MFMT;
+      for(let k=1;k<=5;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(k).alignment={horizontal:k===1?'left':'right'}; }
+      rr.getCell(6).font={color:{argb:BARC}}; rr.getCell(6).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(6).alignment={horizontal:'left'};
+    });
+
+    /* ---- Hoja: Top por venta (con gráfico) ---- */
+    const P=wb.addWorksheet('Top por venta',{views:[{state:'frozen',ySplit:1}]});
+    P.columns=[{width:40},{width:12},{width:8},{width:13},{width:13},{width:24}];
+    _hd(P,['Producto','Categoría','Uds','Venta','Utilidad','Venta ▐'],2);
+    const tops=(d.top||[]).slice(0,30); const maxVT=Math.max(1,...tops.map(t=>Number(t.venta)||0));
+    tops.forEach((t,i)=>{
+      const venta=Number(t.venta)||0;
       const rr=P.getRow(2+i);
-      rr.values=[t.nombre, catLabel(t.cat)||t.cat, Number(t.uds)||0, r2(t.venta), r2(t.util)];
+      rr.values=[t.nombre, catLabel(t.cat)||t.cat, Number(t.uds)||0, r2(venta), r2(t.util), _bar(venta,maxVT,20)];
       rr.getCell(3).numFmt=UFMT; rr.getCell(4).numFmt=MFMT; rr.getCell(5).numFmt=MFMT;
       for(let k=1;k<=5;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(k).alignment={horizontal:k<=2?'left':'right'}; }
+      rr.getCell(6).font={color:{argb:BARC}}; rr.getCell(6).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(6).alignment={horizontal:'left'};
+    });
+
+    /* ---- Hoja: Top por unidades (con gráfico) ---- */
+    const U=wb.addWorksheet('Top por unidades',{views:[{state:'frozen',ySplit:1}]});
+    U.columns=[{width:40},{width:12},{width:8},{width:26}];
+    _hd(U,['Producto','Categoría','Uds','Uds ▐'],2);
+    const topu=(d.top_uds||[]).slice(0,30); const maxU=Math.max(1,...topu.map(t=>Number(t.uds)||0));
+    topu.forEach((t,i)=>{
+      const rr=U.getRow(2+i);
+      rr.values=[t.nombre, catLabel(t.cat)||t.cat, Number(t.uds)||0, _bar(Number(t.uds)||0,maxU,22)];
+      rr.getCell(3).numFmt=UFMT;
+      for(let k=1;k<=3;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(k).alignment={horizontal:k<=2?'left':'right'}; }
+      rr.getCell(4).font={color:{argb:'FF2B6CB0'}}; rr.getCell(4).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(4).alignment={horizontal:'left'};
     });
     const buf=await wb.xlsx.writeBuffer();
     const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
