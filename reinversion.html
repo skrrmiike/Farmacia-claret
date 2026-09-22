@@ -402,8 +402,9 @@
       </div>
       <div id="oiResumen" class="mini" style="margin:8px 0"></div>
       <div id="oiLista"><div class="mini">Cargando…</div></div>
-      <div class="btnrow" id="oiXlsRow" style="margin-top:10px;display:none">
-        <button class="btn" id="oiXls" onclick="descargarExcelOrden()">⬇️ Descargar lista en Excel</button>
+      <div id="oiXlsRow" style="margin-top:10px;display:none">
+        <div class="mini" style="margin-bottom:6px">Descarga el pedido para enviarle a Edilso. Puedes bajar cada categoría por separado o todo junto:</div>
+        <div class="btnrow" id="oiXlsBtns" style="flex-wrap:wrap;gap:8px"></div>
       </div>
     </div>
     <div class="card">
@@ -678,7 +679,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v43 · 21/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v45 · 22/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -1935,13 +1936,26 @@ function renderOrdenInteligente(){
         <b>${money2(gUsd)}</b></div>`;
     return head+list+sub;
   }).join('');
+  // Botones de descarga: uno por categoría + todo junto
+  const btns=$('#oiXlsBtns');
+  if(btns){
+    const perCat=keys.map(c=>{
+      const it=cats[c]; const u=it.reduce((a,r)=>a+r.uds,0); const p=it.reduce((a,r)=>a+r.paq,0);
+      return `<button class="btn" onclick="descargarExcelOrden('${c}',this)">⬇️ ${catLabel(c)||c} · ${p} paq</button>`;
+    }).join('');
+    const todo = keys.length>1 ? `<button class="btn" style="background:#0e5a2b" onclick="descargarExcelOrden(null,this)">⬇️ Todo junto</button>` : '';
+    btns.innerHTML = perCat + todo;
+  }
   $('#oiXlsRow').style.display='';
 }
-async function descargarExcelOrden(){
+async function descargarExcelOrden(catFilter, btn){
   if(typeof ExcelJS==='undefined'){ toast('Cargando Excel… intenta de nuevo en un momento'); return; }
-  const rows=(_smartRows||[]).filter(r=>r.paq>0);
+  let rows=(_smartRows||[]).filter(r=>r.paq>0);
+  if(catFilter) rows=rows.filter(r=>r.cat===catFilter);
   if(!rows.length){ toast('No hay nada que pedir'); return; }
-  toast('Generando Excel…'); $('#oiXls').disabled=true;
+  const catNom = catFilter ? (catLabel(catFilter)||catFilter) : '';
+  if(btn) btn.disabled=true;
+  toast('Generando Excel…');
   try{
     const GREEN='FF0A7D3B',GREEN2='FF12A150',HEAD='FF0E5A2B',ZEBRA='FFF3F8F5',GOLD='FFFFF4D6',GREY='FF667085',INK='FF0F2A1C',WHITE='FFFFFFFF',SUBBG='FFDCEEE3';
     const MFMT='"$"#,##0.00',UFMT='#,##0',DFMT='#,##0.0';
@@ -1949,13 +1963,15 @@ async function descargarExcelOrden(){
     const r2=x=>Number((Number(x)||0).toFixed(2));
     const tasa=Number(state.bcv)||0;
     const wb=new ExcelJS.Workbook(); wb.creator='Operación Reinversión'; wb.created=new Date();
-    const W=wb.addWorksheet('Orden inteligente',{views:[{state:'frozen',ySplit:2}]});
-    W.columns=[{width:38},{width:14},{width:12},{width:11},{width:12},{width:11},{width:12},{width:13}];
+    const W=wb.addWorksheet(catFilter?catNom:'Orden inteligente',{views:[{state:'frozen',ySplit:2}]});
+    W.columns=[{width:38},{width:14},{width:12},{width:11},{width:12},{width:16},{width:12},{width:13}];
     W.mergeCells('A1:H1'); let c=W.getCell('A1');
-    c.value='Orden inteligente de compra · venta reciente + '+crecimientoPct()+'% crecimiento · cobertura '+coberturaSem()+' sem';
+    c.value=(catFilter?('Pedido '+catNom+' · '):'Orden inteligente de compra · ')+'venta reciente + '+crecimientoPct()+'% crecimiento · cobertura '+coberturaSem()+' sem';
     c.font={bold:true,size:14,color:{argb:WHITE}}; c.fill=fill(GREEN2); c.alignment={vertical:'middle',indent:1}; W.getRow(1).height=26;
-    const cols=['Producto','Categoría','Vendió (7 días)','Prom/sem','Stock actual','Pedir (paq)','Pedir (uds)','Gasto $'];
+    const cols=['Producto','Categoría','Vendió (7 días)','Prom/sem','Stock actual','📦 PEDIR (paq)','Pedir (uds)','Gasto $'];
     const hr=W.getRow(2); hr.values=cols; for(let k=1;k<=8;k++){ const cc=hr.getCell(k); cc.font={bold:true,color:{argb:WHITE}}; cc.fill=fill(HEAD); cc.alignment={horizontal:k===1?'left':'center',wrapText:true}; } hr.height=30;
+    // La columna de paquetes es la que Edilso lee: resáltala en el encabezado
+    { const ph=hr.getCell(6); ph.font={bold:true,size:12,color:{argb:INK}}; ph.fill=fill(GOLD); }
     const orden=['pepsi','coca','chuche','medicina'];
     const cats={}; rows.forEach(r=>{ (cats[r.cat]=cats[r.cat]||[]).push(r); });
     const keys=Object.keys(cats).sort((a,b)=>{const ia=orden.indexOf(a),ib=orden.indexOf(b);return (ia<0?9:ia)-(ib<0?9:ib);});
@@ -1970,23 +1986,35 @@ async function descargarExcelOrden(){
         rr.values=[r.descr+(r.porAcabarse?' ⚠️':''), catLabel(r.cat)||r.cat, r.v7, r.prom, r.ex, r.paq, r.uds, (r.sinCosto?'':r2(r.sub))];
         rr.getCell(3).numFmt=UFMT; rr.getCell(4).numFmt=DFMT; rr.getCell(5).numFmt=UFMT; rr.getCell(6).numFmt=UFMT; rr.getCell(7).numFmt=UFMT; if(!r.sinCosto) rr.getCell(8).numFmt=MFMT;
         for(let k=2;k<=8;k++) rr.getCell(k).alignment={horizontal:k===2?'center':'right'};
-        rr.getCell(6).font={bold:true,color:{argb:GREEN}};
         if(r.sinCosto) rr.getCell(8).value='sin costo', rr.getCell(8).font={italic:true,color:{argb:GREY}};
         for(let k=1;k<=8;k++){ rr.getCell(k).fill=fill(i%2?ZEBRA:WHITE); rr.getCell(k).border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}}}; }
+        // Columna PEDIR (paq): la que Edilso necesita ver de un vistazo → número grande, resaltado y centrado
+        const pc=rr.getCell(6);
+        pc.value=r.paq; pc.numFmt=UFMT;
+        pc.font={bold:true,size:15,color:{argb:INK}};
+        pc.fill=fill(GOLD);
+        pc.alignment={horizontal:'center',vertical:'middle'};
+        pc.border={bottom:{style:'hair',color:{argb:'FFE3EAE6'}},left:{style:'thin',color:{argb:GREEN}},right:{style:'thin',color:{argb:GREEN}}};
+        rr.height=22;
         gPaq+=r.paq; gUds+=r.uds; if(!r.sinCosto) gUsd+=r.sub;
         totPaq+=r.paq; totUds+=r.uds; if(!r.sinCosto) totUsd+=r.sub; i++; rIdx++;
       });
-      // Subtotal por categoría
-      const sr=W.getRow(rIdx);
-      sr.values=['Subtotal '+(catLabel(cat)||cat),'','','','',gPaq,gUds,r2(gUsd)];
-      sr.getCell(6).numFmt=UFMT; sr.getCell(7).numFmt=UFMT; sr.getCell(8).numFmt=MFMT;
-      for(let k=1;k<=8;k++){ const cc=sr.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(SUBBG); cc.alignment={horizontal:k===1?'left':'right'}; cc.border={top:{style:'hair',color:{argb:GREEN}}}; }
-      sr.getCell(1).alignment={horizontal:'left',indent:1};
-      rIdx++;
+      // Subtotal por categoría (solo cuando hay más de una categoría en la hoja)
+      if(!catFilter){
+        const sr=W.getRow(rIdx);
+        sr.values=['Subtotal '+(catLabel(cat)||cat),'','','','',gPaq,gUds,r2(gUsd)];
+        sr.getCell(6).numFmt=UFMT; sr.getCell(7).numFmt=UFMT; sr.getCell(8).numFmt=MFMT;
+        for(let k=1;k<=8;k++){ const cc=sr.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(SUBBG); cc.alignment={horizontal:k===1?'left':'right'}; cc.border={top:{style:'hair',color:{argb:GREEN}}}; }
+        sr.getCell(1).alignment={horizontal:'left',indent:1};
+        rIdx++;
+      }
     });
     const tr=W.getRow(rIdx); tr.values=['TOTAL A PEDIR','','','','',totPaq,totUds,r2(totUsd)];
     tr.getCell(6).numFmt=UFMT; tr.getCell(7).numFmt=UFMT; tr.getCell(8).numFmt=MFMT;
     for(let k=1;k<=8;k++){ const cc=tr.getCell(k); cc.font={bold:true,color:{argb:INK}}; cc.fill=fill(GOLD); cc.border={top:{style:'thin',color:{argb:GREEN}}}; cc.alignment={horizontal:k===1?'left':'right'}; }
+    { const tc=tr.getCell(6); tc.font={bold:true,size:15,color:{argb:INK}}; tc.alignment={horizontal:'center',vertical:'middle'};
+      tc.border={top:{style:'thin',color:{argb:GREEN}},left:{style:'thin',color:{argb:GREEN}},right:{style:'thin',color:{argb:GREEN}}}; }
+    tr.height=24;
     rIdx++;
     if(tasa>0){ const br=W.getRow(rIdx); br.getCell(1).value='En bolívares · BCV '+fmt(tasa); br.getCell(1).font={italic:true,color:{argb:GREY}};
       W.mergeCells(`A${rIdx}:G${rIdx}`); br.getCell(8).value=bs(Math.round(totUsd*tasa)); br.getCell(8).alignment={horizontal:'right'}; br.getCell(8).font={bold:true,color:{argb:INK}}; rIdx++; }
@@ -1995,10 +2023,11 @@ async function descargarExcelOrden(){
     c.font={italic:true,size:10,color:{argb:GREY}}; c.alignment={indent:1,wrapText:true}; W.getRow(nr).height=34;
     const buf=await wb.xlsx.writeBuffer();
     const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    await _shareOrDownload(blob,'Orden_inteligente_'+hoyStr()+'.xlsx');
+    const fname = (catFilter? ('Pedido_'+catNom.replace(/[^A-Za-z0-9]+/g,'')) : 'Orden_inteligente')+'_'+hoyStr()+'.xlsx';
+    await _shareOrDownload(blob,fname);
     toast('Excel listo ✓');
   }catch(e){ console.error(e); toast('No se pudo generar el Excel'); }
-  finally{ $('#oiXls').disabled=false; }
+  finally{ if(btn) btn.disabled=false; }
 }
 /* ---------- Histórico / big picture (Excel): acumulado + tendencia por semana + top productos ---------- */
 /* ---------- Gráficos del histórico (SVG, sin librerías) ---------- */
