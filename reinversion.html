@@ -410,6 +410,17 @@
     <div class="card">
       <div class="note">Las órdenes redondean hacia arriba a <b>empaques completos</b> (bolsas, cajas, bultos) según las "unidades por empaque" que pongas en cada producto. Las ventas por producto se ven en <b>🧮 Cierre</b>; las tasas y el capital en <b>💱 Dinero</b>.</div>
     </div>
+    <div class="card" id="cardAuditoria">
+      <h2>🔎 Auditoría de costos</h2>
+      <div class="mini" style="margin-bottom:8px">Compara el <b>costo que Edilso cargó en A2</b> contra el <b>costo real de la factura</b> (costo del bulto ÷ unidades por bulto). Detecta errores de carga y cuánto podrías estar perdiendo por costos mal puestos.</div>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Con costo de factura</div><div class="v" id="auN">—</div><div class="mini">productos</div></div>
+        <div class="kpi"><div class="l">A revisar</div><div class="v" id="auRev">—</div><div class="mini">diferencia > 10%</div></div>
+      </div>
+      <div id="auResumen" class="mini" style="margin:8px 0"></div>
+      <div class="btnrow"><button class="btn" id="auBtn" onclick="loadAuditoria()">🔎 Revisar costos</button></div>
+      <div id="auLista" style="margin-top:8px"></div>
+    </div>
     <div class="card" id="cardCongelado">
       <h2>❄️ Stock congelado</h2>
       <div class="mini" style="margin-bottom:8px">Dinero parado en inventario que casi no rota, comparado con las ventas de las últimas 4 semanas. La idea: dejar de comprar lo que sale aquí y moverlo.</div>
@@ -679,7 +690,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v46 · 22/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v47 · 22/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -1896,6 +1907,41 @@ function _oiApplyPaq(r,paq){ paq=Math.max(0,Math.min(9999,Math.round(Number(paq)
 function _oiStep(id,d){ const r=_oiRowById(id); if(!r) return; _oiApplyPaq(r, (Number(r.paq)||0)+d); renderOrdenInteligente(); }
 function _oiSetPaq(id,val){ const r=_oiRowById(id); if(!r) return; _oiApplyPaq(r, val); renderOrdenInteligente(); }
 function _oiReset(){ if(_smartData){ _smartRows=_procSmart((_smartData&&_smartData.items)||[]); renderOrdenInteligente(); toast('Cantidades restauradas'); } }
+/* ---------- Auditoría de costos: costo de A2 (Edilso) vs costo real de factura ---------- */
+async function apiRPC(fn){
+  const REST=SUPA_FN.replace('/functions/v1','/rest/v1');
+  const r=await fetch(REST+'/rpc/'+fn,{method:'POST',headers:{'apikey':ANON,'Authorization':'Bearer '+ANON,'Content-Type':'application/json'},body:'{}'});
+  if(!r.ok) throw 'HTTP '+r.status;
+  return await r.json();
+}
+let _auData=null;
+async function loadAuditoria(){
+  const box=$('#auLista'); const btn=$('#auBtn'); if(btn) btn.disabled=true;
+  if(box) box.innerHTML='<div class="mini">Revisando costos…</div>';
+  try{
+    const d=await apiRPC('op_auditoria_costos'); _auData=Array.isArray(d)?d:[];
+    renderAuditoria();
+  }catch(e){ if(box) box.innerHTML='<div class="note">No se pudo cargar la auditoría (revisa tu internet).</div>'; }
+  finally{ if(btn) btn.disabled=false; }
+}
+function renderAuditoria(){
+  const rows=_auData||[]; const box=$('#auLista'); if(!box) return;
+  const rev=rows.filter(r=>Math.abs(Number(r.pct)||0)>=10);
+  S('#auN', String(rows.length)); S('#auRev', String(rev.length));
+  const perdTot=rows.reduce((a,r)=>a+((Number(r.perdida)||0)>0?Number(r.perdida):0),0);
+  S('#auResumen', rev.length? ('⚠️ '+rev.length+' producto(s) con el costo mal en A2. Pérdida estimada por costos por debajo del real: '+money2(perdTot)+' (según ventas de 28 días). Pásaselo a Edilso para que los corrija.') : '✅ Todos los costos cargados cuadran con las facturas (±10%). Nada que corregir.');
+  const fmtpct=p=>(p==null?'—':((p>0?'+':'')+p+'%'));
+  box.innerHTML = rows.map(r=>{
+    const bad=Math.abs(Number(r.pct)||0)>=10;
+    const per=Number(r.perdida)||0;
+    const col = bad? '#c0392b' : (Number(r.pct)<0? '#0a7d3b' : '#667085');
+    return `<div class="prod"${bad?' style="background:#fdecea;border-radius:8px"':''}>
+      <div style="flex:1;min-width:0"><div class="nm">${esc(r.descr)}${bad?' <span class="pill warn" style="font-size:9px">corregir</span>':''}</div>
+        <div class="mt"><span class="chip ${catClass(r.cat)}">${catLabel(r.cat)}</span> Edilso <b>${money2(r.edilso)}</b> · real <b>${money2(r.real)}</b> · <b style="color:${col}">${fmtpct(r.pct)}</b></div></div>
+      <div class="rt" style="text-align:right">${per>0?('<span class="mini" style="color:#c0392b">pierdes ~'+money2(per)+'</span>'):(per<0?'<span class="mini">de más '+money2(-per)+'</span>':'')}<div class="mini">${r.uds28} uds/28d</div></div>
+    </div>`;
+  }).join('') || '<div class="mini">Aún no hay productos con costo de factura cargado.</div>';
+}
 async function loadOrdenInteligente(){
   if(!$('#oiLista')) return;
   $('#oiLista').innerHTML='<div class="mini">Calculando con las ventas recientes…</div>';
