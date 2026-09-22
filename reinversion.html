@@ -403,7 +403,7 @@
       <div id="oiResumen" class="mini" style="margin:8px 0"></div>
       <div id="oiLista"><div class="mini">Cargando…</div></div>
       <div id="oiXlsRow" style="margin-top:10px;display:none">
-        <div class="mini" style="margin-bottom:6px">Descarga el pedido para enviarle a Edilso. Puedes bajar cada categoría por separado o todo junto:</div>
+        <div class="mini" style="margin-bottom:6px">Ajusta los paquetes con − / + o escribiendo el número; las unidades y el gasto se recalculan solos. Cuando esté como quieras, descarga el pedido para Edilso (cada categoría por separado o todo junto):</div>
         <div class="btnrow" id="oiXlsBtns" style="flex-wrap:wrap;gap:8px"></div>
       </div>
     </div>
@@ -679,7 +679,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v45 · 22/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v46 · 22/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -1883,13 +1883,19 @@ function _procSmart(items){
     const q=pedirRepo(dem.est, emp, ex, cov);
     const costo=Number(it.costo)||0;
     const porAcabarse = dem.base>0 && ex < dem.base;   // menos de una semana de stock = por acabarse
-    rows.push({codigo:it.codigo, descr:it.descr||it.codigo, cat:it.cat||'otros',
+    rows.push({_id:rows.length, codigo:it.codigo, descr:it.descr||it.codigo, cat:it.cat||'otros',
       v7, prom:dem.prom, est:dem.est, ex, emp, costo,
-      paq:q.paq, uds:q.uds, sub:(costo>0? costo*q.uds : 0), sinCosto:costo<=0, porAcabarse});
+      paq:q.paq, paqSug:q.paq, uds:q.uds, sub:(costo>0? costo*q.uds : 0), sinCosto:costo<=0, porAcabarse});
   });
   rows.sort((a,b)=> (b.porAcabarse-a.porAcabarse) || (b.uds-a.uds));   // primero lo que está por acabarse
   return rows;
 }
+// Edición manual de paquetes antes de enviar: recalcula uds y gasto de la fila
+function _oiRowById(id){ return (_smartRows||[]).find(r=>r._id===id); }
+function _oiApplyPaq(r,paq){ paq=Math.max(0,Math.min(9999,Math.round(Number(paq)||0))); r.paq=paq; r.uds=paq*r.emp; r.sub=r.costo>0? r.costo*r.uds : 0; }
+function _oiStep(id,d){ const r=_oiRowById(id); if(!r) return; _oiApplyPaq(r, (Number(r.paq)||0)+d); renderOrdenInteligente(); }
+function _oiSetPaq(id,val){ const r=_oiRowById(id); if(!r) return; _oiApplyPaq(r, val); renderOrdenInteligente(); }
+function _oiReset(){ if(_smartData){ _smartRows=_procSmart((_smartData&&_smartData.items)||[]); renderOrdenInteligente(); toast('Cantidades restauradas'); } }
 async function loadOrdenInteligente(){
   if(!$('#oiLista')) return;
   $('#oiLista').innerHTML='<div class="mini">Calculando con las ventas recientes…</div>';
@@ -1903,7 +1909,8 @@ async function loadOrdenInteligente(){
 }
 function renderOrdenInteligente(){
   const rows=_smartRows||[];
-  const pedir=rows.filter(r=>r.paq>0);
+  // Mantén visibles las filas sugeridas aunque las bajes a 0, para poder subirlas de nuevo
+  const pedir=rows.filter(r=>(Number(r.paq)||0)>0 || (Number(r.paqSug)||0)>0);
   const totPaq=pedir.reduce((a,r)=>a+r.paq,0);
   const totUds=pedir.reduce((a,r)=>a+r.uds,0);
   const totUsd=pedir.reduce((a,r)=>a+(r.sinCosto?0:r.sub),0);
@@ -1925,26 +1932,36 @@ function renderOrdenInteligente(){
     const gUsd=items.reduce((a,r)=>a+(r.sinCosto?0:r.sub),0);
     const head=`<div style="margin:12px 0 2px;font-weight:700;color:#0a7d3b;font-size:15px">${catLabel(c)||c} <span style="font-weight:600;color:#667085;font-size:12px">· ${items.length} ${items.length===1?'producto':'productos'}</span></div>`;
     const list=items.map(r=>{
-      const empTxt = r.emp>1 ? (r.paq+(r.paq===1?' paquete':' paquetes')+' × '+r.emp+' = '+r.uds+' uds') : (r.uds+' uds');
+      const empTxt = r.emp>1 ? ('× '+r.emp+' = <b>'+r.uds+'</b> uds') : ('<b>'+r.uds+'</b> uds');
       const acab = r.porAcabarse ? ' <span class="pill warn" style="font-size:9px">⚠️ por acabarse</span>' : '';
-      return `<div class="prod"><div><div class="nm">${esc(r.descr)}${acab}</div>
-        <div class="mt"><span class="chip ${catClass(r.cat)}">${catLabel(r.cat)}</span> vendió ${r.v7} (últ. 7 días) · prom ${r.prom}/sem · tienes ${r.ex}</div></div>
-        <div class="rt"><b>${empTxt}</b>${r.sinCosto?'<span class="mini">sin costo</span>':('<span class="mini">'+money2(r.sub)+'</span>')}</div></div>`;
+      const editado = (Number(r.paq)||0)!==(Number(r.paqSug)||0) ? ' <span class="pill" style="font-size:9px;background:#fff4d6;color:#7a5b00">editado · sug '+r.paqSug+'</span>' : '';
+      return `<div class="prod"><div style="flex:1;min-width:0"><div class="nm">${esc(r.descr)}${acab}</div>
+        <div class="mt"><span class="chip ${catClass(r.cat)}">${catLabel(r.cat)}</span> vendió ${r.v7} (últ. 7 días) · prom ${r.prom}/sem · tienes ${r.ex}${editado}</div></div>
+        <div class="rt" style="text-align:right">
+          <div style="display:inline-flex;align-items:center;gap:5px">
+            <button type="button" onclick="_oiStep(${r._id},-1)" style="width:34px;height:34px;border:none;border-radius:8px;background:#e6efe9;color:#0f2a1c;font-size:20px;font-weight:700;line-height:1;cursor:pointer">−</button>
+            <input type="number" inputmode="numeric" value="${r.paq}" min="0" onchange="_oiSetPaq(${r._id},this.value)" onfocus="this.select()" style="width:52px;height:34px;text-align:center;font-size:16px;font-weight:700;color:#0f2a1c;border:2px solid #0a7d3b;border-radius:8px;background:#fff4d6;-moz-appearance:textfield">
+            <button type="button" onclick="_oiStep(${r._id},1)" style="width:34px;height:34px;border:none;border-radius:8px;background:#0a7d3b;color:#fff;font-size:20px;font-weight:700;line-height:1;cursor:pointer">+</button>
+          </div>
+          <div class="mini" style="margin-top:2px">paq · ${empTxt}${r.sinCosto?' · sin costo':(' · '+money2(r.sub))}</div>
+        </div></div>`;
     }).join('');
     const sub=`<div style="display:flex;justify-content:space-between;align-items:center;margin:2px 0 4px;padding:7px 10px;background:#eef7f1;border-radius:8px;font-size:12px;color:#0f2a1c">
         <span>Subtotal ${catLabel(c)||c}: <b>${gPaq}</b> ${gPaq===1?'paquete':'paquetes'} · ${gUds} uds</span>
         <b>${money2(gUsd)}</b></div>`;
     return head+list+sub;
   }).join('');
-  // Botones de descarga: uno por categoría + todo junto
+  // Botones de descarga: uno por categoría (solo las que tengan paquetes > 0) + todo junto
   const btns=$('#oiXlsBtns');
   if(btns){
-    const perCat=keys.map(c=>{
-      const it=cats[c]; const u=it.reduce((a,r)=>a+r.uds,0); const p=it.reduce((a,r)=>a+r.paq,0);
+    const conPaq=keys.filter(c=>cats[c].reduce((a,r)=>a+(Number(r.paq)||0),0)>0);
+    const perCat=conPaq.map(c=>{
+      const p=cats[c].reduce((a,r)=>a+(Number(r.paq)||0),0);
       return `<button class="btn" onclick="descargarExcelOrden('${c}',this)">⬇️ ${catLabel(c)||c} · ${p} paq</button>`;
     }).join('');
-    const todo = keys.length>1 ? `<button class="btn" style="background:#0e5a2b" onclick="descargarExcelOrden(null,this)">⬇️ Todo junto</button>` : '';
-    btns.innerHTML = perCat + todo;
+    const todo = conPaq.length>1 ? `<button class="btn" style="background:#0e5a2b" onclick="descargarExcelOrden(null,this)">⬇️ Todo junto</button>` : '';
+    const reset = `<button class="btn" style="background:#8a6d1f" onclick="_oiReset()">↺ Restaurar sugerido</button>`;
+    btns.innerHTML = (perCat||'<div class="mini">Todo está en 0 — sube algún paquete para poder descargar.</div>') + todo + reset;
   }
   $('#oiXlsRow').style.display='';
 }
