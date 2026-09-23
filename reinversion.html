@@ -205,6 +205,10 @@
 <main class="hide" id="app">
   <!-- ===== HOY ===== -->
   <section id="tab-hoy">
+    <div id="hoyCandAviso" onclick="go('productos')" style="display:none;cursor:pointer;background:#fdecea;border:1px solid #f5b7b1;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-weight:700;color:#c0392b">⚠️ <span id="hoyCandN">0</span> producto(s) vendiéndose SIN registrar</div>
+      <div class="mini" style="color:#922b21;margin-top:3px">La app no los está contando y la orden inteligente no los pide. Toca aquí para agregarlos.</div>
+    </div>
     <div class="card" style="padding:0;overflow:hidden">
       <div style="padding:14px 14px 0"><h2>Hoy · <span id="hoyFecha"></span></h2></div>
       <div style="padding:10px 12px 12px">
@@ -403,23 +407,13 @@
       <div id="oiResumen" class="mini" style="margin:8px 0"></div>
       <div id="oiLista"><div class="mini">Cargando…</div></div>
       <div id="oiXlsRow" style="margin-top:10px;display:none">
-        <div class="mini" style="margin-bottom:6px">Ajusta los paquetes con − / + o escribiendo el número; las unidades y el gasto se recalculan solos. Cuando esté como quieras, descarga el pedido para Edilso (cada categoría por separado o todo junto):</div>
+        <button class="btn" type="button" onclick="_oiOpenEdit()" style="width:100%;background:#0a7d3b;margin-bottom:8px">✏️ Ajustar cantidades</button>
+        <div class="mini" style="margin-bottom:6px">Toca <b>Ajustar cantidades</b> para cambiar los paquetes en una ventana aparte y guardarlos. Cuando esté como quieras, descarga el pedido para Edilso (cada categoría por separado o todo junto):</div>
         <div class="btnrow" id="oiXlsBtns" style="flex-wrap:wrap;gap:8px"></div>
       </div>
     </div>
     <div class="card">
       <div class="note">Las órdenes redondean hacia arriba a <b>empaques completos</b> (bolsas, cajas, bultos) según las "unidades por empaque" que pongas en cada producto. Las ventas por producto se ven en <b>🧮 Cierre</b>; las tasas y el capital en <b>💱 Dinero</b>.</div>
-    </div>
-    <div class="card" id="cardAuditoria">
-      <h2>🔎 Auditoría de costos</h2>
-      <div class="mini" style="margin-bottom:8px">Compara el <b>costo que Edilso cargó en A2</b> contra el <b>costo real de la factura</b> (costo del bulto ÷ unidades por bulto). Detecta errores de carga y cuánto podrías estar perdiendo por costos mal puestos.</div>
-      <div class="kpis">
-        <div class="kpi"><div class="l">Con costo de factura</div><div class="v" id="auN">—</div><div class="mini">productos</div></div>
-        <div class="kpi"><div class="l">A revisar</div><div class="v" id="auRev">—</div><div class="mini">diferencia > 10%</div></div>
-      </div>
-      <div id="auResumen" class="mini" style="margin:8px 0"></div>
-      <div class="btnrow"><button class="btn" id="auBtn" onclick="loadAuditoria()">🔎 Revisar costos</button></div>
-      <div id="auLista" style="margin-top:8px"></div>
     </div>
     <div class="card" id="cardCongelado">
       <h2>❄️ Stock congelado</h2>
@@ -435,12 +429,6 @@
       <div id="cgLista" style="margin-top:10px"><div class="mini">Cargando…</div></div>
       <div class="btnrow" style="margin-top:10px"><button class="btn" id="cgXls" onclick="descargarExcelCongelado()">⬇️ Descargar Excel de stock congelado</button></div>
       <div class="note" style="margin-top:8px">🔴 <b>Muerto</b>: 0 ventas en 4 semanas. 🟠 <b>Muy lento</b>: más de 8 semanas de inventario. 🟡 <b>Lento</b>: 4 a 8 semanas (aquí caen algunos que aún rotan, solo vigilar). 🆕 Los productos con menos de 14 días desde que entraron al inventario quedan <b>en observación</b> (no se juzgan todavía). En pantalla se ven los peores; el Excel trae la lista completa.</div>
-    </div>
-    <div class="card" id="cardMgFlaco" style="display:none">
-      <h2>📉 Margen flaco</h2>
-      <div class="mini" id="mgFlacoInfo" style="margin-bottom:6px"></div>
-      <div class="sub" style="margin-bottom:8px">Productos donde ya no ganas tu meta (subió el costo o se movió el spread). Toca uno para ajustar el precio; te muestro el sugerido.</div>
-      <div id="listaMgFlaco"></div>
     </div>
     <div class="card" id="cardTechos" style="display:none">
       <h2>📈 Techos de venta</h2>
@@ -640,6 +628,18 @@
   </div>
 </div></dialog>
 
+<!-- Dialog: ajustar cantidades de la orden inteligente -->
+<dialog id="dlgOiEdit"><div class="dlg">
+  <h3>✏️ Ajustar cantidades</h3>
+  <div class="mini" id="oiEditResumen" style="margin-bottom:8px">—</div>
+  <div id="oiEditLista" style="max-height:58vh;overflow:auto"></div>
+  <div class="btnrow" style="margin-top:14px;gap:8px">
+    <button class="btn sec" type="button" onclick="_oiCancelEdit()">Cancelar</button>
+    <button class="btn" type="button" style="background:#8a6d1f" onclick="_oiResetEdit()">↺ Sugerido</button>
+    <button class="btn" type="button" style="background:#0a7d3b" onclick="_oiSaveEdit()">✓ Guardar</button>
+  </div>
+</div></dialog>
+
 <dialog id="dlgHist"><div class="dlg">
   <h3>🗂️ Historial de semanas</h3>
   <div class="mini" style="margin-bottom:8px">Cada semana va de martes a lunes (días completos). Toca una para verla y descargar su Excel.</div>
@@ -690,7 +690,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v47 · 22/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v50 · 23/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -812,10 +812,10 @@ function go(tab){
   ['hoy','productos','semana','analisis','cierre'].forEach(t=>$('#tab-'+t).classList.toggle('hide',t!==tab));
   $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   render(); window.scrollTo(0,0);
-  if(tab==='hoy'){ loadHoyReal(); loadGuardStock(); }
+  if(tab==='hoy'){ loadHoyReal(); loadGuardStock(); loadCandidatos(); }
   if(tab==='productos') loadCandidatos();
   if(tab==='cierre') loadCierre();
-  if(tab==='analisis'){ loadAnalisisSemana(); loadCongelado(); loadOrdenInteligente(); renderMargenFlaco(); loadTechos(); }
+  if(tab==='analisis'){ loadAnalisisSemana(); loadCongelado(); loadOrdenInteligente(); loadTechos(); }
   if(tab==='semana'){ loadCambio(); loadMayra().then(loadCobros); }
 }
 let _semData=null;
@@ -1904,44 +1904,41 @@ function _procSmart(items){
 // Edición manual de paquetes antes de enviar: recalcula uds y gasto de la fila
 function _oiRowById(id){ return (_smartRows||[]).find(r=>r._id===id); }
 function _oiApplyPaq(r,paq){ paq=Math.max(0,Math.min(9999,Math.round(Number(paq)||0))); r.paq=paq; r.uds=paq*r.emp; r.sub=r.costo>0? r.costo*r.uds : 0; }
-function _oiStep(id,d){ const r=_oiRowById(id); if(!r) return; _oiApplyPaq(r, (Number(r.paq)||0)+d); renderOrdenInteligente(); }
-function _oiSetPaq(id,val){ const r=_oiRowById(id); if(!r) return; _oiApplyPaq(r, val); renderOrdenInteligente(); }
+function _oiStep(id,d){ const r=_oiRowById(id); if(!r) return; _oiApplyPaq(r, (Number(r.paq)||0)+d); _oiRenderEdit(); }
+function _oiSetPaq(id,val){ const r=_oiRowById(id); if(!r) return; _oiApplyPaq(r, val); _oiRenderEdit(); }
 function _oiReset(){ if(_smartData){ _smartRows=_procSmart((_smartData&&_smartData.items)||[]); renderOrdenInteligente(); toast('Cantidades restauradas'); } }
-/* ---------- Auditoría de costos: costo de A2 (Edilso) vs costo real de factura ---------- */
-async function apiRPC(fn){
-  const REST=SUPA_FN.replace('/functions/v1','/rest/v1');
-  const r=await fetch(REST+'/rpc/'+fn,{method:'POST',headers:{'apikey':ANON,'Authorization':'Bearer '+ANON,'Content-Type':'application/json'},body:'{}'});
-  if(!r.ok) throw 'HTTP '+r.status;
-  return await r.json();
+/* ---------- Ajuste de cantidades en ventana sobrepuesta (con guardar) ---------- */
+let _oiSnap=null;
+function _oiOpenEdit(){
+  if(!_smartRows||!_smartRows.length){ toast('No hay orden para ajustar'); return; }
+  _oiSnap={}; _smartRows.forEach(r=>{ _oiSnap[r._id]=Number(r.paq)||0; });   // copia para poder cancelar
+  _oiRenderEdit();
+  const d=$('#dlgOiEdit'); if(d&&d.showModal) d.showModal();
 }
-let _auData=null;
-async function loadAuditoria(){
-  const box=$('#auLista'); const btn=$('#auBtn'); if(btn) btn.disabled=true;
-  if(box) box.innerHTML='<div class="mini">Revisando costos…</div>';
-  try{
-    const d=await apiRPC('op_auditoria_costos'); _auData=Array.isArray(d)?d:[];
-    renderAuditoria();
-  }catch(e){ if(box) box.innerHTML='<div class="note">No se pudo cargar la auditoría (revisa tu internet).</div>'; }
-  finally{ if(btn) btn.disabled=false; }
+function _oiRenderEdit(){
+  const box=$('#oiEditLista'); if(!box) return;
+  const orden=['pepsi','coca','chuche','medicina'];
+  const rows=(_smartRows||[]).slice().sort((a,b)=>{const ia=orden.indexOf(a.cat),ib=orden.indexOf(b.cat);return ((ia<0?9:ia)-(ib<0?9:ib))||(b.porAcabarse-a.porAcabarse)||(b.uds-a.uds);});
+  let totPaq=0,totUds=0,totUsd=0;
+  box.innerHTML=rows.map(r=>{
+    totPaq+=Number(r.paq)||0; totUds+=r.uds; if(!r.sinCosto) totUsd+=r.sub;
+    const acab = r.porAcabarse ? ' <span class="pill warn" style="font-size:9px">⚠️</span>' : '';
+    const empTxt = r.emp>1 ? ('× '+r.emp+' = <b>'+r.uds+'</b> uds') : ('<b>'+r.uds+'</b> uds');
+    return `<div class="prod"><div style="flex:1;min-width:0"><div class="nm">${esc(r.descr)}${acab}</div>
+      <div class="mt"><span class="chip ${catClass(r.cat)}">${catLabel(r.cat)}</span> vendió ${r.v7} · prom ${r.prom}/sem · tienes ${r.ex}</div>
+      <div class="mini" style="margin-top:2px">paq · ${empTxt}${r.sinCosto?' · sin costo':(' · '+money2(r.sub))}</div></div>
+      <div class="rt" style="text-align:right"><div style="display:inline-flex;align-items:center;gap:5px">
+        <button type="button" onclick="_oiStep(${r._id},-1)" style="width:34px;height:34px;border:none;border-radius:8px;background:#e6efe9;color:#0f2a1c;font-size:20px;font-weight:700;line-height:1;cursor:pointer">−</button>
+        <input type="number" inputmode="numeric" value="${r.paq}" min="0" onchange="_oiSetPaq(${r._id},this.value)" onfocus="this.select()" style="width:52px;height:34px;text-align:center;font-size:16px;font-weight:700;color:#0f2a1c;border:2px solid #0a7d3b;border-radius:8px;background:#fff4d6;-moz-appearance:textfield">
+        <button type="button" onclick="_oiStep(${r._id},1)" style="width:34px;height:34px;border:none;border-radius:8px;background:#0a7d3b;color:#fff;font-size:20px;font-weight:700;line-height:1;cursor:pointer">+</button>
+      </div></div></div>`;
+  }).join('');
+  const tasa=Number(state.bcv)||0;
+  S('#oiEditResumen','Total: '+totPaq+' paq · '+totUds+' uds · '+money2(totUsd)+(tasa>0?(' · '+bs(Math.round(totUsd*tasa))):''));
 }
-function renderAuditoria(){
-  const rows=_auData||[]; const box=$('#auLista'); if(!box) return;
-  const rev=rows.filter(r=>Math.abs(Number(r.pct)||0)>=10);
-  S('#auN', String(rows.length)); S('#auRev', String(rev.length));
-  const perdTot=rows.reduce((a,r)=>a+((Number(r.perdida)||0)>0?Number(r.perdida):0),0);
-  S('#auResumen', rev.length? ('⚠️ '+rev.length+' producto(s) con el costo mal en A2. Pérdida estimada por costos por debajo del real: '+money2(perdTot)+' (según ventas de 28 días). Pásaselo a Edilso para que los corrija.') : '✅ Todos los costos cargados cuadran con las facturas (±10%). Nada que corregir.');
-  const fmtpct=p=>(p==null?'—':((p>0?'+':'')+p+'%'));
-  box.innerHTML = rows.map(r=>{
-    const bad=Math.abs(Number(r.pct)||0)>=10;
-    const per=Number(r.perdida)||0;
-    const col = bad? '#c0392b' : (Number(r.pct)<0? '#0a7d3b' : '#667085');
-    return `<div class="prod"${bad?' style="background:#fdecea;border-radius:8px"':''}>
-      <div style="flex:1;min-width:0"><div class="nm">${esc(r.descr)}${bad?' <span class="pill warn" style="font-size:9px">corregir</span>':''}</div>
-        <div class="mt"><span class="chip ${catClass(r.cat)}">${catLabel(r.cat)}</span> Edilso <b>${money2(r.edilso)}</b> · real <b>${money2(r.real)}</b> · <b style="color:${col}">${fmtpct(r.pct)}</b></div></div>
-      <div class="rt" style="text-align:right">${per>0?('<span class="mini" style="color:#c0392b">pierdes ~'+money2(per)+'</span>'):(per<0?'<span class="mini">de más '+money2(-per)+'</span>':'')}<div class="mini">${r.uds28} uds/28d</div></div>
-    </div>`;
-  }).join('') || '<div class="mini">Aún no hay productos con costo de factura cargado.</div>';
-}
+function _oiSaveEdit(){ const d=$('#dlgOiEdit'); if(d&&d.close) d.close(); renderOrdenInteligente(); toast('Cantidades guardadas'); }
+function _oiCancelEdit(){ if(_oiSnap){ (_smartRows||[]).forEach(r=>{ if(_oiSnap[r._id]!=null) _oiApplyPaq(r,_oiSnap[r._id]); }); } const d=$('#dlgOiEdit'); if(d&&d.close) d.close(); renderOrdenInteligente(); }
+function _oiResetEdit(){ if(_smartData){ _smartRows=_procSmart((_smartData&&_smartData.items)||[]); _oiRenderEdit(); toast('Sugerido restaurado'); } }
 async function loadOrdenInteligente(){
   if(!$('#oiLista')) return;
   $('#oiLista').innerHTML='<div class="mini">Calculando con las ventas recientes…</div>';
@@ -1984,11 +1981,7 @@ function renderOrdenInteligente(){
       return `<div class="prod"><div style="flex:1;min-width:0"><div class="nm">${esc(r.descr)}${acab}</div>
         <div class="mt"><span class="chip ${catClass(r.cat)}">${catLabel(r.cat)}</span> vendió ${r.v7} (últ. 7 días) · prom ${r.prom}/sem · tienes ${r.ex}${editado}</div></div>
         <div class="rt" style="text-align:right">
-          <div style="display:inline-flex;align-items:center;gap:5px">
-            <button type="button" onclick="_oiStep(${r._id},-1)" style="width:34px;height:34px;border:none;border-radius:8px;background:#e6efe9;color:#0f2a1c;font-size:20px;font-weight:700;line-height:1;cursor:pointer">−</button>
-            <input type="number" inputmode="numeric" value="${r.paq}" min="0" onchange="_oiSetPaq(${r._id},this.value)" onfocus="this.select()" style="width:52px;height:34px;text-align:center;font-size:16px;font-weight:700;color:#0f2a1c;border:2px solid #0a7d3b;border-radius:8px;background:#fff4d6;-moz-appearance:textfield">
-            <button type="button" onclick="_oiStep(${r._id},1)" style="width:34px;height:34px;border:none;border-radius:8px;background:#0a7d3b;color:#fff;font-size:20px;font-weight:700;line-height:1;cursor:pointer">+</button>
-          </div>
+          <div style="font-size:22px;font-weight:800;color:#0a7d3b;line-height:1">${r.paq}</div>
           <div class="mini" style="margin-top:2px">paq · ${empTxt}${r.sinCosto?' · sin costo':(' · '+money2(r.sub))}</div>
         </div></div>`;
     }).join('');
@@ -2516,6 +2509,8 @@ function renderCandidatos(items){
   const card=$('#cardCandidatos'), box=$('#listaCand'), info=$('#candInfo');
   if(!card||!box) return;
   items=items||[];
+  // Alerta en la pantalla Hoy (safeguard: no perder productos que venden sin registrar)
+  const av=$('#hoyCandAviso'); if(av){ if(items.length){ av.style.display=''; S('#hoyCandN',String(items.length)); } else { av.style.display='none'; } }
   if(!items.length){ card.style.display='none'; box.innerHTML=''; if(info) info.textContent=''; return; }
   card.style.display='';
   if(info) info.textContent=items.length+' producto'+(items.length===1?'':'s')+' que podrías agregar (ordenados por lo más vendido en 4 semanas).';
@@ -2546,29 +2541,6 @@ function openProdNuevo(codigo,nombre,existencia){
 }
 
 /* ---------- Margen flaco: productos por debajo de la meta de margen (solo lectura, en la app) ---------- */
-function renderMargenFlaco(){
-  const card=$('#cardMgFlaco'), box=$('#listaMgFlaco'), info=$('#mgFlacoInfo');
-  if(!card||!box) return;
-  const obj=Number(state.cfg.margenObj)||30;
-  const rows=(state.productos||[])
-    .filter(p=>p.activo!==false && Number(p.costo)>0 && Number(p.precio)>0)
-    .map(p=>({p, real:Math.round(margenReal(p)*100)}))
-    .filter(x=>x.real < obj)
-    .sort((a,b)=>a.real-b.real);
-  if(!rows.length){ card.style.display='none'; box.innerHTML=''; if(info) info.textContent=''; return; }
-  card.style.display='';
-  if(info) info.textContent=rows.length+' producto'+(rows.length===1?'':'s')+' por debajo de tu meta de '+obj+'% real.';
-  box.innerHTML='';
-  rows.slice(0,20).forEach(x=>{
-    const p=x.p; const sug=precioSugerido(p.costo);
-    const div=document.createElement('div'); div.className='prod'; div.style.cursor='pointer'; div.onclick=()=>openProd(p.id);
-    div.innerHTML=`<div><div class="nm">${esc(p.nombre)}</div>
-      <div class="mt"><span class="chip ${catClass(p.cat)}">${catLabel(p.cat)}</span> ahora ${money2(p.precio)} · margen real <b style="color:var(--bad)">${x.real}%</b> · sugerido <b>${money2(sug)}</b> para ${obj}%</div></div>
-      <div class="rt"><span class="pill bad" style="font-size:9.5px">margen bajo</span></div>`;
-    box.appendChild(div);
-  });
-}
-
 /* ---------- Techos de venta: tendencia semana a semana por producto ---------- */
 let _techosCargando=false;
 function _spark(arr){
