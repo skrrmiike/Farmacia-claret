@@ -242,6 +242,12 @@
   .pill{box-shadow:0 2px 6px -3px rgba(0,0,0,.3)}
   .seg button.on{box-shadow:var(--shadow),0 0 0 1px color-mix(in srgb,var(--brand2) 30%,transparent)}
   @media (prefers-reduced-motion:reduce){main>section:not(.hide){animation:none!important}}
+  /* ===== Vendido en vivo: destello de venta nueva ===== */
+  .prod.justSold{animation:justSold 1.9s var(--ease)}
+  @keyframes justSold{0%{background:color-mix(in srgb,var(--ok) 32%,transparent)}60%{background:color-mix(in srgb,var(--ok) 14%,transparent)}100%{background:transparent}}
+  #hoyVivoLista .pill{vertical-align:middle}
+  .pulseNum{animation:pulseNum .8s var(--ease)}
+  @keyframes pulseNum{0%{transform:scale(1)}30%{transform:scale(1.09)}100%{transform:scale(1)}}
 </style>
 </head>
 <body>
@@ -772,7 +778,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v53 · 23/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v55 · 23/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -2452,8 +2458,16 @@ async function loadHoyReal(){
     corteHoy=Number(d.total_monto)||0;
     S('#hoyMonto',money2(corteHoy));
     S('#hoyUnid',(d.total_unid||0));
-    _hoyVivo=(d.productos||[]).slice().sort((a,b)=>(Number(b.monto)||0)-(Number(a.monto)||0));
-    renderHoyVivo();
+    { const prods=(d.productos||[]);
+      const nowByCode={}; prods.forEach(p=>{ nowByCode[p.codigo]=Number(p.vendido)||0; });
+      _hoyJustSold=new Set(); let ventaNueva=false;
+      if(_hoyPrevByCode){ prods.forEach(p=>{ if((Number(p.vendido)||0)>(_hoyPrevByCode[p.codigo]||0)){ _hoyJustSold.add(p.codigo); ventaNueva=true; } }); }
+      _hoyPrevByCode=nowByCode;
+      window._hoyUltima=d.ultima_venta||null;
+      _hoyVivo=prods.slice().sort((a,b)=>{ const ta=a.ultima?Date.parse(a.ultima):0, tb=b.ultima?Date.parse(b.ultima):0; return (tb-ta) || ((Number(b.monto)||0)-(Number(a.monto)||0)); });
+      renderHoyVivo();
+      if(ventaNueva) _pulseMonto();
+    }
     updGuardianVenta();
     S('#mCorte',money2(corteHoy));
     const tasa=Number(state.bcv)||0;
@@ -2470,15 +2484,21 @@ async function loadHoyReal(){
 }
 
 /* ---------- Vendido hoy en vivo (debajo del perro, tope 10 + cargar más) ---------- */
-let _hoyVivo=[], _hoyVivoShown=10;
+let _hoyVivo=[], _hoyVivoShown=10, _hoyPrevByCode=null, _hoyJustSold=new Set();
+function _horaVE(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleTimeString('es-VE',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'America/Caracas'}); }catch(e){ return ''; } }
+function _pulseMonto(){ const el=$('#hoyMonto'); if(!el) return; el.classList.remove('pulseNum'); void el.offsetWidth; el.classList.add('pulseNum'); }
 function renderHoyVivo(){
   const wrap=$('#hoyVivo'), box=$('#hoyVivoLista'), mas=$('#hoyVivoMas'); if(!box) return;
   const arr=_hoyVivo||[];
   if(!arr.length){ if(wrap) wrap.style.display='none'; return; }
   if(wrap) wrap.style.display='';
   const shown=Math.min(_hoyVivoShown, arr.length);
-  S('#hoyVivoN', arr.length+' producto'+(arr.length===1?'':'s'));
-  box.innerHTML=arr.slice(0,shown).map(p=>`<div class="prod"><div style="flex:1;min-width:0"><div class="nm">${esc(p.nombre)}</div><div class="mt"><span class="chip ${catClass(p.cat)}">${catLabel(p.cat)}</span> · ${p.vendido} uds × ${money2(p.precio)}</div></div><div class="rt"><b>${money2(p.monto)}</b></div></div>`).join('');
+  S('#hoyVivoN', arr.length+' producto'+(arr.length===1?'':'s')+' · más reciente arriba');
+  box.innerHTML=arr.slice(0,shown).map(p=>{
+    const nuevo=_hoyJustSold&&_hoyJustSold.has(p.codigo);
+    const hr=_horaVE(p.ultima);
+    return `<div class="prod${nuevo?' justSold':''}"><div style="flex:1;min-width:0"><div class="nm">${esc(p.nombre)}${nuevo?' <span class="pill" style="font-size:9px;background:#0f9d58;color:#fff">recién</span>':''}</div><div class="mt"><span class="chip ${catClass(p.cat)}">${catLabel(p.cat)}</span> · ${p.vendido} uds × ${money2(p.precio)}</div></div><div class="rt"><b>${money2(p.monto)}</b>${hr?('<span class="mini">'+hr+'</span>'):''}</div></div>`;
+  }).join('');
   if(mas){ if(shown<arr.length){ mas.style.display=''; mas.textContent='Cargar más… ('+(arr.length-shown)+' restantes)'; } else mas.style.display='none'; }
 }
 function _hoyVivoMas(){ _hoyVivoShown+=10; renderHoyVivo(); }
