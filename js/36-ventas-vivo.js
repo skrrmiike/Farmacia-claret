@@ -94,16 +94,16 @@
       _vvKpi('Promedio por día', _vvNum(prom)+' u')+
       _vvKpi('Mejor día', mejor.dia?(_vvNum(mejor.uds)+' u · '+_vvDia(mejor.dia)):'—')+
     '</div>';
-    // Top 25 de hoy (en vivo) — ordenado por unidades
-    var th=(d.top_hoy||[]).slice().sort(byUds);
-    html+='<div class="vv-card"><h3>Top 25 de hoy (en vivo)</h3>'+
-      (th.length? _vvHBars(th.slice(0,25).map(function(t){return {lbl:t.descr,val:Number(t.uds)||0,txt:_vvNum(t.uds)+' u'};}),'#7c3aed') : '<div class="vv-note">Todavía no hay ventas registradas hoy.</div>')+'</div>';
+    // Top productos con selector de ventana (hoy / 7 días / 30 días)
+    var _win=(window._vvTopWin||'hoy');
+    var _src=({hoy:d.top_hoy,'7':d.top_7,'30':d.top}[_win]||[]).slice().sort(byUds);
+    var _col=(_win==='hoy'?'#7c3aed':'#0ea5e9');
+    var _lbl=({hoy:'Hoy · en vivo','7':'Últimos 7 días','30':'Últimos 30 días · del '+_vvDia(d.desde)+' al '+_vvDia(d.hasta)}[_win]);
+    var _seg='<div style="display:inline-flex;gap:4px;background:#eef2f7;border-radius:10px;padding:3px;margin-bottom:8px">'+[['hoy','Hoy'],['7','7 días'],['30','30 días']].map(function(w){var on=w[0]===_win;return '<button type="button" onclick="_vvSetTop(\''+w[0]+'\')" style="border:none;cursor:pointer;font:inherit;font-size:12px;font-weight:700;padding:6px 13px;border-radius:8px;'+(on?'background:#fff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.14)':'background:transparent;color:#64748b')+'">'+w[1]+'</button>';}).join('')+'</div>';
+    html+='<div class="vv-card"><h3>Top productos</h3>'+_seg+'<div class="vv-sub" style="margin:-2px 0 8px">'+_lbl+'</div>'+
+      (_src.length? _vvHBars(_src.slice(0,10).map(function(t){return {lbl:t.descr,val:Number(t.uds)||0,txt:_vvNum(t.uds)+' u'};}),_col) : '<div class="vv-note">Sin ventas en esta ventana.</div>')+'</div>';
     // Ventas por día (unidades)
     html+='<div class="vv-card"><h3>Ventas por día (unidades)</h3>'+_vvBars(dias.slice(-30),'uds','#2563eb')+'</div>';
-    // Top productos — ordenado por unidades
-    var tp=(d.top||[]).slice().sort(byUds);
-    html+='<div class="vv-card"><h3>Top productos</h3>'+
-      _vvHBars(tp.slice(0,12).map(function(t){return {lbl:t.descr,val:Number(t.uds)||0,txt:_vvNum(t.uds)+' u'};}),'#0ea5e9')+'</div>';
     // Por categoría — ordenado por unidades
     var pc=(d.por_cat||[]).slice().sort(byUds);
     html+='<div class="vv-card"><h3>Por categoría</h3>'+
@@ -141,6 +141,7 @@
     }catch(e){ alert('No se pudo generar el Excel.'); }
   }
   window._vvExcel=_vvExcel;
+  window._vvSetTop=function(w){ window._vvTopWin=w; var box=document.getElementById('ventasvivo-content'); if(box&&_vvData) _vvRender(box,_vvData); };
 
   window.renderVentasVivo = async function(){
     var box=document.getElementById('ventasvivo-content'); if(!box) return;
