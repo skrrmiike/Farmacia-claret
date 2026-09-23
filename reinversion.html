@@ -171,6 +171,77 @@
   .gaxis{stroke:var(--line)}
   .gtxt{fill:var(--muted);font-size:8px}
   .gval{fill:var(--ink);font-size:8px;font-weight:700}
+  /* ===================== ACABADO PREMIUM ===================== */
+  :root{
+    --shadow:0 1px 2px rgba(16,24,32,.05),0 6px 20px -8px rgba(16,24,32,.14),0 14px 44px -16px rgba(16,24,32,.12);
+    --shadow-lg:0 10px 28px -10px rgba(16,24,32,.22),0 26px 70px -26px rgba(16,24,32,.24);
+    --glow:0 2px 16px rgba(43,122,143,.30);
+    --ring:0 0 0 3px rgba(43,122,143,.20);
+    --ease:cubic-bezier(.2,.7,.2,1);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --shadow:0 1px 2px rgba(0,0,0,.45),0 10px 28px -10px rgba(0,0,0,.6);
+      --shadow-lg:0 12px 34px -12px rgba(0,0,0,.65),0 30px 80px -28px rgba(0,0,0,.7);
+      --glow:0 2px 20px rgba(78,196,226,.32);
+      --ring:0 0 0 3px rgba(78,196,226,.24);
+    }
+  }
+  .card,.btn,.kpi,.pill,.chip,.prod,nav button,.seg button,dialog,input,select,.gear{
+    transition:transform .18s var(--ease),box-shadow .22s var(--ease),background-color .2s var(--ease),border-color .2s var(--ease),color .2s var(--ease),opacity .2s var(--ease);
+  }
+  .card{box-shadow:var(--shadow)}
+  .card:hover{box-shadow:var(--shadow-lg)}
+  .big,.kpi .v,.prod .rt b{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+  .big{letter-spacing:-.6px;text-shadow:var(--glow)}
+  .kpi{background:linear-gradient(180deg,color-mix(in srgb,var(--chip) 55%,var(--card)),var(--chip))}
+  .kpi:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+  .kpi .v{letter-spacing:-.2px}
+  .btn{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 86%,#fff),var(--brand));box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 6px 16px -8px rgba(16,24,32,.5);letter-spacing:.2px}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.16) inset,0 12px 24px -10px rgba(16,24,32,.55)}
+  .btn:active{transform:translateY(0) scale(.985)}
+  .btn.sec{background:linear-gradient(180deg,color-mix(in srgb,var(--chip) 65%,var(--card)),var(--chip));color:var(--ink);box-shadow:var(--shadow)}
+  .btn.wa{background:linear-gradient(180deg,#2ee06f,#25D366)}
+  .btn[disabled]{transform:none;box-shadow:none}
+  nav{background:color-mix(in srgb,var(--card) 84%,transparent);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);box-shadow:0 -10px 26px -18px rgba(0,0,0,.45)}
+  nav button.on{transform:translateY(-1px)}
+  nav button.on .ic{filter:drop-shadow(0 3px 8px rgba(43,122,143,.45))}
+  header{box-shadow:0 10px 26px -16px rgba(0,0,0,.5)}
+  .gear:active{transform:scale(.94)}
+  input:focus,select:focus{box-shadow:var(--ring)}
+  .chip{box-shadow:0 2px 6px -2px rgba(0,0,0,.28)}
+  dialog{box-shadow:var(--shadow-lg)}
+  dialog[open]{animation:dlgIn .26s var(--ease)}
+  @keyframes dlgIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+  dialog::backdrop{backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  .prod{border-radius:10px;margin-left:-6px;margin-right:-6px;padding-left:6px;padding-right:6px}
+  .prod:hover{background:color-mix(in srgb,var(--chip) 45%,transparent)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  /* ===== PERRITO + BÓVEDA (nivel 2) ===== */
+  .guardScene{box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), inset 0 26px 44px -26px rgba(255,255,255,.20), var(--shadow)}
+  .guardScene::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.7;
+    background:radial-gradient(2px 2px at 18% 22%,rgba(255,255,255,.55),transparent),radial-gradient(1.6px 1.6px at 80% 15%,rgba(255,255,255,.45),transparent),radial-gradient(1.5px 1.5px at 63% 28%,rgba(255,255,255,.32),transparent),radial-gradient(1.8px 1.8px at 33% 12%,rgba(255,255,255,.4),transparent),radial-gradient(1.4px 1.4px at 88% 34%,rgba(255,255,255,.28),transparent)}
+  .guardian{filter:drop-shadow(0 8px 9px rgba(0,0,0,.42))}
+  .dog[data-mood="high"],.dog[data-mood="party"]{filter:drop-shadow(0 0 13px rgba(244,212,122,.6)) drop-shadow(0 8px 9px rgba(0,0,0,.42))}
+  .dog[data-mood="party"]::before{content:"";position:absolute;left:50%;top:44%;width:132px;height:132px;transform:translate(-50%,-50%);border-radius:50%;z-index:-1;background:radial-gradient(circle,rgba(247,215,119,.4),transparent 68%);animation:vGlow 1.2s ease-in-out infinite}
+  .gGloss{opacity:.16}
+  .gCheek{display:none;opacity:.55}
+  .dog[data-mood="mid"] .gCheek,.dog[data-mood="high"] .gCheek,.dog[data-mood="party"] .gCheek{display:block}
+  .gShine{animation:gShineTw 3.4s ease-in-out infinite}
+  @keyframes gShineTw{0%,100%{opacity:1}50%{opacity:.5}}
+  .vault svg{filter:drop-shadow(0 8px 9px rgba(0,0,0,.42))}
+  .gBubble{background:linear-gradient(180deg,#ffffff,#e9f4f6);box-shadow:0 8px 18px -6px rgba(0,0,0,.4)}
+  .gBubble::after{border-right-color:#fbfdfe}
+  .bottle{box-shadow:inset 0 -3px 0 rgba(0,0,0,.15), 0 4px 7px -3px rgba(0,0,0,.5)}
+  .gsStat .n.big{text-shadow:0 2px 18px rgba(120,220,240,.35)}
+  /* ===== Toques premium generales (nivel 2) ===== */
+  main>section:not(.hide){animation:secIn .32s var(--ease)}
+  @keyframes secIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+  .card h2::before{content:"";display:inline-block;width:16px;height:2px;border-radius:2px;vertical-align:middle;margin-right:8px;background:linear-gradient(90deg,var(--brand2),transparent)}
+  .card{background-image:linear-gradient(180deg,color-mix(in srgb,var(--card) 100%,#fff 0%),var(--card))}
+  .pill{box-shadow:0 2px 6px -3px rgba(0,0,0,.3)}
+  .seg button.on{box-shadow:var(--shadow),0 0 0 1px color-mix(in srgb,var(--brand2) 30%,transparent)}
+  @media (prefers-reduced-motion:reduce){main>section:not(.hide){animation:none!important}}
 </style>
 </head>
 <body>
@@ -254,6 +325,9 @@
                   <path d="M49 61 Q60 60 71 61 Q67 75 60 75 Q53 75 49 61 Z" fill="#5a2f2f"/>
                   <path class="gTongue" d="M56 67 Q60 84 64 67 Q60 71 56 67 Z" fill="#ec7b7b"/>
                 </g>
+                <ellipse class="gCheek" cx="41" cy="55" rx="5" ry="3.4" fill="#f28a8a"/>
+                <ellipse class="gCheek" cx="79" cy="55" rx="5" ry="3.4" fill="#f28a8a"/>
+                <ellipse class="gGloss" cx="52" cy="33" rx="13" ry="8" fill="#fff"/>
               </svg>
             </div>
             <div class="vault" id="vault" data-full="0">
@@ -690,7 +764,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v50 · 23/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v52 · 23/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
