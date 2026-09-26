@@ -780,7 +780,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v56 · 26/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v57 · 26/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -2909,64 +2909,111 @@ setInterval(()=>{ if(PIN && !document.hidden) refrescar(false); }, 10*60*1000);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && PIN){ refrescar(false); loadHoyReal(); loadMayra(); } });
 </script>
 
-<!-- ===== Orden de compra por voz (Alexa): la app revisa cada 15s si pediste una orden por voz, la muestra e imprime. ===== -->
+<!-- ===== Orden de compra por voz (Alexa): aparece en pantalla y tú eliges Editar o Imprimir. Revisa cada 5s. ===== -->
 <script>
 (function(){
-  // CSS de impresión: al imprimir, solo se ve la orden (se ocultan menús, encabezado, etc.)
+  // CSS de impresión: al imprimir, solo se ve la orden (sin menús, botones ni +/−)
   var st=document.createElement('style');
-  st.textContent='@media print{body>*{display:none!important}#ordenVozOverlay{display:block!important;position:static!important;background:#fff!important;inset:auto!important;padding:0!important}#ordenVozOverlay .ovBox{box-shadow:none!important;max-width:none!important;border-radius:0!important;margin:0!important;padding:0!important;color:#000!important}#ordenVozOverlay .ovBtns{display:none!important}}';
+  st.textContent='@media print{body>*{display:none!important}#ordenVozOverlay{display:block!important;position:static!important;background:#fff!important;inset:auto!important;padding:0!important}#ordenVozOverlay .ovBox{box-shadow:none!important;max-width:none!important;border-radius:0!important;margin:0!important;padding:0!important;color:#000!important}#ordenVozOverlay .ovBtns,#ordenVozOverlay .ovStep{display:none!important}}';
   document.head.appendChild(st);
-  // Ventana (overlay) que aparece con la orden lista
+  // Ventana (overlay) que aparece con la orden
   var ov=document.createElement('div');
   ov.id='ordenVozOverlay';
   ov.style.cssText='display:none;position:fixed;inset:0;z-index:200;background:rgba(8,12,16,.5);overflow:auto;padding:20px';
-  ov.innerHTML='<div class="ovBox" style="max-width:680px;margin:0 auto;background:var(--card,#fff);color:var(--ink,#0f1720);border-radius:16px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.3)"><div id="ordenVozPrint"></div><div class="ovBtns" style="display:flex;gap:8px;margin-top:14px"><button style="flex:1;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:640;background:#eef2f4;color:#0f1720;cursor:pointer" onclick="_ordenVozCerrar()">Cerrar</button><button style="flex:1;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:640;background:#0a7d3b;color:#fff;cursor:pointer" onclick="window.print()">🖨 Imprimir</button></div></div>';
+  ov.innerHTML='<div class="ovBox" style="max-width:680px;margin:0 auto;background:var(--card,#fff);color:var(--ink,#0f1720);border-radius:16px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.3)"><div id="ordenVozPrint"></div><div id="ordenVozBtns" class="ovBtns" style="margin-top:14px"></div></div>';
   document.body.appendChild(ov);
 
   var handled=(function(){try{return localStorage.getItem('opOrdenVozLast')||'';}catch(e){return '';}})();
-  var busy=false;
+  var busy=false, _rows=[], _mode='view', _curId=null, handledCmd=null;
+  var ORD=['pepsi','coca','chuche','medicina'];
+  function _catlbl(c){ try{ return catLabel(c)||c; }catch(e){ return c; } }
+  function _grupos(rows){ var cats={}; rows.forEach(function(r){(cats[r.cat]=cats[r.cat]||[]).push(r);}); return {cats:cats, keys:Object.keys(cats).sort(function(a,b){var ia=ORD.indexOf(a),ib=ORD.indexOf(b);return (ia<0?9:ia)-(ib<0?9:ib);})}; }
+  function _tot(rows){ var p=0,u=0,d=0; rows.forEach(function(r){ if((Number(r.paq)||0)>0){ p+=r.paq; u+=r.uds; if(!r.sinCosto) d+=r.sub; } }); return {p:p,u:u,d:d}; }
 
   window._ordenVozCerrar=function(){ var o=document.getElementById('ordenVozOverlay'); if(o) o.style.display='none'; };
+  window._ovEdit=function(){ _mode='edit'; _render(); };
+  window._ovView=function(){ _mode='view'; _render(); try{ _guardar(); }catch(e){} };
+  window._ovStep=function(i,d){ var r=_rows[i]; if(!r) return; _setPaq(r,(Number(r.paq)||0)+d); _render(); };
+  window._ovSet=function(i,v){ var r=_rows[i]; if(!r) return; _setPaq(r,v); _render(); };
+  function _setPaq(r,paq){ paq=Math.max(0,Math.min(9999,Math.round(Number(paq)||0))); r.paq=paq; r.uds=paq*r.emp; r.sub=r.costo>0? r.costo*r.uds : 0; }
+  window._ovImprimir=function(){ _mode='view'; _render(); try{ _guardar(); }catch(e){} setTimeout(function(){ try{ window.print(); }catch(e){} },200); };
 
-  async function generar(id){
-    busy=true;
-    try{
-      handled=String(id); try{localStorage.setItem('opOrdenVozLast',String(id));}catch(e){}
-      var d=await api('orden_inteligente');
-      var rows=_procSmart((d&&d.items)||[]).filter(function(r){ return (Number(r.paq)||0)>0; });
-      var tasa=Number(state.bcv)||0;
-      var totPaq=0, totUds=0, totUsd=0;
-      rows.forEach(function(r){ totPaq+=r.paq; totUds+=r.uds; if(!r.sinCosto) totUsd+=r.sub; });
-      var orden=['pepsi','coca','chuche','medicina'];
-      var cats={}; rows.forEach(function(r){ (cats[r.cat]=cats[r.cat]||[]).push(r); });
-      var keys=Object.keys(cats).sort(function(a,b){ var ia=orden.indexOf(a),ib=orden.indexOf(b); return (ia<0?9:ia)-(ib<0?9:ib); });
-      var fnow=new Date().toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-      var html='<div style="font-size:22px;font-weight:800;color:#0a7d3b">Orden de compra — Edilso</div>'
-        +'<div style="font-size:12px;color:#6b7580;margin:2px 0 12px">Operación Reinversión · '+fnow+'</div>';
-      if(!rows.length){
-        html+='<div style="font-size:13px;color:#6b7580;line-height:1.5">Por ahora no hay que pedir nada: el stock cubre lo que se está vendiendo. 👍</div>';
-      } else {
-        keys.forEach(function(c){
-          var items=cats[c].slice().sort(function(a,b){ return b.uds-a.uds; });
-          html+='<div style="margin:12px 0 4px;font-weight:700;color:#0a7d3b">'+(catLabel(c)||c)+'</div>';
+  function _guardar(){
+    if(_curId==null) return;
+    var rows=_rows.filter(function(r){return (Number(r.paq)||0)>0;});
+    var t=_tot(_rows);
+    var items=rows.map(function(r){return {codigo:r.codigo,descr:r.descr,cat:r.cat,paq:r.paq,uds:r.uds,costo:r.costo,sub:r.sinCosto?0:r.sub};});
+    try{ api('orden_marcar',{id:_curId, items:items, total_costo:t.d, n_items:rows.length}); }catch(e){}
+  }
+
+  function _render(){
+    var tasa=Number(state.bcv)||0;
+    var pa=document.getElementById('ordenVozPrint');
+    var bt=document.getElementById('ordenVozBtns');
+    var fnow=new Date().toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    var head='<div style="font-size:22px;font-weight:800;color:#0a7d3b">Orden de compra — Edilso</div>'
+      +'<div style="font-size:12px;color:#6b7580;margin:2px 0 12px">Operación Reinversión · '+fnow+(_mode==='edit'?' · ✏️ editando':'')+'</div>';
+    var visibles = _mode==='edit' ? _rows : _rows.filter(function(r){return (Number(r.paq)||0)>0;});
+    var html=head;
+    if(!visibles.length){
+      html+='<div style="font-size:13px;color:#6b7580;line-height:1.5">'+(_mode==='edit'?'No hay productos para ajustar.':'Por ahora no hay que pedir nada: el stock cubre lo que se está vendiendo. 👍')+'</div>';
+    } else {
+      var g=_grupos(visibles);
+      g.keys.forEach(function(c){
+        var items=g.cats[c].slice().sort(function(a,b){return (b.porAcabarse-a.porAcabarse)||(b.uds-a.uds);});
+        html+='<div style="margin:12px 0 4px;font-weight:700;color:#0a7d3b">'+_catlbl(c)+'</div>';
+        if(_mode==='edit'){
+          items.forEach(function(r){
+            var i=_rows.indexOf(r);
+            var empTxt=r.emp>1?('× '+r.emp+' = <b>'+r.uds+'</b> uds'):('<b>'+r.uds+'</b> uds');
+            html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #eee">'
+              +'<div style="flex:1;min-width:0"><div style="font-weight:600">'+esc(r.descr)+(r.porAcabarse?' ⚠️':'')+'</div>'
+              +'<div style="font-size:11px;color:#6b7580">'+empTxt+(r.sinCosto?' · sin costo':(' · '+money2(r.sub)))+'</div></div>'
+              +'<div class="ovStep" style="display:flex;align-items:center;gap:5px">'
+              +'<button type="button" onclick="_ovStep('+i+',-1)" style="width:32px;height:32px;border:none;border-radius:8px;background:#e6efe9;color:#0f2a1c;font-size:19px;font-weight:700;cursor:pointer">−</button>'
+              +'<input type="number" inputmode="numeric" value="'+r.paq+'" min="0" onchange="_ovSet('+i+',this.value)" onfocus="this.select()" style="width:48px;height:32px;text-align:center;font-size:15px;font-weight:700;border:2px solid #0a7d3b;border-radius:8px;background:#fff4d6;color:#0f2a1c">'
+              +'<button type="button" onclick="_ovStep('+i+',1)" style="width:32px;height:32px;border:none;border-radius:8px;background:#0a7d3b;color:#fff;font-size:19px;font-weight:700;cursor:pointer">+</button>'
+              +'</div></div>';
+          });
+        } else {
           html+='<table style="width:100%;border-collapse:collapse;font-size:14px"><thead><tr style="background:#0e5a2b;color:#fff"><th style="text-align:left;padding:6px 8px">Producto</th><th style="padding:6px 8px">Pedir</th><th style="padding:6px 8px;text-align:right">Costo</th></tr></thead><tbody>';
           items.forEach(function(r,i){
             var empTxt=r.emp>1?(r.paq+' paq × '+r.emp+' = '+r.uds+' uds'):(r.uds+' uds');
             html+='<tr style="background:'+(i%2?'#f3f8f5':'#fff')+'"><td style="padding:6px 8px">'+esc(r.descr)+'</td><td style="padding:6px 8px;text-align:center;font-weight:700">'+empTxt+'</td><td style="padding:6px 8px;text-align:right">'+(r.sinCosto?'—':money2(r.sub))+'</td></tr>';
           });
           html+='</tbody></table>';
-        });
-        html+='<div style="margin-top:14px;padding-top:10px;border-top:2px solid #0a7d3b;display:flex;justify-content:space-between;font-weight:800;font-size:16px"><span>Total: '+totPaq+' paq · '+totUds+' uds</span><span style="color:#0a7d3b">'+money2(totUsd)+(tasa>0?(' · '+bs(Math.round(totUsd*tasa))):'')+'</span></div>';
-      }
-      var pa=document.getElementById('ordenVozPrint'); if(pa) pa.innerHTML=html;
+        }
+      });
+      var t=_tot(_rows);
+      html+='<div style="margin-top:14px;padding-top:10px;border-top:2px solid #0a7d3b;display:flex;justify-content:space-between;font-weight:800;font-size:16px"><span>Total: '+t.p+' paq · '+t.u+' uds</span><span style="color:#0a7d3b">'+money2(t.d)+(tasa>0?(' · '+bs(Math.round(t.d*tasa))):'')+'</span></div>';
+    }
+    pa.innerHTML=html;
+    var bstyle='flex:1;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:640;cursor:pointer';
+    if(_mode==='edit'){
+      bt.innerHTML='<div style="display:flex;gap:8px"><button type="button" style="'+bstyle+';background:#0a7d3b;color:#fff" onclick="_ovView()">✓ Listo</button>'
+        +'<button type="button" style="'+bstyle+';background:#eef2f4;color:#0f1720" onclick="_ordenVozCerrar()">Cerrar</button></div>';
+    } else {
+      bt.innerHTML='<div style="display:flex;gap:8px"><button type="button" style="'+bstyle+';background:#eef2f4;color:#0f1720" onclick="_ovEdit()">✏️ Editar</button>'
+        +'<button type="button" style="'+bstyle+';background:#0a7d3b;color:#fff" onclick="_ovImprimir()">🖨 Imprimir</button></div>'
+        +'<div style="margin-top:8px"><button type="button" style="width:100%;border:none;border-radius:12px;padding:11px;font-size:14px;background:#f6f7f9;color:#6b7580;cursor:pointer" onclick="_ordenVozCerrar()">Cerrar</button></div>';
+    }
+  }
+
+  async function generar(id){
+    busy=true;
+    try{
+      handled=String(id); try{localStorage.setItem('opOrdenVozLast',String(id));}catch(e){}
+      _curId=id; _mode='view';
+      var d=await api('orden_inteligente');
+      var all=_procSmart((d&&d.items)||[]);
+      // deja los que el sistema sugiere (paq o sugerido > 0); en Editar puedes subir o bajar cada uno
+      _rows=all.filter(function(r){ return (Number(r.paq)||0)>0 || (Number(r.paqSug)||0)>0; });
+      _render();
       var o=document.getElementById('ordenVozOverlay'); if(o) o.style.display='block';
-      var itemsSnap=rows.map(function(r){ return {codigo:r.codigo,descr:r.descr,cat:r.cat,paq:r.paq,uds:r.uds,costo:r.costo,sub:r.sinCosto?0:r.sub}; });
-      try{ await api('orden_marcar',{id:id, items:itemsSnap, total_costo:totUsd, n_items:rows.length}); }catch(e){}
-      setTimeout(function(){ try{ window.print(); }catch(e){} }, 600);
+      _guardar();
     }catch(e){ if(typeof toast==='function') toast('No se pudo generar la orden'); }
     finally{ busy=false; }
   }
-
   async function poll(){
     if(busy) return;
     if(typeof PIN==='undefined' || !PIN) return;
@@ -2974,13 +3021,26 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && PIN){
     try{
       var d=await api('orden_pendiente');
       var p=d&&d.pendiente;
-      if(p && String(p.id)!==String(handled)) await generar(p.id);
+      if(p && String(p.id)!==String(handled)){ await generar(p.id); }
+      // Comandos por voz (imprímela / edítala) sobre la orden ya mostrada
+      var c=d&&d.cmd;
+      if(c && c.id!=null){
+        if(handledCmd===null){ handledCmd=String(c.id); } // primer poll: no dispares comandos viejos
+        else if(String(c.id)!==String(handledCmd)){
+          handledCmd=String(c.id);
+          var o=document.getElementById('ordenVozOverlay');
+          if(o && o.style.display!=='none'){
+            if(c.cmd==='imprimir'){ _ovImprimir(); }
+            else if(c.cmd==='editar'){ _ovEdit(); }
+          }
+        }
+      }
     }catch(e){}
   }
   window._ordenVozPoll=poll;
-  setInterval(poll, 15000);
+  setInterval(poll, 5000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) poll(); });
-  setTimeout(poll, 4000);
+  setTimeout(poll, 3000);
 })();
 </script>
 
