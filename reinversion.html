@@ -250,6 +250,7 @@
   @keyframes pulseNum{0%{transform:scale(1)}30%{transform:scale(1.09)}100%{transform:scale(1)}}
 </style>
 </head>
+
 <body>
 
 <!-- ===== PIN GATE ===== -->
@@ -766,6 +767,7 @@
 </div></dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+
 <script>
 const $=(s)=>document.querySelector(s), $$=(s)=>document.querySelectorAll(s);
 const money=(n)=>'$'+(Math.round(n||0)).toLocaleString('es-VE');
@@ -778,7 +780,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v55 · 23/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v56 · 26/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -1070,6 +1072,7 @@ async function descargarExcelCongelado(){
   }catch(e){ console.error(e); toast('No se pudo generar el Excel'); }
   finally{ $('#cgXls').disabled=false; }
 }
+
 /* ---------- Excel semanal bonito (ExcelJS: colores, totales, agotados y gráficos) ---------- */
 const _DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const _DIAS_AB=['dom','lun','mar','mié','jue','vie','sáb'];
@@ -1644,6 +1647,7 @@ async function excelCobro(){
   }catch(e){ console.error(e); toast('No se pudo generar el Excel'); }
   finally{ $('#cobroXls').disabled=false; }
 }
+
 function openMov(tipo){
   setMovTipo(tipo||'pago');
   $('#movFecha').value=hoyStr(); $('#movConcepto').value=''; $('#movUsd').value=''; $('#movBs').value='';
@@ -2173,6 +2177,7 @@ async function descargarExcelOrden(catFilter, btn){
   }catch(e){ console.error(e); toast('No se pudo generar el Excel'); }
   finally{ if(btn) btn.disabled=false; }
 }
+
 /* ---------- Histórico / big picture (Excel): acumulado + tendencia por semana + top productos ---------- */
 /* ---------- Gráficos del histórico (SVG, sin librerías) ---------- */
 let _grafData=null, _grafMetric='venta';
@@ -2564,6 +2569,7 @@ async function loadGuardStock(){
   finally{ _guardStockCargando=false; }
 }
 function fmt(n){return (n||0).toLocaleString('es-VE')}
+
 let prodCat='';
 function setProdCat(c){
   prodCat=c||'';
@@ -2902,5 +2908,81 @@ setInterval(()=>{ const h=$('#tab-hoy'); if(h && !h.classList.contains('hide') &
 setInterval(()=>{ if(PIN && !document.hidden) refrescar(false); }, 10*60*1000);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && PIN){ refrescar(false); loadHoyReal(); loadMayra(); } });
 </script>
+
+<!-- ===== Orden de compra por voz (Alexa): la app revisa cada 15s si pediste una orden por voz, la muestra e imprime. ===== -->
+<script>
+(function(){
+  // CSS de impresión: al imprimir, solo se ve la orden (se ocultan menús, encabezado, etc.)
+  var st=document.createElement('style');
+  st.textContent='@media print{body>*{display:none!important}#ordenVozOverlay{display:block!important;position:static!important;background:#fff!important;inset:auto!important;padding:0!important}#ordenVozOverlay .ovBox{box-shadow:none!important;max-width:none!important;border-radius:0!important;margin:0!important;padding:0!important;color:#000!important}#ordenVozOverlay .ovBtns{display:none!important}}';
+  document.head.appendChild(st);
+  // Ventana (overlay) que aparece con la orden lista
+  var ov=document.createElement('div');
+  ov.id='ordenVozOverlay';
+  ov.style.cssText='display:none;position:fixed;inset:0;z-index:200;background:rgba(8,12,16,.5);overflow:auto;padding:20px';
+  ov.innerHTML='<div class="ovBox" style="max-width:680px;margin:0 auto;background:var(--card,#fff);color:var(--ink,#0f1720);border-radius:16px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.3)"><div id="ordenVozPrint"></div><div class="ovBtns" style="display:flex;gap:8px;margin-top:14px"><button style="flex:1;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:640;background:#eef2f4;color:#0f1720;cursor:pointer" onclick="_ordenVozCerrar()">Cerrar</button><button style="flex:1;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:640;background:#0a7d3b;color:#fff;cursor:pointer" onclick="window.print()">🖨 Imprimir</button></div></div>';
+  document.body.appendChild(ov);
+
+  var handled=(function(){try{return localStorage.getItem('opOrdenVozLast')||'';}catch(e){return '';}})();
+  var busy=false;
+
+  window._ordenVozCerrar=function(){ var o=document.getElementById('ordenVozOverlay'); if(o) o.style.display='none'; };
+
+  async function generar(id){
+    busy=true;
+    try{
+      handled=String(id); try{localStorage.setItem('opOrdenVozLast',String(id));}catch(e){}
+      var d=await api('orden_inteligente');
+      var rows=_procSmart((d&&d.items)||[]).filter(function(r){ return (Number(r.paq)||0)>0; });
+      var tasa=Number(state.bcv)||0;
+      var totPaq=0, totUds=0, totUsd=0;
+      rows.forEach(function(r){ totPaq+=r.paq; totUds+=r.uds; if(!r.sinCosto) totUsd+=r.sub; });
+      var orden=['pepsi','coca','chuche','medicina'];
+      var cats={}; rows.forEach(function(r){ (cats[r.cat]=cats[r.cat]||[]).push(r); });
+      var keys=Object.keys(cats).sort(function(a,b){ var ia=orden.indexOf(a),ib=orden.indexOf(b); return (ia<0?9:ia)-(ib<0?9:ib); });
+      var fnow=new Date().toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      var html='<div style="font-size:22px;font-weight:800;color:#0a7d3b">Orden de compra — Edilso</div>'
+        +'<div style="font-size:12px;color:#6b7580;margin:2px 0 12px">Operación Reinversión · '+fnow+'</div>';
+      if(!rows.length){
+        html+='<div style="font-size:13px;color:#6b7580;line-height:1.5">Por ahora no hay que pedir nada: el stock cubre lo que se está vendiendo. 👍</div>';
+      } else {
+        keys.forEach(function(c){
+          var items=cats[c].slice().sort(function(a,b){ return b.uds-a.uds; });
+          html+='<div style="margin:12px 0 4px;font-weight:700;color:#0a7d3b">'+(catLabel(c)||c)+'</div>';
+          html+='<table style="width:100%;border-collapse:collapse;font-size:14px"><thead><tr style="background:#0e5a2b;color:#fff"><th style="text-align:left;padding:6px 8px">Producto</th><th style="padding:6px 8px">Pedir</th><th style="padding:6px 8px;text-align:right">Costo</th></tr></thead><tbody>';
+          items.forEach(function(r,i){
+            var empTxt=r.emp>1?(r.paq+' paq × '+r.emp+' = '+r.uds+' uds'):(r.uds+' uds');
+            html+='<tr style="background:'+(i%2?'#f3f8f5':'#fff')+'"><td style="padding:6px 8px">'+esc(r.descr)+'</td><td style="padding:6px 8px;text-align:center;font-weight:700">'+empTxt+'</td><td style="padding:6px 8px;text-align:right">'+(r.sinCosto?'—':money2(r.sub))+'</td></tr>';
+          });
+          html+='</tbody></table>';
+        });
+        html+='<div style="margin-top:14px;padding-top:10px;border-top:2px solid #0a7d3b;display:flex;justify-content:space-between;font-weight:800;font-size:16px"><span>Total: '+totPaq+' paq · '+totUds+' uds</span><span style="color:#0a7d3b">'+money2(totUsd)+(tasa>0?(' · '+bs(Math.round(totUsd*tasa))):'')+'</span></div>';
+      }
+      var pa=document.getElementById('ordenVozPrint'); if(pa) pa.innerHTML=html;
+      var o=document.getElementById('ordenVozOverlay'); if(o) o.style.display='block';
+      var itemsSnap=rows.map(function(r){ return {codigo:r.codigo,descr:r.descr,cat:r.cat,paq:r.paq,uds:r.uds,costo:r.costo,sub:r.sinCosto?0:r.sub}; });
+      try{ await api('orden_marcar',{id:id, items:itemsSnap, total_costo:totUsd, n_items:rows.length}); }catch(e){}
+      setTimeout(function(){ try{ window.print(); }catch(e){} }, 600);
+    }catch(e){ if(typeof toast==='function') toast('No se pudo generar la orden'); }
+    finally{ busy=false; }
+  }
+
+  async function poll(){
+    if(busy) return;
+    if(typeof PIN==='undefined' || !PIN) return;
+    if(document.hidden) return;
+    try{
+      var d=await api('orden_pendiente');
+      var p=d&&d.pendiente;
+      if(p && String(p.id)!==String(handled)) await generar(p.id);
+    }catch(e){}
+  }
+  window._ordenVozPoll=poll;
+  setInterval(poll, 15000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) poll(); });
+  setTimeout(poll, 4000);
+})();
+</script>
+
 </body>
 </html>
