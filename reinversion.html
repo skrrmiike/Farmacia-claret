@@ -780,7 +780,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v58 · 26/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v59 · 26/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -1947,16 +1947,31 @@ function empaqueDe(codigo){
 }
 // semanas de inventario objetivo por compra (Miguel compra semanal → 1)
 function coberturaSem(){ return Math.max(1, Number(state.cfg.coberturaSemanas)||1); }
-// Orden inteligente: pedir para cubrir la venta de la semana pasada, RESTANDO lo que ya hay en stock.
-// deficit = cobertura*vendido − existencia ; se redondea hacia ARRIBA a empaques completos.
-// paq = paquetes a pedir; uds = paq*emp; si deficit<=0 no se pide (el stock ya cubre).
+// Días desde HOY hasta que entra el próximo pedido = días hasta el día de compra (cicloDia)
+// + días de entrega (leadDias). Sirve para proyectar cuánto stock quedará cuando llegue la mercancía.
+// Ej: hoy sábado, compra el martes (cicloDia=2) y entrega 1 día → 3+1 = 4 días.
+function _diasHastaLlegada(){
+  const hoy=new Date().getDay();                                   // 0 domingo … 6 sábado
+  let ciclo=Number(state.cfg.cicloDia); if(!isFinite(ciclo)||ciclo<0||ciclo>6) ciclo=2;  // martes por defecto
+  const lead=Math.max(0, Number(state.cfg.leadDias)||0);
+  const d=(ciclo-hoy+7)%7;                                         // días hasta el próximo día de compra
+  return d+lead;
+}
+// Orden inteligente: pedir para cubrir la venta de la semana, RESTANDO el stock que QUEDARÁ cuando
+// llegue el pedido (no el de hoy). Proyecta el consumo de los días que faltan para la compra:
+//   diaria = venta semanal / 7 ; stock al llegar = existencia − diaria*díasHastaLlegada (mínimo 0)
+//   deficit = cobertura*vendido − stockAlLlegar ; se redondea hacia ARRIBA a empaques completos.
+// paq = paquetes a pedir; uds = paq*emp; si deficit<=0 no se pide.
 function pedirRepo(vend, emp, existencia, cover){
   vend=Math.max(0,Number(vend)||0); emp=Math.max(1,Number(emp)||1);
   existencia=Math.max(0,Number(existencia)||0); cover=Math.max(1,Number(cover)||1);
-  const deficit=Math.max(0, cover*vend - existencia);
-  if(deficit<=0) return {emp, paq:0, uds:0, vend, existencia, deficit:0};
+  const dias=_diasHastaLlegada();
+  const diaria=vend/7;                                             // venta diaria estimada
+  const exProy=Math.max(0, existencia - diaria*dias);             // stock que quedará cuando llegue el pedido
+  const deficit=Math.max(0, cover*vend - exProy);
+  if(deficit<=0) return {emp, paq:0, uds:0, vend, existencia, exProy, dias, deficit:0};
   const paq=Math.ceil(deficit/emp);
-  return {emp, paq, uds:paq*emp, vend, existencia, deficit};
+  return {emp, paq, uds:paq*emp, vend, existencia, exProy, dias, deficit};
 }
 
 /* ---------- Orden de compra INTELIGENTE (aprende de las últimas semanas) ---------- */
@@ -2054,7 +2069,8 @@ function renderOrdenInteligente(){
   const tasa=Number(state.bcv)||0;
   S('#oiPaq',String(totPaq)); S('#oiPaqN',totPaq===1?'paquete · '+totUds+' uds':'paquetes · '+totUds+' uds');
   S('#oiGasto',money2(totUsd)); S('#oiGastoBs', tasa>0? bs(Math.round(totUsd*tasa)) : 'Bs —');
-  S('#oiResumen','📚 Usa la venta reciente (últimos 7 días) o el promedio semanal (según las semanas que llevamos vendiendo cada producto), lo que sea mayor, y pide '+crecimientoPct()+'% de más para crecer. Cobertura '+coberturaSem()+' sem.'+(nAcab>0?(' ⚠️ '+nAcab+' por acabarse.'):'')+(sinCosto>0?(' '+sinCosto+' sin costo (no suman al gasto).'):''));
+  var _dll=_diasHastaLlegada();
+  S('#oiResumen','📚 Usa la venta reciente (últimos 7 días) o el promedio semanal (según las semanas que llevamos vendiendo cada producto), lo que sea mayor, y pide '+crecimientoPct()+'% de más para crecer. Cobertura '+coberturaSem()+' sem. 📅 Descuenta lo que se venderá en los '+_dll+' día'+(_dll===1?'':'s')+' que faltan para la compra.'+(nAcab>0?(' ⚠️ '+nAcab+' por acabarse.'):'')+(sinCosto>0?(' '+sinCosto+' sin costo (no suman al gasto).'):''));
   const box=$('#oiLista'); if(!box) return;
   if(!pedir.length){ box.innerHTML='<div class="note">Por ahora no hay que pedir nada: el stock cubre lo que se está vendiendo. 👍</div>'; $('#oiXlsRow').style.display='none'; return; }
   const orden=['pepsi','coca','chuche','medicina'];
@@ -2114,7 +2130,7 @@ async function descargarExcelOrden(catFilter, btn){
     const W=wb.addWorksheet(catFilter?catNom:'Orden inteligente',{views:[{state:'frozen',ySplit:2}]});
     W.columns=[{width:38},{width:14},{width:12},{width:11},{width:12},{width:16},{width:12},{width:13}];
     W.mergeCells('A1:H1'); let c=W.getCell('A1');
-    c.value=(catFilter?('Pedido '+catNom+' · '):'Orden inteligente de compra · ')+'venta reciente + '+crecimientoPct()+'% crecimiento · cobertura '+coberturaSem()+' sem';
+    c.value=(catFilter?('Pedido '+catNom+' · '):'Orden inteligente de compra · ')+'venta reciente + '+crecimientoPct()+'% crecimiento · cobertura '+coberturaSem()+' sem · ajustado a '+_diasHastaLlegada()+' días hasta la compra';
     c.font={bold:true,size:14,color:{argb:WHITE}}; c.fill=fill(GREEN2); c.alignment={vertical:'middle',indent:1}; W.getRow(1).height=26;
     const cols=['Producto','Categoría','Vendió (7 días)','Prom/sem','Stock actual','📦 PEDIR (paq)','Pedir (uds)','Gasto $'];
     const hr=W.getRow(2); hr.values=cols; for(let k=1;k<=8;k++){ const cc=hr.getCell(k); cc.font={bold:true,color:{argb:WHITE}}; cc.fill=fill(HEAD); cc.alignment={horizontal:k===1?'left':'center',wrapText:true}; } hr.height=30;
@@ -2167,7 +2183,7 @@ async function descargarExcelOrden(catFilter, btn){
     if(tasa>0){ const br=W.getRow(rIdx); br.getCell(1).value='En bolívares · BCV '+fmt(tasa); br.getCell(1).font={italic:true,color:{argb:GREY}};
       W.mergeCells(`A${rIdx}:G${rIdx}`); br.getCell(8).value=bs(Math.round(totUsd*tasa)); br.getCell(8).alignment={horizontal:'right'}; br.getCell(8).font={bold:true,color:{argb:INK}}; rIdx++; }
     const nr=rIdx+1; W.mergeCells(`A${nr}:H${nr}`); c=W.getCell(`A${nr}`);
-    c.value='Cantidad a pedir = (venta reciente o promedio semanal según las semanas con datos de cada producto, lo que sea mayor) + '+crecimientoPct()+'% de crecimiento × cobertura, menos tu stock, redondeado a empaques completos. Incluye lo que está por acabarse (⚠️). Ajusta antes de comprar.';
+    c.value='Cantidad a pedir = (venta reciente o promedio semanal según las semanas con datos de cada producto, lo que sea mayor) + '+crecimientoPct()+'% de crecimiento × cobertura, menos el stock que QUEDARÁ cuando llegue el pedido (se descuenta lo que se venderá en los '+_diasHastaLlegada()+' días que faltan para la compra), redondeado a empaques completos. Incluye lo que está por acabarse (⚠️). Ajusta antes de comprar.';
     c.font={italic:true,size:10,color:{argb:GREY}}; c.alignment={indent:1,wrapText:true}; W.getRow(nr).height=34;
     const buf=await wb.xlsx.writeBuffer();
     const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
