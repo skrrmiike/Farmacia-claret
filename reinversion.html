@@ -780,7 +780,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v57 · 26/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v58 · 26/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -2914,7 +2914,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && PIN){
 (function(){
   // CSS de impresión: al imprimir, solo se ve la orden (sin menús, botones ni +/−)
   var st=document.createElement('style');
-  st.textContent='@media print{body>*{display:none!important}#ordenVozOverlay{display:block!important;position:static!important;background:#fff!important;inset:auto!important;padding:0!important}#ordenVozOverlay .ovBox{box-shadow:none!important;max-width:none!important;border-radius:0!important;margin:0!important;padding:0!important;color:#000!important}#ordenVozOverlay .ovBtns,#ordenVozOverlay .ovStep{display:none!important}}';
+  st.textContent='@media print{@page{margin:1.4cm}body>*{display:none!important}#ordenVozOverlay{display:block!important;position:static!important;background:#fff!important;inset:auto!important;padding:0!important;overflow:visible!important}#ordenVozOverlay .ovBox{box-shadow:none!important;max-width:none!important;border-radius:0!important;margin:0!important;padding:0!important;background:#fff!important}#ordenVozOverlay .ovBtns,#ordenVozOverlay .ovStep{display:none!important}}';
   document.head.appendChild(st);
   // Ventana (overlay) que aparece con la orden
   var ov=document.createElement('div');
@@ -2950,44 +2950,75 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && PIN){
     var tasa=Number(state.bcv)||0;
     var pa=document.getElementById('ordenVozPrint');
     var bt=document.getElementById('ordenVozBtns');
-    var fnow=new Date().toLocaleDateString('es-VE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    var head='<div style="font-size:22px;font-weight:800;color:#0a7d3b">Orden de compra — Edilso</div>'
-      +'<div style="font-size:12px;color:#6b7580;margin:2px 0 12px">Operación Reinversión · '+fnow+(_mode==='edit'?' · ✏️ editando':'')+'</div>';
+    var fnow=new Date().toLocaleDateString('es-VE',{day:'2-digit',month:'long',year:'numeric'});
+    var folio=(_curId!=null)?('N° '+String(_curId).padStart(5,'0')):'';
+    var VERDE='#0a7d3b', INK='#0f1720', MUT='#6b7580', L1='#d7e2db', L2='#eef2ef';
+    var FF="font-family:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif";
+    var head=''
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:3px solid '+VERDE+';padding-bottom:12px">'
+        +'<div><div style="font-size:19px;font-weight:800;letter-spacing:.3px;color:'+VERDE+'">Operación Reinversión</div>'
+          +'<div style="font-size:11px;color:'+MUT+';margin-top:3px;letter-spacing:1px;text-transform:uppercase">Farmacia Claret</div></div>'
+        +'<div style="text-align:right"><div style="font-size:15px;font-weight:800;letter-spacing:2px">ORDEN DE COMPRA</div>'
+          +(folio?'<div style="font-size:12px;color:'+MUT+';margin-top:4px">'+folio+'</div>':'')
+          +'<div style="font-size:12px;color:'+MUT+'">'+fnow+'</div></div>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 2px;font-size:13px">'
+        +'<div><span style="color:'+MUT+'">Proveedor:&nbsp;</span><b>Edilso</b></div>'
+        +(_mode==='edit'?'<div style="color:'+VERDE+';font-weight:700;font-size:12px">✏️ Editando</div>':'')
+      +'</div>';
     var visibles = _mode==='edit' ? _rows : _rows.filter(function(r){return (Number(r.paq)||0)>0;});
-    var html=head;
+    var body='';
     if(!visibles.length){
-      html+='<div style="font-size:13px;color:#6b7580;line-height:1.5">'+(_mode==='edit'?'No hay productos para ajustar.':'Por ahora no hay que pedir nada: el stock cubre lo que se está vendiendo. 👍')+'</div>';
+      body='<div style="font-size:13px;color:'+MUT+';line-height:1.6;padding:28px 0;text-align:center">'+(_mode==='edit'?'No hay productos para ajustar.':'Por ahora no hay que pedir nada: el stock cubre lo que se está vendiendo. 👍')+'</div>';
     } else {
       var g=_grupos(visibles);
       g.keys.forEach(function(c){
         var items=g.cats[c].slice().sort(function(a,b){return (b.porAcabarse-a.porAcabarse)||(b.uds-a.uds);});
-        html+='<div style="margin:12px 0 4px;font-weight:700;color:#0a7d3b">'+_catlbl(c)+'</div>';
+        body+='<div style="margin:18px 0 6px;font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:'+VERDE+';border-bottom:1px solid '+L1+';padding-bottom:5px">'+_catlbl(c)+'</div>';
         if(_mode==='edit'){
           items.forEach(function(r){
             var i=_rows.indexOf(r);
             var empTxt=r.emp>1?('× '+r.emp+' = <b>'+r.uds+'</b> uds'):('<b>'+r.uds+'</b> uds');
-            html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #eee">'
+            body+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid '+L2+'">'
               +'<div style="flex:1;min-width:0"><div style="font-weight:600">'+esc(r.descr)+(r.porAcabarse?' ⚠️':'')+'</div>'
-              +'<div style="font-size:11px;color:#6b7580">'+empTxt+(r.sinCosto?' · sin costo':(' · '+money2(r.sub)))+'</div></div>'
-              +'<div class="ovStep" style="display:flex;align-items:center;gap:5px">'
-              +'<button type="button" onclick="_ovStep('+i+',-1)" style="width:32px;height:32px;border:none;border-radius:8px;background:#e6efe9;color:#0f2a1c;font-size:19px;font-weight:700;cursor:pointer">−</button>'
-              +'<input type="number" inputmode="numeric" value="'+r.paq+'" min="0" onchange="_ovSet('+i+',this.value)" onfocus="this.select()" style="width:48px;height:32px;text-align:center;font-size:15px;font-weight:700;border:2px solid #0a7d3b;border-radius:8px;background:#fff4d6;color:#0f2a1c">'
-              +'<button type="button" onclick="_ovStep('+i+',1)" style="width:32px;height:32px;border:none;border-radius:8px;background:#0a7d3b;color:#fff;font-size:19px;font-weight:700;cursor:pointer">+</button>'
+              +'<div style="font-size:11px;color:'+MUT+'">'+empTxt+(r.sinCosto?' · sin costo':(' · '+money2(r.sub)))+'</div></div>'
+              +'<div class="ovStep" style="display:flex;align-items:center;gap:6px">'
+              +'<button type="button" onclick="_ovStep('+i+',-1)" style="width:34px;height:34px;border:none;border-radius:9px;background:#e6efe9;color:#0f2a1c;font-size:20px;font-weight:700;cursor:pointer">−</button>'
+              +'<div style="min-width:34px;text-align:center;font-size:17px;font-weight:800;color:'+INK+'">'+r.paq+'</div>'
+              +'<button type="button" onclick="_ovStep('+i+',1)" style="width:34px;height:34px;border:none;border-radius:9px;background:'+VERDE+';color:#fff;font-size:20px;font-weight:700;cursor:pointer">+</button>'
               +'</div></div>';
           });
         } else {
-          html+='<table style="width:100%;border-collapse:collapse;font-size:14px"><thead><tr style="background:#0e5a2b;color:#fff"><th style="text-align:left;padding:6px 8px">Producto</th><th style="padding:6px 8px">Pedir</th><th style="padding:6px 8px;text-align:right">Costo</th></tr></thead><tbody>';
-          items.forEach(function(r,i){
-            var empTxt=r.emp>1?(r.paq+' paq × '+r.emp+' = '+r.uds+' uds'):(r.uds+' uds');
-            html+='<tr style="background:'+(i%2?'#f3f8f5':'#fff')+'"><td style="padding:6px 8px">'+esc(r.descr)+'</td><td style="padding:6px 8px;text-align:center;font-weight:700">'+empTxt+'</td><td style="padding:6px 8px;text-align:right">'+(r.sinCosto?'—':money2(r.sub))+'</td></tr>';
+          body+='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
+            +'<th style="text-align:left;padding:7px 8px;border-bottom:2px solid '+INK+';font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:'+MUT+';font-weight:700">Producto</th>'
+            +'<th style="text-align:center;padding:7px 8px;border-bottom:2px solid '+INK+';font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:'+MUT+';font-weight:700">Cantidad</th>'
+            +'<th style="text-align:right;padding:7px 8px;border-bottom:2px solid '+INK+';font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:'+MUT+';font-weight:700">Costo</th>'
+            +'</tr></thead><tbody>';
+          items.forEach(function(r){
+            var empTxt=r.emp>1?('<b>'+r.paq+'</b> paq <span style="color:'+MUT+'">('+r.uds+' uds)</span>'):('<b>'+r.uds+'</b> uds');
+            body+='<tr style="border-bottom:1px solid '+L2+'"><td style="padding:8px 8px">'+esc(r.descr)+(r.porAcabarse?' <span style="color:#c47d00">⚠️</span>':'')+'</td>'
+              +'<td style="padding:8px 8px;text-align:center">'+empTxt+'</td>'
+              +'<td style="padding:8px 8px;text-align:right">'+(r.sinCosto?'—':money2(r.sub))+'</td></tr>';
           });
-          html+='</tbody></table>';
+          body+='</tbody></table>';
         }
       });
       var t=_tot(_rows);
-      html+='<div style="margin-top:14px;padding-top:10px;border-top:2px solid #0a7d3b;display:flex;justify-content:space-between;font-weight:800;font-size:16px"><span>Total: '+t.p+' paq · '+t.u+' uds</span><span style="color:#0a7d3b">'+money2(t.d)+(tasa>0?(' · '+bs(Math.round(t.d*tasa))):'')+'</span></div>';
+      var nreng=_rows.filter(function(r){return (Number(r.paq)||0)>0;}).length;
+      body+='<div style="display:flex;justify-content:flex-end;margin-top:18px"><table style="border-collapse:collapse;font-size:13px;min-width:230px">'
+        +'<tr><td style="padding:3px 16px 3px 0;color:'+MUT+'">Renglones</td><td style="text-align:right;font-weight:700">'+nreng+'</td></tr>'
+        +'<tr><td style="padding:3px 16px 3px 0;color:'+MUT+'">Paquetes</td><td style="text-align:right;font-weight:700">'+t.p+'</td></tr>'
+        +'<tr><td style="padding:3px 16px 6px 0;color:'+MUT+'">Unidades</td><td style="text-align:right;font-weight:700">'+t.u+'</td></tr>'
+        +'<tr><td style="padding:8px 16px 3px 0;border-top:2px solid '+VERDE+';font-weight:800;font-size:15px">Total</td><td style="text-align:right;border-top:2px solid '+VERDE+';font-weight:800;font-size:15px;color:'+VERDE+';padding-top:8px">'+money2(t.d)+'</td></tr>'
+        +(tasa>0?('<tr><td></td><td style="text-align:right;color:'+MUT+';font-size:12px;padding-top:2px">'+bs(Math.round(t.d*tasa))+'</td></tr>'):'')
+        +'</table></div>'
+        +'<div style="display:flex;gap:44px;margin-top:44px">'
+          +'<div style="flex:1;text-align:center;border-top:1px solid #9aa4ad;padding-top:6px;font-size:11px;color:'+MUT+'">Autorizado por</div>'
+          +'<div style="flex:1;text-align:center;border-top:1px solid #9aa4ad;padding-top:6px;font-size:11px;color:'+MUT+'">Recibido por</div>'
+        +'</div>';
     }
-    pa.innerHTML=html;
+    var foot='<div style="margin-top:16px;padding-top:8px;font-size:10px;color:#9aa4ad;text-align:center;letter-spacing:.3px">Operación Reinversión · Farmacia Claret</div>';
+    pa.innerHTML='<div style="'+FF+';color:'+INK+'">'+head+body+foot+'</div>';
     var bstyle='flex:1;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:640;cursor:pointer';
     if(_mode==='edit'){
       bt.innerHTML='<div style="display:flex;gap:8px"><button type="button" style="'+bstyle+';background:#0a7d3b;color:#fff" onclick="_ovView()">✓ Listo</button>'
