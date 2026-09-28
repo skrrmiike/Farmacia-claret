@@ -780,7 +780,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v59 · 26/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v61 · 28/09';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -2474,6 +2474,7 @@ async function traerTasasBinance(silencioso){
 /* ---------- HOY: venta y corte reales (desde A2 vía 'cierre') ---------- */
 let corteHoy=0;
 async function loadHoyReal(){
+  try{ loadEstadoSync(); }catch(e){}
   try{
     const d=await api('cierre',{modo:'curso'});
     corteHoy=Number(d.total_monto)||0;
@@ -2501,6 +2502,37 @@ async function loadHoyReal(){
     if(ivi) ivi.innerHTML = corteHoy>0
       ? `Mayra te pasa el total (<b>${money2(corteHoy)}</b>).`+(window._hoyIva>0?` IVA sobre el margen (${pctStr(ivaRate())}% de venta − costo, bebidas y chucherías): <b>${money2(window._hoyIva)}</b> ·`:'')+` impuestos (${impLabel()}): <b>${money2(window._hoyImp)}</b> · tu ganancia neta del día: <b>${money2(window._hoyUtilNeto)}</b>.`
       : '';
+  }catch(e){ /* silencioso */ }
+}
+
+/* ---------- Aviso de estado del sync: cuándo entró la última venta ---------- */
+async function _apiEstado(){
+  const r=await fetch(SUPA_FN+'/op-estado',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ANON},body:JSON.stringify({token:TK_STOCK})});
+  return await r.json().catch(()=>({}));
+}
+function _fmtHace(min){
+  if(min==null) return 'sin datos';
+  if(min<60) return 'hace '+min+' min';
+  var h=Math.floor(min/60), m=min%60;
+  return 'hace '+h+' h'+(m?(' '+m+' min'):'');
+}
+async function loadEstadoSync(){
+  var host=$('#tab-hoy'); if(!host) return;
+  var b=document.getElementById('syncBanner');
+  if(!b){ b=document.createElement('div'); b.id='syncBanner'; b.style.cssText='margin:0 0 12px;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:600;display:none;align-items:center;gap:8px'; host.insertBefore(b, host.firstChild); }
+  try{
+    var d=await _apiEstado();
+    if(!d||!d.ok){ b.style.display='none'; return; }
+    var min=d.min_mov;
+    // La farmacia trabaja 24 horas: si pasa mucho tiempo sin ventas a cualquier hora, es señal de que el puente se cayó.
+    var col, ico, txt;
+    if(min==null){ col='#6b7580'; ico='•'; txt='Sin datos de ventas todavía'; }
+    else if(min<60){ col='#0a7d3b'; ico='🟢'; txt='Ventas entrando normal · última '+_fmtHace(min); }
+    else if(min<120){ col='#b7791f'; ico='🟡'; txt='Sin ventas nuevas desde '+_fmtHace(min)+' — mantente atento'; }
+    else { col='#c0392b'; ico='🔴'; txt='⚠️ No entran ventas desde '+_fmtHace(min)+' — revisa el puente en la farmacia'; }
+    b.style.background=col+'22'; b.style.color=col; b.style.border='1px solid '+col+'55';
+    b.innerHTML='<span>'+ico+'</span><span>'+txt+'</span>';
+    b.style.display='flex';
   }catch(e){ /* silencioso */ }
 }
 
