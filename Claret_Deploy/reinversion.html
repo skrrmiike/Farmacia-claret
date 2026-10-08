@@ -379,6 +379,30 @@
         </div>
       </div>
     </div>
+
+    <!-- ===== ENTRADAS DEL DÍA ===== -->
+    <div class="card" id="cardEntradas">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <h2 style="margin:0">📥 Entradas <span id="entTit" style="text-transform:none;letter-spacing:0;color:var(--ink)">de hoy</span></h2>
+        <button type="button" class="btn sec" id="entRangoBtn" onclick="_entToggleRango()" style="padding:6px 12px;font-size:12px;width:auto;flex:none">📅 Otro rango</button>
+      </div>
+      <div class="sub" style="margin:6px 0 8px">Mercancía que entró o cantidades que aumentaron (desde A2). Lo que recibiste/compraste en el período.</div>
+      <div id="entRango" style="display:none;background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px">
+        <div class="seg" id="entQuick" style="margin-bottom:8px">
+          <button type="button" class="on" data-p="hoy" onclick="_entPreset('hoy')">Hoy</button>
+          <button type="button" data-p="ayer" onclick="_entPreset('ayer')">Ayer</button>
+          <button type="button" data-p="semana" onclick="_entPreset('semana')">Últimos 7 días</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+          <label style="flex:1;min-width:120px;margin:0">Desde<input type="date" id="entDesde" style="margin-top:4px"></label>
+          <label style="flex:1;min-width:120px;margin:0">Hasta<input type="date" id="entHasta" style="margin-top:4px"></label>
+          <button type="button" class="btn" onclick="_entAplicarFechas()" style="padding:11px 16px;width:auto;flex:none">Ver</button>
+        </div>
+      </div>
+      <div id="entKpis" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px"></div>
+      <div id="entLista"></div>
+      <div class="btnrow" style="margin-top:10px"><button type="button" class="btn" id="entPdf" onclick="descargarPDFEntradas()">⬇️ Descargar PDF de entradas</button></div>
+    </div>
   </section>
 
   <!-- ===== PRODUCTOS ===== -->
@@ -517,7 +541,7 @@
       </div>
       <div id="cgLista" style="margin-top:10px"><div class="mini">Cargando…</div></div>
       <div class="btnrow" style="margin-top:10px"><button class="btn" id="cgXls" onclick="descargarExcelCongelado()">⬇️ Descargar Excel de stock congelado</button></div>
-      <div class="note" style="margin-top:8px">🔴 <b>Muerto</b>: 0 ventas en 4 semanas. 🟠 <b>Muy lento</b>: más de 8 semanas de inventario. 🟡 <b>Lento</b>: 4 a 8 semanas (aquí caen algunos que aún rotan, solo vigilar). 🆕 Los productos con menos de 14 días desde que entraron al inventario quedan <b>en observación</b> (no se juzgan todavía). En pantalla se ven los peores; el Excel trae la lista completa.</div>
+      <div class="note" style="margin-top:8px">🔴 <b>Muerto</b>: 0 ventas en 4 semanas. 🟠 <b>Muy lento</b>: más de 8 semanas de inventario. 🟡 <b>Lento</b>: 4 a 8 semanas (aquí caen algunos que aún rotan, solo vigilar). 🆕 Los productos con menos de 14 días desde que entraron al inventario quedan <b>en observación</b> (no se juzgan todavía). El promedio de venta se mide según las <b>semanas reales</b> que cada producto lleva en inventario, no contra 4 fijas: así no se castiga a lo que llegó hace poco. En pantalla se ven los peores; el Excel trae la lista completa.</div>
     </div>
     <div class="card" id="cardTechos" style="display:none">
       <h2>📈 Techos de venta</h2>
@@ -767,6 +791,8 @@
 </div></dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <script>
 const $=(s)=>document.querySelector(s), $$=(s)=>document.querySelectorAll(s);
@@ -780,7 +806,7 @@ const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 const TK_STOCK='op_stk_5r8w2q7t';   // token op-api / stock-op
 const TK_CAJA='caja_7k2m9x4p1q8w';  // token buscar_med
 const PINKEY='opReinvPin_v1';
-const APP_VER='v61 · 28/09';   // sube este número cada vez que se publique un cambio
+const APP_VER='v62 · 08/10';   // sube este número cada vez que se publique un cambio
 /* Auto-actualizador: si el servidor tiene una versión más nueva, limpia la caché y recarga una vez. */
 async function checkUpdate(){
   try{
@@ -902,7 +928,7 @@ function go(tab){
   ['hoy','productos','semana','analisis','cierre'].forEach(t=>$('#tab-'+t).classList.toggle('hide',t!==tab));
   $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   render(); window.scrollTo(0,0);
-  if(tab==='hoy'){ loadHoyReal(); loadGuardStock(); loadCandidatos(); }
+  if(tab==='hoy'){ loadHoyReal(); loadGuardStock(); loadCandidatos(); loadEntradas(_entYMD(0),_entYMD(0)); }
   if(tab==='productos') loadCandidatos();
   if(tab==='cierre') loadCierre();
   if(tab==='analisis'){ loadAnalisisSemana(); loadCongelado(); loadOrdenInteligente(); loadTechos(); }
@@ -986,11 +1012,14 @@ function _procCongelado(items){
     if(dias!=null && (maxDias==null || dias>maxDias)) maxDias=dias;
     if(ex<=0) return;
     if(dias!=null && dias<CONG_MIN_DIAS){ nuN++; nuD+=dinero; return; }  // producto nuevo: en observación
-    if(!(ex>vend)) return;                           // solo más de 4 semanas de inventario (o 0 ventas)
-    const velSem=vend/4;                             // venta semanal promedio (4 semanas)
-    const semanas = vend>0 ? ex/velSem : Infinity;   // semanas de inventario
-    const tier = vend<=0 ? 3 : (ex>2*vend ? 2 : 1);
-    rows.push({nombre:it.nombre, cat:it.cat, ex, vend, velSem, semanas, costo, dinero, tier, dias});
+    // Promedio de venta JUSTO: se divide entre las semanas reales que el producto lleva en inventario,
+    // no entre 4 fijas. Así no se castiga a lo que llegó hace poco (piso 2 sem por el candado de 14 días, tope 4 = la ventana).
+    const semInv = Math.min(Math.max(dias==null?28:dias,14),28)/7;   // 2 … 4 semanas reales
+    const velSem = vend>0 ? vend/semInv : 0;                         // venta semanal promedio real
+    const semanas = vend>0 ? ex/velSem : Infinity;                   // semanas de inventario encima
+    if(!(semanas>4)) return;                                         // solo lo que supera 4 semanas de inventario
+    const tier = vend<=0 ? 3 : (semanas>8 ? 2 : 1);                  // muerto / muy lento (>8 sem) / lento (4–8)
+    rows.push({nombre:it.nombre, cat:it.cat, ex, vend, velSem, semanas, semInv, costo, dinero, tier, dias});
   });
   rows.sort((a,b)=> b.tier-a.tier || b.dinero-a.dinero);
   _congNuevos={n:nuN, dinero:Math.round(nuD*100)/100};
@@ -1524,6 +1553,98 @@ async function _shareOrDownload(blob,name){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1500); return true;
+}
+
+/* ---------- Entradas del día (mercancía que entró / cantidades que subieron desde A2) ---------- */
+let _entData=null, _entDesdeYMD=null, _entHastaYMD=null;
+const _CAT_LBL={pepsi:'Pepsi',coca:'Coca-Cola',chuche:'Chuchería',medicina:'Medicina'};
+function _catLbl(c){ return _CAT_LBL[c]||(c?(c.charAt(0).toUpperCase()+c.slice(1)):'—'); }
+function _entYMD(off){ const d=new Date(Date.now()-4*3600e3+(off||0)*86400e3); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0'); }
+function _entISOdesde(ymd){ return ymd+'T04:00:00.000Z'; }            // 00:00 Caracas
+function _entISOhasta(ymd){ const d=new Date(ymd+'T04:00:00.000Z'); d.setUTCDate(d.getUTCDate()+1); return d.toISOString(); } // 00:00 Caracas del día siguiente
+function _entFechaCorta(ymd){ if(!ymd) return ''; const d=new Date(ymd+'T12:00:00'); return _DIAS_AB[d.getDay()]+' '+ymd.slice(8,10)+'/'+ymd.slice(5,7); }
+function _entTitulo(){
+  const hoy=_entYMD(0);
+  if(_entDesdeYMD===_entHastaYMD){
+    if(_entDesdeYMD===hoy) return 'de hoy';
+    if(_entDesdeYMD===_entYMD(-1)) return 'de ayer';
+    return 'del '+_entFechaCorta(_entDesdeYMD);
+  }
+  return 'del '+_entFechaCorta(_entDesdeYMD)+' al '+_entFechaCorta(_entHastaYMD);
+}
+function _entToggleRango(){ const r=$('#entRango'); if(r) r.style.display=(r.style.display==='none'||!r.style.display)?'block':'none'; }
+function _entPreset(p){
+  $$('#entQuick button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+  if(p==='ayer') loadEntradas(_entYMD(-1),_entYMD(-1));
+  else if(p==='semana') loadEntradas(_entYMD(-6),_entYMD(0));
+  else loadEntradas(_entYMD(0),_entYMD(0));
+}
+function _entAplicarFechas(){
+  const d=($('#entDesde')||{}).value, h=($('#entHasta')||{}).value;
+  if(!d||!h){ toast('Elige las dos fechas'); return; }
+  if(d>h){ toast('La fecha "desde" es mayor que "hasta"'); return; }
+  $$('#entQuick button').forEach(b=>b.classList.remove('on'));
+  loadEntradas(d,h);
+}
+async function loadEntradas(desdeYMD,hastaYMD){
+  if(!$('#entLista')) return;
+  _entDesdeYMD=desdeYMD||_entYMD(0); _entHastaYMD=hastaYMD||_entDesdeYMD;
+  try{ if($('#entDesde')) $('#entDesde').value=_entDesdeYMD; if($('#entHasta')) $('#entHasta').value=_entHastaYMD; }catch(e){}
+  $('#entLista').innerHTML='<div class="note">Cargando entradas…</div>'; $('#entKpis').innerHTML='';
+  try{
+    const d=await api('entradas',{desde:_entISOdesde(_entDesdeYMD),hasta:_entISOhasta(_entHastaYMD)});
+    _entData=d; renderEntradas();
+  }catch(e){ $('#entLista').innerHTML='<div class="note">No se pudieron cargar las entradas (revisa tu internet).</div>'; }
+}
+function renderEntradas(){
+  const d=_entData||{}; const items=d.items||[];
+  S('#entTit', _entTitulo());
+  $('#entKpis').innerHTML=
+    '<div class="kpi"><div class="l">Productos</div><div class="v">'+(d.n_prod||0)+'</div></div>'+
+    '<div class="kpi"><div class="l">Unidades</div><div class="v">'+((d.tot_uds||0).toLocaleString('es-VE'))+'</div></div>'+
+    '<div class="kpi"><div class="l">Valor (costo)</div><div class="v">'+money2(d.tot_valor||0)+'</div></div>';
+  const box=$('#entLista');
+  if(!items.length){ box.innerHTML='<div class="note">No hubo entradas en este período.</div>'; return; }
+  const nuevos=(d.n_nuevos||0)>0 ? ('<div class="note" style="margin-bottom:8px">🆕 '+d.n_nuevos+' producto'+(d.n_nuevos===1?'':'s')+' nuevo'+(d.n_nuevos===1?'':'s')+' (primera vez que entra al inventario).</div>') : '';
+  const rows=items.map(it=>{
+    const nuevo=it.es_nuevo?'<span style="font-size:9.5px;background:#1f8a4d;color:#fff;border-radius:6px;padding:1px 5px;margin-left:6px;vertical-align:middle">NUEVO</span>':'';
+    return '<div class="prod"><div style="flex:1;min-width:0">'+
+      '<div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(it.descr||it.codigo)+nuevo+'</div>'+
+      '<div class="mt">'+_catLbl(it.cat)+' · '+esc(it.codigo||'')+' · quedan '+((Number(it.existencia)||0).toLocaleString('es-VE'))+'</div></div>'+
+      '<div class="rt"><b style="font-size:15px;color:var(--ink)">+'+((Number(it.uds)||0).toLocaleString('es-VE'))+'</b><div class="mini">'+money2(it.valor||0)+'</div></div></div>';
+  }).join('');
+  box.innerHTML=nuevos+rows;
+}
+async function descargarPDFEntradas(){
+  const d=_entData||{}; const items=(d.items||[]).slice();
+  if(!items.length){ toast('No hay entradas que exportar'); return; }
+  const J=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:null;
+  if(!J){ toast('Cargando PDF… intenta de nuevo en un momento'); return; }
+  const btn=$('#entPdf'); if(btn) btn.disabled=true;
+  try{
+    const doc=new J({unit:'pt',format:'a4'});
+    doc.setFontSize(15); doc.setTextColor(20);
+    doc.text('Entradas '+_entTitulo(), 40, 42);
+    doc.setFontSize(9); doc.setTextColor(120);
+    doc.text('Operación Reinversión · Farmacia Claret · generado '+hoyStr(), 40, 58);
+    const body=items.map(it=>[String(it.codigo||''),String(it.descr||''),_catLbl(it.cat),(Number(it.uds)||0).toLocaleString('es-VE'),money2(it.valor||0)]);
+    body.push(['','TOTAL ('+(d.n_prod||items.length)+' productos)','',(d.tot_uds||0).toLocaleString('es-VE'),money2(d.tot_valor||0)]);
+    doc.autoTable({
+      startY:72,
+      head:[['Código','Producto','Categoría','Entró','Valor $']],
+      body:body,
+      styles:{fontSize:8,cellPadding:3,overflow:'linebreak'},
+      headStyles:{fillColor:[31,78,95],textColor:255,fontStyle:'bold'},
+      columnStyles:{0:{cellWidth:85},1:{cellWidth:'auto'},2:{cellWidth:70},3:{cellWidth:46,halign:'right'},4:{cellWidth:64,halign:'right'}},
+      alternateRowStyles:{fillColor:[245,247,249]},
+      didParseCell:function(h){ if(h.row.index===body.length-1){ h.cell.styles.fontStyle='bold'; h.cell.styles.fillColor=[226,232,236]; } }
+    });
+    const blob=doc.output('blob');
+    const fn='Entradas_'+_entDesdeYMD+(_entDesdeYMD!==_entHastaYMD?('_a_'+_entHastaYMD):'')+'.pdf';
+    await _shareOrDownload(blob,fn);
+    toast('PDF listo ✓');
+  }catch(e){ console.error(e); toast('No se pudo generar el PDF'); }
+  finally{ if(btn) btn.disabled=false; }
 }
 async function excelCobro(){
   const n=window._cobroN||0;
