@@ -848,10 +848,37 @@ function _gerenteDispHTML(){
 }
 
 function _cbTasas(){
+  // Fuente principal: HISTORIAL de tasas (db.tasas, el que se mantiene en el modulo de Tasas).
+  // Respaldo: la tasa guardada con el consolidado diario (ventas_diarias) para los dias que falten.
+  var hist=(typeof db!=='undefined' && db && db.tasas) ? db.tasas : {};
+  var mapa={};
+  Object.keys(hist).forEach(function(f){ if(String(f).slice(0,7)===_cbMes){ var v=Number(hist[f])||0; if(v>0) mapa[String(f).slice(0,10)]={tasa:v,fuente:'Historial'}; } });
   supabaseClient.from('ventas_diarias').select('fecha,tasa').gte('fecha',_cbMes+'-01').lte('fecha',_cbMes+'-31').order('fecha').then(function(r){
-    var rows=(r&&r.data)||[];
-    if(!rows.length){ showToast&&showToast('Sin tasas guardadas para '+_cbMes+' (se guardan con el consolidado diario de las 9pm)'); return; }
-    var txt=rows.map(function(x){ return (''+x.fecha).slice(8,10)+': '+(Number(x.tasa)||0).toLocaleString('es-VE',{maximumFractionDigits:2}); }).join('  ·  ');
-    alert('📈 TASAS BCV DE '+_cbMes+' (guardadas cada día con el cierre)\n\n'+txt+'\n\nCada cierre de caja también guarda su tasa del día — nada se pierde para conciliar.');
-  });
+    ((r&&r.data)||[]).forEach(function(x){ var f=String(x.fecha).slice(0,10); var v=Number(x.tasa)||0; if(v>0 && !mapa[f]) mapa[f]={tasa:v,fuente:'Cierre'}; });
+    _cbTasasModal(mapa);
+  }).catch(function(){ _cbTasasModal(mapa); });
+}
+function _cbTasasModal(mapa){
+  var dias=Object.keys(mapa).sort();
+  var mesLbl=_cbMes;
+  try{ var p=_cbMes.split('-'); mesLbl=new Date(p[0],p[1]-1,1).toLocaleDateString('es-VE',{month:'long',year:'numeric'}); }catch(e){}
+  var filas=dias.length? dias.map(function(f){
+    var r=mapa[f]; var dd=f.slice(8,10); var esHist=(r.fuente==='Historial');
+    return '<tr style="border-top:1px solid #eef0f3"><td style="padding:7px 10px;font-weight:700;font-variant-numeric:tabular-nums">'+dd+'</td>'+
+      '<td style="padding:7px 10px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700">'+(Number(r.tasa)||0).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+      '<td style="padding:7px 10px;text-align:right"><span style="font-size:10.5px;font-weight:700;color:'+(esHist?'#1E38A6':'#64748b')+';background:'+(esHist?'#e8edfb':'#f1f5f9')+';padding:2px 8px;border-radius:999px">'+r.fuente+'</span></td></tr>';
+  }).join('') : '<tr><td colspan="3" style="padding:18px;text-align:center;color:#64748b;font-size:13px">Sin tasas para este mes. Agregalas en el modulo de Tasas (historial).</td></tr>';
+  var inner='<div style="padding:15px 18px;border-bottom:1px solid #eef0f3;display:flex;justify-content:space-between;align-items:center;gap:10px">'+
+      '<div style="font-weight:700;font-size:15px;color:#1e293b">📈 Tasas del mes — '+esc(mesLbl)+'</div>'+
+      '<button class="btn btn-ghost btn-sm" onclick="_contaCloseModal()">Cerrar</button></div>'+
+    '<div style="padding:4px 18px 16px;color:#1e293b">'+
+      '<div style="font-size:11.5px;color:#64748b;margin:8px 0 10px">Se toman del <b>historial de tasas</b> que mantienes; los dias que falten se completan con la tasa guardada en el cierre de ese dia.</div>'+
+      '<div style="max-height:60vh;overflow:auto;border:1px solid #eef0f3;border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:12.5px"><thead><tr style="background:#f8fafc"><th style="text-align:left;padding:7px 10px;font-size:11px;color:#64748b">Dia</th><th style="text-align:right;padding:7px 10px;font-size:11px;color:#64748b">Tasa (Bs/$)</th><th style="text-align:right;padding:7px 10px;font-size:11px;color:#64748b">Fuente</th></tr></thead><tbody>'+filas+'</tbody></table></div>'+
+      '<div style="font-size:11px;color:#94a3b8;margin-top:8px">'+dias.length+' dia(s) con tasa.</div></div>';
+  if(typeof _contaCloseModal==='function') _contaCloseModal();
+  var d=document.createElement('div'); d.id='conta-modal';
+  d.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow:auto';
+  d.innerHTML='<div style="background:#fff;color:#1e293b;border-radius:16px;max-width:min(460px,95vw);width:100%;box-shadow:0 24px 64px rgba(0,0,0,.32)">'+inner+'</div>';
+  d.addEventListener('click',function(e){ if(e.target===d && typeof _contaCloseModal==='function') _contaCloseModal(); });
+  document.body.appendChild(d);
 }
