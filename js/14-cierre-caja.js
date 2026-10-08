@@ -255,7 +255,10 @@ function _ccFormHTML(c){
   var fondoBox='<div style="font-size:12px;color:var(--muted);margin-bottom:10px">💼 Fondo inicial declarado: <b>Bs '+_ccFmt(_ccNum(d.fondo_bs))+'</b> · <b>$ '+_ccFmt(_ccNum(d.fondo_usd))+'</b> <span>· el efectivo en $ va a la caja roja</span></div>';
   var diagBtn='<button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:8px" onclick="_ccDiag()">🔍 ¿Por qué no cuadra? (diagnóstico)</button>';
   var cuadreBtn='<button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:12px" onclick="_ccCuadreXlsx()">📥 Descargar cuadre (formato oficial)</button>';
-  return head+turnoBox+relevoBox+fondoBox+sEfBs+sEf+sDol+sZel+sTra+sDeb+sCre+sGas+res+resFiscal+diagBtn+cuadreBtn+acc;
+  var _fstyle='<style>.cc-fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px;align-items:start;margin:0 0 12px}.cc-fgrid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:12px;align-items:start;margin:0 0 12px}.cc-fgrid>.tbox,.cc-fgrid2>.tbox{margin-bottom:0!important}</style>';
+  var gridPagos='<div class="cc-fgrid">'+sEfBs+sEf+sDol+sZel+sTra+sDeb+sCre+sGas+'</div>';
+  var gridCuadre='<div class="cc-fgrid2">'+res+resFiscal+'</div>';
+  return _fstyle+head+turnoBox+relevoBox+fondoBox+gridPagos+gridCuadre+diagBtn+cuadreBtn+acc;
 }
 function _ccA2(k,v){ if(!_ccAct)return; if(!_ccAct.a2)_ccAct.a2={}; _ccAct.a2[k]=v; if(_ccA2T)clearTimeout(_ccA2T); _ccA2T=setTimeout(function(){ supabaseClient.from('cierres_caja').update({a2:_ccAct.a2}).eq('id',_ccAct.id).then(function(){}); },600); }
 function _ccFiscalSet(k,v){ if(!_ccAct)return; if(!_ccAct.data)_ccAct.data={}; _ccAct.data[k]=v; _ccSave(); renderCierre(); }
