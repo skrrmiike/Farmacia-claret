@@ -1,27 +1,40 @@
 function _cbHTML(){
   if(!_cbMes){ var h=new Date(); _cbMes=h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0'); }
-  var inp='padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:13px';
-  var chips=Object.keys(_cbBankData).map(function(bid){ return '<span style="background:#dcfce7;color:#166534;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px">'+_cbBankLabel(bid)+' · '+_cbBankData[bid].length+' mov.</span>'; }).join(' ');
-  return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">'+
-    '<div style="font-size:17px;font-weight:600">🏦 Conciliación bancaria de cajas</div>'+
-    '<button class="btn btn-ghost btn-sm" onclick="_cbTasas()">📈 Tasas del mes</button>'+
-    '<input type="month" value="'+_cbMes+'" onchange="_cbSetMes(this.value)" style="'+inp+'">'+
+  var inp='padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px';
+  var chips=Object.keys(_cbBankData).map(function(bid){ return '<span style="display:inline-flex;align-items:center;gap:5px;background:#ecfdf5;color:#166534;font-size:11px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid #bbf7d0">✓ '+_cbBankLabel(bid)+' · '+_cbBankData[bid].length+' mov.</span>'; }).join(' ');
+  return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">'+
+      '<div style="display:flex;align-items:center;gap:12px;min-width:0">'+
+        '<div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#1E38A6,#2f54c7);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 16px rgba(30,56,166,.28)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg></div>'+
+        '<div style="min-width:0"><div style="font-size:18px;font-weight:800;letter-spacing:-.01em">Conciliación de cajas</div><div style="font-size:12px;color:var(--muted)">Cruce de las transferencias de caja contra el banco</div></div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+        '<input type="month" value="'+_cbMes+'" onchange="_cbSetMes(this.value)" style="'+inp+'">'+
+        '<button class="btn btn-ghost btn-sm" style="padding:8px 13px" onclick="_cbTasas()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Tasas del mes</button>'+
+      '</div>'+
     '</div>'+
-    '<div class="tbox" style="padding:14px;margin-bottom:12px">'+
-    '<div style="font-weight:700;font-size:13px;margin-bottom:6px">1 · Estados de cuenta del mes</div>'+
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Sube el estado de cuenta de cada banco (Excel de Mercantil/Banesco, o pega el texto de los demás). Las transferencias de las cajas ya están cargadas automáticamente.</div>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
-    '<select id="cb-banco-sel" style="'+inp+'">'+_CB_BANCOS.map(function(b){return '<option value="'+b[0]+'">'+b[1]+'</option>';}).join('')+'</select>'+
-    '<input type="file" id="cb-file" accept=".xlsx,.xls,.txt,.csv" style="font-size:12px" onchange="_cbArchivo(this)">'+
-    '<button class="btn btn-ghost btn-sm" onclick="_cbPegarTexto()">📋 Pegar texto</button>'+
+    '<div class="tbox" style="padding:16px;margin-bottom:14px;border-radius:14px">'+
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'+
+        '<span style="width:24px;height:24px;border-radius:50%;background:#1E38A6;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">1</span>'+
+        '<div style="font-weight:700;font-size:14px">Estados de cuenta del mes</div>'+
+      '</div>'+
+      '<div style="font-size:12px;color:var(--muted);margin:4px 0 12px;line-height:1.5">Sube el estado de cuenta de cada banco (Excel de Mercantil/Banesco, o pega el texto de los demás). Las transferencias de las cajas ya están cargadas automáticamente.</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+        '<select id="cb-banco-sel" style="'+inp+'">'+_CB_BANCOS.map(function(b){return '<option value="'+b[0]+'">'+b[1]+'</option>';}).join('')+'</select>'+
+        '<label class="btn btn-ghost btn-sm" style="padding:9px 13px;cursor:pointer;margin:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5-5 5 5M12 5v12"/></svg>Subir archivo<input type="file" id="cb-file" accept=".xlsx,.xls,.txt,.csv" style="display:none" onchange="_cbArchivo(this)"></label>'+
+        '<button class="btn btn-ghost btn-sm" style="padding:9px 13px" onclick="_cbPegarTexto()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Pegar texto</button>'+
+      '</div>'+
+      '<div id="cb-chips" style="margin-top:'+(chips?'12px':'0')+';display:flex;gap:6px;flex-wrap:wrap">'+chips+'</div>'+
     '</div>'+
-    '<div id="cb-chips" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">'+chips+'</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">'+
+      '<button class="btn btn-green" style="padding:11px 20px;font-weight:700;border-radius:11px" onclick="_cbConciliar()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M21 12a9 9 0 1 1-6.2-8.5"/><path d="M22 4 12 14.01l-3-3"/></svg>Conciliar mes</button>'+
+      '<button class="btn btn-ghost" style="padding:11px 18px;border-radius:11px" onclick="_cbExport()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Exportar reporte</button>'+
     '</div>'+
-    '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'+
-    '<button class="btn btn-green" style="padding:10px 18px" onclick="_cbConciliar()">⚙ Conciliar mes</button>'+
-    '<button class="btn btn-ghost" onclick="_cbExport()">⬇ Exportar reporte</button>'+
-    '</div>'+
-    '<div id="cb-results">'+(_cbRows.length?_cbResultadosHTML():'<div class="tbox" style="padding:18px;text-align:center;color:var(--muted);font-size:13px">Carga al menos un estado de cuenta y presiona <b>Conciliar mes</b>.<br>Los resultados anteriores del mes se cargan solos si ya conciliaste antes.</div>')+'</div>';
+    '<div id="cb-results">'+(_cbRows.length?_cbResultadosHTML():
+      '<div class="tbox" style="padding:34px 18px;text-align:center;border-radius:14px;border-style:dashed">'+
+        '<div style="width:46px;height:46px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg></div>'+
+        '<div style="font-size:13.5px;color:var(--text);font-weight:600;margin-bottom:3px">Aún no has conciliado este mes</div>'+
+        '<div style="font-size:12px;color:var(--muted);line-height:1.5">Carga al menos un estado de cuenta y presiona <b>Conciliar mes</b>.<br>Si ya conciliaste antes, los resultados se cargan solos.</div>'+
+      '</div>')+'</div>';
 }
 function _cbSetMes(v){ _cbMes=v; _cbRows=[]; _cbBankData={}; _cbCargarGuardado(function(){ _cbRepaint(); }); }
 function _cbPegarTexto(){
