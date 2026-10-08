@@ -34,7 +34,7 @@
 </style>
 </head>
 <body>
-<div id="ver-badge" style="position:fixed;bottom:3px;right:6px;font-size:9px;color:#94a3b8;z-index:5;pointer-events:none;font-family:system-ui">v417</div>
+<div id="ver-badge" style="position:fixed;bottom:3px;right:6px;font-size:9px;color:#94a3b8;z-index:5;pointer-events:none;font-family:system-ui">v422</div>
 <div id="ov" class="ov">
   <div class="card">
     <div style="text-align:center;margin-bottom:14px"><div style="width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:inline-grid;place-items:center;color:#fff;font-size:26px">🧾</div><div style="font-weight:800;font-size:20px;margin-top:8px">Caja · Claret</div><div class="muted">Cierre de caja</div></div>
@@ -55,13 +55,14 @@
 var SUPA_URL='https://unuumkcapdtqmbwefbfg.supabase.co';
 var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVudXVta2NhcGR0cW1id2VmYmZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTgxMDUsImV4cCI6MjA5NTk5NDEwNX0.TMQ_YgWlNXrBboJcg5YfS6359Fhw6zv_N10K5m_xtrE';
 var TOKEN='caja_7k2m9x4p1q8w';
-var DENOM=[5,10,20,50,100,200,500];
+var DENOM=[20,50,100,200,500];
 var FONDO_BS=3000;
 var BANCOS=['Mercantil','Provincial','Banesco','Banco del Tesoro','Bancaribe','BNC'];
 var METODOS=[
  {k:'dolares',ic:'💲',n:'Dólares efectivo',mon:'$',firma:true,campos:[{k:'monto',t:'Monto en $',num:true,ph:'0'},{k:'fact',t:'Nº Factura (opcional)'}]},
  {k:'zelle',ic:'📧',n:'Zelle',mon:'$',firma:true,campos:[{k:'titular',t:'Titular del Zelle'},{k:'monto',t:'Monto en $',num:true,ph:'0'}]},
  {k:'transfer',ic:'🏦',n:'Pago móvil / Transferencia',mon:'Bs',firma:true,campos:[{k:'banco',t:'Banco',sel:BANCOS},{k:'ref',t:'Referencia'},{k:'monto',t:'Monto en Bs',num:true,ph:'0'}]},
+ {k:'efectivobs',ic:'💵',n:'Efectivo (Bs)',mon:'Bs',firma:false,campos:[{k:'monto',t:'Monto en Bs',num:true,ph:'0'}]},
  {k:'gastos',ic:'🧾',n:'Gasto / salida',mon:'Bs',firma:false,campos:[{k:'concepto',t:'Concepto'},{k:'monto',t:'Monto en Bs',num:true,ph:'0'}]}
 ];
 var C=null, FIRMAS=[], _saveT=null, _ver=0, _pollT=null, _saving=false, _dirty=false, _lastSaveOk=true;
@@ -118,6 +119,7 @@ document.addEventListener('keydown', function(ev){
   var typing=(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA');
   var modal=document.getElementById('modal');
   if(document.getElementById('voz-mic')){ if(ev.key==='Enter'){ ev.preventDefault(); vozTerminar(); return; } if(ev.key==='Escape'){ ev.preventDefault(); vozParar(); return; } }
+  if(!modal && C && C.estado==='descanso' && C.descanso_reemplazo && !window._reeOk && ev.key==='Enter'){ ev.preventDefault(); _reeEntrar(); return; }
   if(ev.key==='Escape'){ if(modal){ ev.preventDefault(); cerrarModal(); } return; }
   if(ev.key==='Enter' && modal && typing){
     var list=[].slice.call(modal.querySelectorAll('input,select')).filter(function(x){ return !x.disabled && x.offsetParent!==null; });
@@ -130,7 +132,7 @@ document.addEventListener('keydown', function(ev){
   }
   if(!C || modal) return;
   if(!ev.altKey || ev.ctrlKey || ev.metaKey) return;
-  if(ev.key>='1' && ev.key<='4'){
+  if(ev.key>='1' && ev.key<='5'){
     var k=(METODOS[parseInt(ev.key)-1]||{}).k;
     if(k && C.estado==='abierto'){ ev.preventDefault(); abrirAgregar(); setTimeout(function(){ formPago(k); },40); }
   } else if((ev.key||'').toLowerCase()==='c' && C.estado==='abierto'){ ev.preventDefault(); abrirCierre(); }
@@ -141,7 +143,7 @@ function _loadCajeros(){ try{ API('cajeros',{empresa:'farmacia'}).then(function(
 function _fondoNote(){ var el=document.getElementById('e-fondo-note'); if(!el)return; var cj=(document.getElementById('e-caja')||{}).value||''; if(/^yapag/i.test(cj)){ el.innerHTML='💳 YaPagué: <b>sin fondo de efectivo</b> (arranca en 0).'; } else { el.innerHTML='💵 Fondo de caja: <b>Bs 3.000</b> (fijo, ya cargado). Se descuenta al cerrar para no inflar la venta.'; } }
 _loadCajeros(); _fondoNote();
 function afterEnter(){ try{ localStorage.setItem('caja_sesion', JSON.stringify({id:C.id,caja:C.caja,cajero:C.cajero,fecha:C.fecha,estado:C.estado,data:C.data,ver:_ver})); }catch(e){} document.getElementById('ov').style.display='none'; document.getElementById('app').style.display='block'; render(); if(_pollT)clearInterval(_pollT); _pollT=setInterval(poll,5000); _resetIdle(); }
-function poll(){ if(!C)return; API('dia',{fecha:C.fecha,empresa:'farmacia'}).then(function(res){ if(!res||res.error)return; if(res.cierres)window._diaCierres=res.cierres; if(res.banco_prior!==undefined && res.banco_prior!==window._bancoPrior){ window._bancoPrior=res.banco_prior||''; window._bancoNota=res.banco_nota||''; if(!document.getElementById('modal'))render(); } if(res.turneros)window._turneros=res.turneros; var srv=(res.cierres||[]).filter(function(x){return x.id===C.id;})[0]; if(!srv)return; var ch=false; if(res.tasa!=null && num(res.tasa)!==num(C.data.tasa)){ C.data.tasa=res.tasa; ch=true; } if(srv.estado!==C.estado){ C.estado=srv.estado; ch=true; } var nf=(res.firmas||[]).filter(function(f){return f.cierre_id===C.id;}); if(nf.length!==FIRMAS.length)ch=true; FIRMAS=nf; if((srv.ver||0)>_ver && !_saving && !_dirty){ C.data=norm(srv).data; _ver=srv.ver; ch=true; } if(_dirty&&!_saving)flushSave(); if(ch && !document.getElementById('modal'))render(); }).catch(function(){}); }
+function poll(){ if(!C)return; API('dia',{fecha:C.fecha,empresa:'farmacia'}).then(function(res){ if(!res||res.error)return; if(res.cierres)window._diaCierres=res.cierres; if(res.banco_prior!==undefined && res.banco_prior!==window._bancoPrior){ window._bancoPrior=res.banco_prior||''; window._bancoNota=res.banco_nota||''; if(!document.getElementById('modal'))render(); } if(res.turneros)window._turneros=res.turneros; var srv=(res.cierres||[]).filter(function(x){return x.id===C.id;})[0]; if(!srv)return; var ch=false; if(res.tasa!=null && num(res.tasa)!==num(C.data.tasa)){ C.data.tasa=res.tasa; ch=true; } if(srv.estado!==C.estado){ C.estado=srv.estado; ch=true; } if(srv.descanso!==C.descanso){ C.descanso=srv.descanso; ch=true; } if(srv.descanso_solicitado!==C.descanso_solicitado){ C.descanso_solicitado=srv.descanso_solicitado; ch=true; } if(srv.descanso_reemplazo!==C.descanso_reemplazo){ C.descanso_reemplazo=srv.descanso_reemplazo; ch=true; } if(srv.descanso_inicio!==C.descanso_inicio){ C.descanso_inicio=srv.descanso_inicio; } var nf=(res.firmas||[]).filter(function(f){return f.cierre_id===C.id;}); if(nf.length!==FIRMAS.length)ch=true; FIRMAS=nf; if((srv.ver||0)>_ver && !_saving && !_dirty){ C.data=norm(srv).data; _ver=srv.ver; ch=true; } if(_dirty&&!_saving)flushSave(); if(ch && !document.getElementById('modal'))render(); }).catch(function(){}); }
 function firmada(id){ return FIRMAS.some(function(f){return f.linea_id===id;}); }
 function firmaDe(id){ return FIRMAS.filter(function(f){return f.linea_id===id;})[0]||null; }
 
@@ -172,37 +174,48 @@ function ind(txt,col){ var e=document.getElementById('save-ind'); if(e){ e.textC
 
 function render(){
   var app=document.getElementById('app'); if(!C)return;
-  var t=tot(); var cerr=(C.estado==='cerrado'); var esp=(C.estado==='por_confirmar');
-  var pill=cerr?'<span class="pill p-cerr">✓ Cerrada</span>':(esp?'<span class="pill p-porc">Esperando visto bueno</span>':'<span class="pill p-abierto">Abierta</span>');
+  var t=tot(); var cerr=(C.estado==='cerrado'); var esp=(C.estado==='por_confirmar'); var desc=(C.estado==='descanso');
+  var solic=(C.estado!=='cerrado' && C.descanso_solicitado); var descRee=(desc && !!C.descanso_reemplazo);
+  if(!descRee)window._reeOk=false; var reeListo=(descRee && window._reeOk); var operable=(C.estado==='abierto') || reeListo;
+  var pill=cerr?'<span class="pill p-cerr">✓ Cerrada</span>':(desc?'<span class="pill p-porc">☕ En descanso</span>':(esp?'<span class="pill p-porc">Esperando visto bueno</span>':'<span class="pill p-abierto">Abierta</span>'));
   var items=[];
   ['efectivobs','dolares','zelle','transfer','debito','credito','gastos'].forEach(function(k){ (C.data[k]||[]).forEach(function(x,i){ items.push({k:k,i:i,x:x}); }); });
   items.reverse();
-  var lista=items.map(function(it){ var m=meta(it.k); var x=it.x; var det=x.titular||x.banco||x.concepto||x.fact||''; var fdo=(m.firma&&firmada(x.id));
+  var _rows=items.map(function(it){ var m=meta(it.k); var x=it.x; var det=x.titular||x.banco||x.concepto||x.fact||''; var fdo=(m.firma&&firmada(x.id));
     var right = m.firma ? (fdo?'<span style="color:var(--grn);font-weight:800;font-size:12px">✓ Firmado</span>':(esTurnero()?'<button class="btn btn-grn" style="padding:5px 10px;font-size:11px" onclick="turVerifica(\''+it.k+'\','+it.i+')">🌙 Verificar y firmar</button>':(x.solic?'<span style="color:var(--amb);font-weight:700;font-size:12px">🔔 Esperando firma</span>':'<span style="color:var(--mut);font-size:12px">sin firmar</span>'))) : '';
-    return '<div style="display:flex;align-items:center;gap:11px;padding:11px 4px;border-top:1px solid var(--bd)">'+
-      '<span style="font-size:22px">'+m.ic+'</span>'+
-      '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">'+m.mon+' '+fmt(x.monto)+(it.k==='gastos'?' (gasto)':'')+'</div>'+(det?'<div class="muted" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(det)+'</div>':'')+'</div>'+
-      right+(cerr?'':'<button onclick="delPago(\''+it.k+'\','+it.i+')" style="border:0;background:none;color:var(--red);font-size:20px;cursor:pointer;margin-left:4px">×</button>')+
+    return '<div style="display:flex;align-items:center;gap:9px;padding:7px 4px;border-top:1px solid var(--bd)">'+
+      '<span style="font-size:18px;line-height:1;flex:none">'+m.ic+'</span>'+
+      '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13.5px">'+m.mon+' '+fmt(x.monto)+(it.k==='gastos'?' (gasto)':'')+'</div>'+(det?'<div class="muted" style="font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(det)+'</div>':'')+'</div>'+
+      right+(!operable?'':'<button onclick="delPago(\''+it.k+'\','+it.i+')" style="border:0;background:none;color:var(--red);font-size:19px;cursor:pointer;margin-left:4px;line-height:1">×</button>')+
     '</div>';
-  }).join('');
+  });
+  var _totN=_rows.length, _exp=!!window._pagExp, _cap=7;
+  var _shown=(_totN>_cap && !_exp)?_rows.slice(0,_cap):_rows;
+  var lista=_shown.join('');
+  var _verMas=(_totN>_cap)?('<div style="text-align:center;margin-top:8px"><button onclick="window._pagExp='+(_exp?'false':'true')+';render()" style="border:1px solid var(--bd);background:none;color:var(--acc);font-weight:700;font-size:12.5px;cursor:pointer;border-radius:999px;padding:6px 14px">'+(_exp?'▲ ver menos':('▼ ver todos ('+_totN+')'))+'</button></div>'):'';
   var efLine='';
   if(!lista && !efLine) lista='<div class="muted" style="text-align:center;padding:20px">Aún no has registrado pagos.</div>';
-  lista=efLine+lista;
+  lista=efLine+lista+_verMas;
 
   var acc='';
-  if(cerr){ acc='<div class="card" style="text-align:center;color:var(--grn);font-weight:800">✓ Caja cerrada y confirmada.</div>'; }
-  else if(esp){ acc='<div class="card" style="text-align:center"><div style="font-weight:800;color:var(--acc)">⏳ Esperando el visto bueno del supervisor</div><div class="muted" style="margin-top:4px">Cuando confirme, la caja queda cerrada.</div></div>'; }
-  else { acc='<div style="display:flex;gap:8px"><button class="btn btn-gh" style="flex:1;padding:14px;font-size:15px" onclick="abrirRelevo()">🔄 Entregar (relevo)</button><button class="btn btn-grn" style="flex:1;padding:14px;font-size:15px" onclick="abrirCierre()">🔒 Cerrar caja</button></div>'; }
+  if(cerr){ acc='<div class="card" style="text-align:center;color:var(--grn);font-weight:800">✓ Caja cerrada y confirmada.<button class="btn btn-gh" style="width:100%;margin-top:10px;padding:13px;font-weight:700;color:var(--acc)" onclick="cuadreXlsx()">📥 Descargar cuadre (Excel)</button></div>'; }
+  else if(desc && descRee && !reeListo){ acc='<div class="card" style="text-align:center"><div style="font-weight:800;font-size:16px;color:var(--acc)">🔁 Reemplazo: '+esc(C.descanso_reemplazo)+'</div><div class="muted" style="margin:4px 0 12px">'+esc(C.cajero)+' está en descanso. Si eres <b>'+esc(C.descanso_reemplazo)+'</b>, entra para trabajar en esta caja — lo que registres entra en el turno de '+esc(C.cajero)+'.</div><button class="btn btn-grn" style="width:100%;padding:15px;font-size:16px" onclick="_reeEntrar()">✓ Soy '+esc(C.descanso_reemplazo)+' · Entrar (Enter)</button></div>'; }
+  else if(desc && descRee){ acc='<div class="card" style="text-align:center;color:var(--acc);font-weight:700">🔁 Cubriendo a '+esc(C.cajero)+' · trabajando como '+esc(C.descanso_reemplazo)+'</div>'; }
+  else if(desc){ acc='<div class="card" style="text-align:center"><div style="font-weight:800;color:var(--acc)">☕ Caja en descanso (en pausa)</div><div class="muted" style="margin-top:4px">La caja está en pausa, no se cerró. El supervisor la reactiva cuando vuelvas.</div></div>'; }
+  else if(esp){ acc='<div class="card" style="text-align:center"><div style="font-weight:800;color:var(--acc)">⏳ Esperando el visto bueno del supervisor</div><div class="muted" style="margin-top:4px">Cuando confirme, la caja queda cerrada.</div><button class="btn btn-gh" style="width:100%;margin-top:10px;padding:13px;font-weight:700;color:var(--acc)" onclick="cuadreXlsx()">📥 Descargar cuadre (Excel)</button></div>'; }
+  else { acc='<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-gh" style="flex:1;min-width:140px;padding:14px;font-size:15px" onclick="abrirRelevo()">🔄 Entregar (relevo)</button><button class="btn btn-grn" style="flex:1;min-width:140px;padding:14px;font-size:15px" onclick="abrirCierre()">🔒 Cerrar caja</button></div>'; }
+  var topBanner = solic ? ('<div style="background:linear-gradient(140deg,#7c3aed,#9333ea);color:#fff;border-radius:14px;padding:14px;margin-bottom:12px"><div style="font-weight:800;font-size:15px">☕ El supervisor te envía a descanso</div><div style="font-size:12px;opacity:.95;margin:4px 0 10px">'+(C.descanso_reemplazo?('Te cubrirá <b>'+esc(C.descanso_reemplazo)+'</b>. '):'')+'Termina de atender a quien tengas y luego acepta.</div><button class="btn" style="width:100%;padding:13px;background:#fff;color:#6d28d9;font-weight:800;border:0" onclick="descansoAceptar()">✓ Aceptar e ir a descanso</button></div>') : '';
 
   app.innerHTML=
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><div style="font-weight:800;font-size:19px">'+esc(C.caja)+' · '+esc(C.cajero)+'</div><div style="text-align:right">'+pill+'<div id="save-ind" class="muted" style="font-size:11px;margin-top:4px"></div></div></div>'+
     '<div class="card" style="text-align:center;background:linear-gradient(140deg,#1E2E52,#1E38A6 55%,#2B47C4);color:#fff;border:0;box-shadow:0 2px 6px rgba(30,56,166,.25),0 18px 40px -14px rgba(30,56,166,.55),inset 0 1px 0 rgba(255,255,255,.14)"><div style="font-size:13px;opacity:.9;font-weight:600">TOTAL DEL DÍA</div><div style="display:flex;justify-content:center;align-items:baseline;gap:18px;flex-wrap:wrap"><div><div style="font-size:31px;font-weight:900;line-height:1.1">Bs '+fmt(t.totalBs)+'</div><div style="font-size:10px;opacity:.8;letter-spacing:.4px">BOLÍVARES</div></div><div><div style="font-size:31px;font-weight:900;line-height:1.1">$ '+fmt(t.totalUsd)+'</div><div style="font-size:10px;opacity:.8;letter-spacing:.4px">DÓLARES</div></div></div>'+(t.gastosBs?('<div style="font-size:12px;opacity:.85">(−) gastos: Bs '+fmt(t.gastosBs)+'</div>'):'')+'<div style="font-size:11px;opacity:.8;margin-top:4px">Tasa del día: Bs '+(num(C.data.tasa)?fmt(C.data.tasa):'—')+' / $ · desde Central</div>'+((num(C.data.fondo_bs)>0||t.ventaEf>0)?('<div style="font-size:11px;opacity:.85;margin-top:2px">Fondo: Bs '+fmt(t.fondo)+(' · Venta efectivo: Bs '+fmt(t.ventaEf))+'</div>'):'')+((num(C.data.fondo_usd)>0)?('<div style="font-size:11px;opacity:.85">Fondo en dólares: $ '+fmt(C.data.fondo_usd)+' · el efectivo en $ va a la caja roja</div>'):'')+'</div>'+
+    topBanner+
     (esTurnero()?('<div style="background:linear-gradient(140deg,#312e81,#4338ca);color:#fff;border-radius:14px;padding:10px 14px;margin-bottom:12px"><b>🌙 Turno noche activo</b><div style="font-size:11.5px;opacity:.9">Dólares/Zelle se firman solos · el pago móvil lo VERIFICAS tú antes de firmar · cierra antes de las 12 y vuelve a entrar después de las 12 para abrir el día nuevo.</div></div>'):'')+
     (window._bancoPrior?('<div style="background:linear-gradient(140deg,#065f46,#079455);color:#fff;border-radius:14px;padding:12px 14px;margin-bottom:12px;box-shadow:0 2px 6px rgba(7,148,85,.25),0 12px 26px -12px rgba(7,148,85,.5)"><div style="font-size:11px;font-weight:700;opacity:.85;letter-spacing:.5px">🏦 BANCO PRIORITARIO HOY</div><div style="font-size:20px;font-weight:900;margin-top:2px">'+esc(window._bancoPrior)+'</div><div style="font-size:11.5px;opacity:.9;margin-top:2px">'+(window._bancoNota?esc(window._bancoNota):'Recibe los pagos móviles / transferencias por este banco')+'</div></div>'):'')+
-    (cerr||esp?'':'<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-acc" style="flex:1;padding:16px;font-size:18px" onclick="abrirAgregar()">➕ Registrar pago</button><button class="btn btn-gh" style="width:64px;padding:16px;font-size:22px" title="Dictar por voz (Alt+V)" onclick="vozIniciar()">🎤</button></div>')+
-    (cerr||esp||!/^yapag/i.test(C.caja||'')?'':'<div style="text-align:center;margin:-4px 0 12px"><button onclick="ypAbrir(window._ypUltPre||{})" style="border:0;background:none;color:var(--mut);font-size:12px;cursor:pointer;text-decoration:underline">🛵 ¿Se cerró el pedido Ya Pagué? Tócame para volver a abrirlo</button></div>')+
+    (!operable?'':'<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-acc" style="flex:1;padding:16px;font-size:18px" onclick="abrirAgregar()">➕ Registrar pago</button><button class="btn btn-gh" style="width:64px;padding:16px;font-size:22px" title="Dictar por voz (Alt+V)" onclick="vozIniciar()">🎤</button></div>')+
+    (!operable||!/^yapag/i.test(C.caja||'')?'':'<div style="text-align:center;margin:-4px 0 12px"><button onclick="ypAbrir(window._ypUltPre||{})" style="border:0;background:none;color:var(--mut);font-size:12px;cursor:pointer;text-decoration:underline">🛵 ¿Se cerró el pedido Ya Pagué? Tócame para volver a abrirlo</button></div>')+
     '<div style="margin-bottom:12px"><button class="btn btn-gh" style="width:100%;padding:12px;font-size:15px;font-weight:700" onclick="buscarMedAbrir()">🔎 Buscar medicamento</button></div>'+
-    '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><span style="font-weight:800;font-size:14px">Pagos de hoy</span><span class="muted" style="font-size:10.5px">⌨ Alt+1-4 método · Alt+V voz · Alt+C cierre · Alt+R relevo</span></div>'+lista+'</div>'+
+    '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><span style="font-weight:800;font-size:14px">Pagos de hoy</span><span class="muted" style="font-size:10.5px">⌨ Alt+1-5 método · Alt+V voz · Alt+C cierre · Alt+R relevo · Alt+D descanso</span></div>'+lista+'</div>'+
     acc;
 }
 function delPago(k,i){ if(!C)return; var arr=C.data[k]; var real=arr[i]; if(!real)return; var mt=meta(k); if(real.solic&&firmada(real.id)){ toast('Ya está firmado, no se puede borrar.'); return; } var eraSolic=!!(real.solic&&!firmada(real.id)); if(!confirm(eraSolic?'Este pago está esperando firma. Si lo borras, se le avisará al supervisor y quedará registrado. ¿Borrar?':'¿Borrar este pago?'))return; arr.splice(i,1); scheduleSave(); render(); if(eraSolic){ try{ API('evento',{cierre_id:C.id,fecha:C.fecha,caja:C.caja,cajero:C.cajero,tipo:'borrado',metodo:(mt?mt.n:k),moneda:(mt?mt.mon:''),monto:num(real.monto),detalle:(real.titular||real.banco||real.concepto||real.ref||'')}); }catch(e){} toast('Pago borrado · se avisó al supervisor'); } }
@@ -341,7 +354,7 @@ function abrirAgregar(){
   var m=document.createElement('div'); m.id='modal'; m.className='modal'; m.onclick=function(e){ if(e.target===m)cerrarModal(); };
   var grid=METODOS.map(function(mt,ix){ return '<div class="mbtn" onclick="formPago(\''+mt.k+'\')"><span class="mkey">'+(ix+1)+'</span><span class="em">'+mt.ic+'</span>'+mt.n+'</div>'; }).join('');
   if(C&&/^yapag/i.test(C.caja||'')) grid+='<div class="mbtn" onclick="cerrarModal();ypAbrir({credito:1})"><span class="em">💳</span>Crédito MARA / NIVAR</div>';
-  m.innerHTML='<div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:800;font-size:18px">¿Qué recibiste?</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div><div class="mgrid">'+grid+'</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">⌨ <b>Alt + 1-4</b> elige el método · <b>Enter</b> pasa al siguiente campo y guarda · <b>Esc</b> cancela</div></div>';
+  m.innerHTML='<div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:800;font-size:18px">¿Qué recibiste?</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div><div class="mgrid">'+grid+'</div><div class="muted" style="text-align:center;font-size:11px;margin-top:10px">⌨ <b>Alt + 1-5</b> elige el método · <b>Enter</b> pasa al siguiente campo y guarda · <b>Esc</b> cancela</div></div>';
   document.body.appendChild(m);
 }
 function formPago(k){
@@ -352,7 +365,7 @@ function formPago(k){
 }
 
 function _ctVal(k){ if(!C)return ''; var a=(C.data&&C.data[k])||[]; if(!a.length)return ''; var t=0; a.forEach(function(x){t+=num(x.monto);}); return t||''; }
-function _cierreTot(k,v){ if(!C)return; var n=num(v); C.data[k]=(n>0)?[{id:'a2_'+k,monto:n,a2:true}]:[]; scheduleSave(); if(document.getElementById('ct-ef')){ var foco=(document.activeElement&&document.activeElement.id)||''; cerrarModal(); abrirCierre(); if(foco){ var f=document.getElementById(foco); if(f)f.focus(); } } }
+function _cierreTot(k,v){ if(!C)return; if(k==='efectivobs' && (C.data.efectivobs||[]).some(function(x){return !x.a2;})){ toast('Ya hay efectivo registrado por venta; se suma solo.'); return; } var n=num(v); C.data[k]=(n>0)?[{id:'a2_'+k,monto:n,a2:true}]:[]; scheduleSave(); if(document.getElementById('ct-ef')){ var foco=(document.activeElement&&document.activeElement.id)||''; cerrarModal(); abrirCierre(); if(foco){ var f=document.getElementById(foco); if(f)f.focus(); } } }
 
 function ypChain(k,rec){
   try{
@@ -410,14 +423,15 @@ function guardarEfectivo(){ if(!C)return; DENOM.forEach(function(dn){ var v=num(
 function abrirCierre(){
   var m=document.createElement('div'); m.id='modal'; m.className='modal'; m.onclick=function(e){ if(e.target===m)cerrarModal(); };
   var t=tot(); var pend=pendientes(); var d=C.data;
+  var _efPorVenta=(C.data.efectivobs||[]).some(function(x){return !x.a2;}); var _efReg=_ctVal('efectivobs')||0; var _efN=(C.data.efectivobs||[]).filter(function(x){return !x.a2;}).length;
   m.innerHTML='<div class="sheet"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-weight:800;font-size:18px">🔒 Cerrar caja</div><button onclick="cerrarModal()" style="border:0;background:var(--bd);width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer">×</button></div>'+
     '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between"><span>Ventas en Bs</span><b>Bs '+fmt(t.totalBs)+'</b></div><div style="display:flex;justify-content:space-between"><span>Ventas en $</span><b>$ '+fmt(t.totalUsd)+'</b></div><div style="display:flex;justify-content:space-between"><span class="muted">Venta en efectivo (registrada)</span><span class="muted">Bs '+fmt(t.ventaEf)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Fondo inicial</span><span class="muted">Bs '+fmt(t.fondo)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Debe haber contado (venta del día)</span><span class="muted">Bs '+fmt(t.esperado)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Efectivo contado (arqueo)</span><span class="muted">Bs '+fmt(t.efBs)+'</span></div>'+(t.efBs>0?('<div style="display:flex;justify-content:space-between;font-weight:800;color:'+(Math.abs(t.descuadre)<0.5?'var(--grn)':'var(--red)')+'"><span>Descuadre</span><span>'+(Math.abs(t.descuadre)<0.5?'✓ cuadra':((t.descuadre>0?'+':'')+fmt(t.descuadre)))+'</span></div>'):'')+'</div>'+
     '<div class="card" style="margin-bottom:12px"><div style="font-weight:800;margin-bottom:8px">🧾 Reporte fiscal (Z)</div><label class="fl">Ventas Netas (del ticket Z)</label><input type="number" inputmode="decimal" id="fz-vn" value="'+(num(d.fiscal_ventas_netas)||d.fiscal_ventas_netas?d.fiscal_ventas_netas:'')+'" placeholder="0" oninput="fzLive()" onchange="fzSet(\'fiscal_ventas_netas\',this.value)"><label class="fl">Ventas Netas 2º reporte Z (solo si hubo dos)</label><input type="number" inputmode="decimal" id="fz-vn2" value="'+(num(d.fiscal_ventas_netas2)||d.fiscal_ventas_netas2?d.fiscal_ventas_netas2:'')+'" placeholder="0" oninput="fzLive()" onchange="fzSet(&#39;fiscal_ventas_netas2&#39;,this.value)"><label class="fl">Créditos (ventas a crédito, si aplica)</label><input type="number" inputmode="decimal" id="fz-cr" value="'+(num(d.fiscal_creditos)||d.fiscal_creditos?d.fiscal_creditos:'')+'" placeholder="0" oninput="fzLive()" onchange="fzSet(\'fiscal_creditos\',this.value)"><div id="fz-resumen" style="margin-top:10px;font-size:13px"><div style="display:flex;justify-content:space-between"><span class="muted">Total caja (fiscal)</span><span>Bs '+fmt(t.fiscalTotalCaja)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Total cuadre</span><span>Bs '+fmt(t.fiscalCuadre)+'</span></div><div style="display:flex;justify-content:space-between;font-weight:800;color:'+(t.fiscalVN?(Math.abs(t.fiscalDif)<0.5?'var(--grn)':'var(--red)'):'var(--mut)')+'"><span>Diferencia</span><span>'+(t.fiscalVN?(Math.abs(t.fiscalDif)<0.5?'✓ cuadra':((t.fiscalDif>0?'+':'')+fmt(t.fiscalDif))):'—')+'</span></div></div></div>'+
     '<div class="card" style="margin-bottom:12px"><div style="font-weight:800;margin-bottom:2px">💳 Totales del cuadre (A2)</div><div class="muted" style="font-size:11.5px;margin-bottom:8px">Copia estos tres del cuadre de caja de A2 al cerrar.</div>'+
-    '<label class="fl">Efectivo en Bs (venta del día)</label><input type="number" inputmode="decimal" id="ct-ef" value="'+(_ctVal('efectivobs')||'')+'" placeholder="0" onchange="_cierreTot(&#39;efectivobs&#39;,this.value)">'+
+    (_efPorVenta?('<label class="fl">Efectivo en Bs (ya registrado por venta)</label><div id="ct-ef" style="padding:12px;border:1px dashed var(--bd);border-radius:12px;background:#f8fafc;font-weight:800">Bs '+fmt(_efReg)+' <span style="font-weight:500;color:var(--mut);font-size:12px">· '+_efN+' pago(s) · se suma solo</span></div>'):('<label class="fl">Efectivo en Bs (venta del día)</label><input type="number" inputmode="decimal" id="ct-ef" value="'+(_ctVal('efectivobs')||'')+'" placeholder="0" onchange="_cierreTot(&#39;efectivobs&#39;,this.value)">'))+
     '<label class="fl">Tarjeta de débito (total Bs)</label><input type="number" inputmode="decimal" id="ct-deb" value="'+(_ctVal('debito')||'')+'" placeholder="0" onchange="_cierreTot(&#39;debito&#39;,this.value)">'+
     '<label class="fl">Tarjeta de crédito (total Bs)</label><input type="number" inputmode="decimal" id="ct-cred" value="'+(_ctVal('credito')||'')+'" placeholder="0" onchange="_cierreTot(&#39;credito&#39;,this.value)"></div>'+
-    '<button class="btn btn-gh" style="width:100%;margin-bottom:10px" onclick="diagDescuadre()">🔍 ¿Por qué no cuadra? (diagnóstico)</button>'+(t.efBs<=0?'<button class="btn btn-gh" style="width:100%;margin-bottom:10px" onclick="formEfectivo()">💵 Falta contar el efectivo</button>':'')+
+    (t.efBs<=0?'<button class="btn btn-gh" style="width:100%;margin-bottom:10px" onclick="formEfectivo()">💵 Falta contar el efectivo</button>':'')+
     (pend>0?('<div style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412;border-radius:12px;padding:12px;font-weight:700;margin-bottom:12px">Faltan '+pend+' pago(s) por firmar. El supervisor debe firmarlos antes de cerrar.</div>'):'<div style="background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:12px;padding:12px;font-weight:700;margin-bottom:12px">✓ Todo firmado.</div>')+
     '<button class="btn btn-grn" style="width:100%;padding:15px" '+(pend>0?'disabled':'')+' onclick="pedirCierre()">Pedir cierre al supervisor</button>'+
     '<div class="muted" style="text-align:center;margin-top:8px">El supervisor dará el visto bueno final.</div></div>';
@@ -432,27 +446,7 @@ function fzLive(){
   el.innerHTML='<div style="display:flex;justify-content:space-between"><span class="muted">Total caja (fiscal)</span><span>Bs '+fmt(t.fiscalTotalCaja)+'</span></div><div style="display:flex;justify-content:space-between"><span class="muted">Total cuadre</span><span>Bs '+fmt(cuadre)+'</span></div><div style="display:flex;justify-content:space-between;font-weight:800;color:'+(hasVN?(Math.abs(dif)<0.5?'var(--grn)':'var(--red)'):'var(--mut)')+'"><span>Diferencia</span><span>'+(hasVN?(Math.abs(dif)<0.5?'✓ cuadra':((dif>0?'+':'')+fmt(dif))):'—')+'</span></div>';
 }
 function fzSet(k,v){ if(!C)return; C.data[k]=v; scheduleSave(); }
-function diagDescuadre(){
-  if(!C)return; var t=tot(); var L=[];
-  var dEf=t.efBs-t.ventaEf;
-  if(t.efBs<=0) L.push('• No has contado el efectivo (arqueo en 0).');
-  else if(Math.abs(dEf)>=1) L.push('• Efectivo: contaste Bs '+fmt(t.efBs)+' pero declaraste Bs '+fmt(t.ventaEf)+' ('+(dEf>0?'sobran':'faltan')+' Bs '+fmt(Math.abs(dEf))+'). ¿Contaste el fondo por error? ¿Vuelto mal dado?');
-  var dif=t.fiscalDif;
-  if(t.fiscalVN>0 && Math.abs(dif)>=1){
-    L.push('• Cuadre fiscal: diferencia de '+(dif>0?'+':'')+fmt(dif)+' Bs contra el reporte Z.');
-    var candidatos=[];
-    (C.data.transfer||[]).forEach(function(x){ candidatos.push({n:'pago móvil ref '+(x.ref||'—'),m:num(x.monto)}); });
-    (C.data.dolares||[]).forEach(function(x){ candidatos.push({n:'dólares $'+fmt(x.monto),m:num(x.monto)*num(C.data.tasa)}); });
-    (C.data.zelle||[]).forEach(function(x){ candidatos.push({n:'zelle $'+fmt(x.monto),m:num(x.monto)*num(C.data.tasa)}); });
-    (C.data.gastos||[]).forEach(function(x){ candidatos.push({n:'gasto '+(x.concepto||''),m:num(x.monto)}); });
-    candidatos.forEach(function(c){ if(Math.abs(Math.abs(dif)-c.m)<1) L.push('  ↳ La diferencia coincide con: '+c.n+' (Bs '+fmt(c.m)+'). ¿Se registró doble, no se entregó, o falta en el Z?'); });
-    if(num(C.data.fiscal_ventas_netas2)===0) L.push('  ↳ ¿Hubo un 2º reporte Z sin sumar? Hay campo para agregarlo.');
-  }
-  if(!L.length){ toast('Todo cuadra ✓'); return; }
-  var texto=L.join('\n');
-  alert('🔍 DIAGNÓSTICO DEL DESCUADRE\n\n'+texto+'\n\nEste diagnóstico queda guardado para control interno.');
-  try{ API('evento',{cierre_id:C.id,fecha:C.fecha,caja:C.caja,cajero:C.cajero,tipo:'descuadre_diag',metodo:'',moneda:'Bs',monto:Math.round((Math.abs(dEf)+Math.abs(t.fiscalVN>0?dif:0))*100)/100,detalle:texto.slice(0,480)}); }catch(e){}
-}
+/* El diagnóstico "¿por qué no cuadra?" se movió a la app del supervisor (cierre de caja). */
 /* ===== Dictado por voz guiado (sin IA: Web Speech API + reglas) ===== */
 var _vozRec=null,_vozActivo=false,_vozFinal='',_vozPaso=-1,_vozK=null,_vozVals={};
 function vozSoporta(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
@@ -475,6 +469,7 @@ function vozMetodo(t){
   if(/dolar|divisa|verde/.test(s))return 'dolares';
   if(/transferencia|pago movil|pagomovil|movil|transfiere/.test(s))return 'transfer';
   if(/gasto/.test(s))return 'gastos';
+  if(/efectivo|efectibo|\bcash\b|contante|billete/.test(s))return 'efectivobs';
   return null;
 }
 function vozBanco(t){ var s=vozNorm(t); var hit=null; (BANCOS||[]).forEach(function(b){ if(s.indexOf(vozNorm(b))>=0)hit=b; }); if(!hit){ var AL={'tesoro':'Banco del Tesoro','caribe':'Bancaribe','nacional de credito':'BNC'}; Object.keys(AL).forEach(function(k){ if(!hit && s.indexOf(k)>=0 && BANCOS.indexOf(AL[k])>=0)hit=AL[k]; }); } return hit; }
@@ -483,7 +478,7 @@ function vozRef(t){ var d=(''+t).replace(/[^0-9]/g,''); return d||(''+t).trim();
 function vozTitulo(t){ return (''+t).trim().replace(/[.,;]+$/,'').split(/\s+/).map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' '); }
 function vozCampoActual(){ if(_vozPaso<0||!_vozK)return null; var mt=meta(_vozK); return mt.campos[_vozPaso]||null; }
 function vozPregunta(){
-  if(_vozPaso<0)return {q:'¿Cuál es el método de pago?',hint:'Di: <b>"dólares"</b> · <b>"zelle"</b> · <b>"pago móvil"</b> · <b>"gasto"</b><br><span style="opacity:.8">Efectivo, débito y crédito van como totales al cerrar la caja</span>'};
+  if(_vozPaso<0)return {q:'¿Cuál es el método de pago?',hint:'Di: <b>"efectivo"</b> · <b>"dólares"</b> · <b>"zelle"</b> · <b>"pago móvil"</b> · <b>"gasto"</b><br><span style="opacity:.8">Débito y crédito van como totales al cerrar la caja</span>'};
   var c=vozCampoActual(); if(!c)return null;
   var mt=meta(_vozK); var opc=/opcional/i.test(c.t);
   if(c.k==='monto')return {q:'¿Cuál es el monto en '+mt.mon+'?',hint:'Di el número: <b>"350"</b> · <b>"13 mil 500"</b> · <b>"15 con 50"</b>'};
@@ -522,6 +517,7 @@ function vozIniciar(){
     '<div id="voz-mic" style="width:72px;height:72px;margin:10px auto;border-radius:50%;background:linear-gradient(140deg,#B42318,#e0492e);display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;box-shadow:0 0 0 0 rgba(180,35,24,.45);animation:vozpulse 1.4s infinite">🎤</div>'+
     '<div id="voz-txt" class="muted" style="min-height:40px;font-weight:700;font-size:16px;padding:2px">Te escucho…</div>'+
     '<div id="voz-hint" class="muted" style="font-size:12px;line-height:1.6;margin-top:4px"></div>'+
+    '<div class="muted" style="font-size:11px;margin-top:6px;opacity:.85">💬 Di <b>"repetir"</b> para corregir · <b>"siguiente"</b> o <b>Enter</b> para avanzar</div>'+
     '<button class="btn btn-grn" style="width:100%;margin-top:12px;padding:13px;font-size:15px" onclick="vozTerminar()">✓ Responder (Enter)</button>'+
     '<button id="voz-skip" class="btn btn-gh" style="width:100%;margin-top:8px;padding:11px;display:none" onclick="vozSaltar()">Omitir este dato</button>'+
     '<button class="btn btn-gh" style="width:100%;margin-top:8px;padding:11px" onclick="vozParar()">Cancelar (Esc)</button></div>';
@@ -564,9 +560,22 @@ function vozTerminar(){
 function vozSaltar(){ var c=vozCampoActual(); if(!c)return; _vozVals[c.k]=''; _vozFinal=''; _vozPaso++; vozPintar(); }
 function vozRespuesta(txt){
   _vozFinal='';
+  var _cmd=vozNorm(txt);
+  // "repetir / corregir / atrás": rehacer el dato (otra chance si se equivocó)
+  if(/\b(repetir|repite|repitelo|otra vez|de nuevo|nuevamente|corregir|corrige|corregi|atras|volver|regresar|me equivoque|equivoque|borra eso)\b/.test(_cmd)){
+    if(_vozPaso<=0){ _vozPaso=-1; _vozK=null; } else { _vozPaso--; }
+    vozPintar(); toast('Repite ese dato'); return;
+  }
+  // "siguiente / avanzar": pasar al siguiente campo
+  if(/\b(siguiente|avanzar|avanza|continuar|continua|pasa)\b/.test(_cmd)){
+    var cs=vozCampoActual();
+    if(cs && /opcional/i.test(cs.t)){ _vozVals[cs.k]=''; _vozPaso++; vozPintar(); return; }
+    if(cs && cs.k!=='monto' && _vozVals[cs.k]!==undefined && _vozVals[cs.k]!==''){ _vozPaso++; vozPintar(); return; }
+    vozError('Primero dime el dato, o di <b>"omitir"</b> si no aplica'); return;
+  }
   if(_vozPaso<0){
     var k=vozMetodo(txt);
-    if(!k){ vozError('No entendí el método. Di p. ej. <b>"dólares"</b> o <b>"pago móvil"</b>'); return; }
+    if(!k){ vozError('No entendí el método. Di p. ej. <b>"efectivo"</b>, <b>"dólares"</b> o <b>"pago móvil"</b>'); return; }
     _vozK=k; _vozPaso=0; vozPintar(); return;
   }
   var c=vozCampoActual(); if(!c){ vozFinalizar(); return; }
@@ -616,6 +625,10 @@ function abrirRelevo(){
   document.body.appendChild(m);
 }
 function pedirRelevo(){ if(!C)return; if(pendientes()>0){ toast('Faltan firmas'); return; } var t=tot(); if(t.efBs<=0){ toast('Cuenta el efectivo primero'); return; } scheduleSave(); (function esp(n){ if(_dirty||_saving){ if(n<=0){ toast('Guardando… reintenta'); return; } setTimeout(function(){esp(n-1);},500); return; } API('pedir_cierre',{id:C.id,por:C.cajero,relevo:true,entrega_efectivo:t.efBs}).then(function(r){ if(r.error==='faltan_firmas'){ toast('Faltan '+(r.pend||'')+' firmas'); return; } if(r.error){ toast('Error: '+r.error); return; } C.estado='por_confirmar'; C.relevo=true; cerrarModal(); render(); toast('Entregado. Esperando visto bueno del supervisor.'); }).catch(function(){ toast('Sin conexión. Reintenta.'); }); })(12); }
+function descansoAceptar(){ if(!C)return; API('descanso_aceptar',{id:C.id}).then(function(r){ if(r&&r.ok){ C.estado='descanso'; C.descanso=true; C.descanso_solicitado=false; window._reeOk=false; render(); toast('☕ En descanso'+(C.descanso_reemplazo?(' · cubre '+C.descanso_reemplazo):'')); } else { toast('No se pudo: '+((r&&r.error)||'reintenta')); } }).catch(function(){ toast('Sin conexión · reintenta'); }); }
+function _reeEntrar(){ if(!C||C.estado!=='descanso'||!C.descanso_reemplazo)return; window._reeOk=true; render(); toast('Entraste como reemplazo · registra normal'); }
+function cargarExcelJS(cb){ if(window.ExcelJS)return cb(true); var s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'; s.onload=function(){cb(!!window.ExcelJS);}; s.onerror=function(){cb(false);}; document.head.appendChild(s); }
+function cuadreXlsx(){ if(!C)return; var d=C.data||{}; toast('Generando cuadre…'); cargarExcelJS(function(ok){ if(!ok||!window.ExcelJS){ toast('No se pudo cargar Excel'); return; } fetch('plantilla_cuadre.xlsx').then(function(r){ if(!r.ok)throw new Error('No encontré la plantilla'); return r.arrayBuffer(); }).then(function(buf){ var wb=new ExcelJS.Workbook(); return wb.xlsx.load(buf).then(function(){ var ws=wb.getWorksheet('MODELO')||wb.worksheets[0]; var DR={20:22,50:23,100:24,200:25,500:26}; ws.getCell('B9').value=(C.caja||''); try{ var p=String(C.fecha||'').split('-'); if(p.length===3)ws.getCell('B11').value=new Date(+p[0],+p[1]-1,+p[2]); }catch(e){} var ef=d.efectivo||{}; Object.keys(DR).forEach(function(dn){ var cant=num(ef[dn]); if(cant>0)ws.getCell('B'+DR[dn]).value=cant; }); var tasa=num(d.tasa); var r=18; (d.transfer||[]).forEach(function(x){ ws.getCell('H'+r).value=x.banco||''; ws.getCell('I'+r).value=x.ref||''; ws.getCell('J'+r).value=num(x.monto); r++; }); var deb=(d.debito||[]).reduce(function(a,x){return a+num(x.monto);},0); if(deb>0)ws.getCell('F18').value=deb; var cre=(d.credito||[]).reduce(function(a,x){return a+num(x.monto);},0); if(cre>0)ws.getCell('L18').value=cre; r=18; (d.dolares||[]).forEach(function(x){ ws.getCell('N'+r).value=num(x.monto); ws.getCell('O'+r).value=tasa; r++; }); r=18; (d.zelle||[]).forEach(function(x){ ws.getCell('R'+r).value=num(x.monto); ws.getCell('S'+r).value=tasa; r++; }); r=18; (d.gastos||[]).forEach(function(x){ ws.getCell('V'+r).value=num(x.monto); r++; }); var vn=num(d.fiscal_ventas_netas)+num(d.fiscal_ventas_netas2); if(vn)ws.getCell('C51').value=vn; if(num(d.fiscal_creditos))ws.getCell('C53').value=num(d.fiscal_creditos); if(num(d.fiscal_reposicion))ws.getCell('C57').value=num(d.fiscal_reposicion); try{ wb.calcProperties={fullCalcOnLoad:true}; }catch(e){} return wb.xlsx.writeBuffer(); }); }).then(function(buf){ var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Cuadre '+(C.caja||'Caja')+' '+(C.fecha||'')+'.xlsx'; document.body.appendChild(a); a.click(); setTimeout(function(){try{a.remove();URL.revokeObjectURL(a.href);}catch(e){}},3000); toast('✓ Cuadre descargado'); }).catch(function(e){ toast('Error: '+((e&&e.message)||e)); }); }); }
 function saveNow(){ scheduleSave(); }
 try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); }catch(e){}
 window.addEventListener('beforeunload',function(){ if(_dirty||_saving)_writeBk(true); });
