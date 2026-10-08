@@ -105,9 +105,9 @@ function _dpFiscalDif(c){
 function _dpMetrics(e){
   var id=String(e.id), nn=_dpNorm(e.nombre), cargo=(e.cargo||'').toLowerCase();
   // Asistencia
-  var f=0,fj=0, vistos={};
-  _dpAsis.forEach(function(a){ if(String(a.empleado_id)===id){ var k=a.tipo+'|'+a.fecha; if(vistos[k])return; vistos[k]=1; if(a.tipo==='falta')f++; else if(a.tipo==='falta_justificada')fj++; } });
-  var sAsis=Math.max(0,Math.min(100,100-12*f-4*fj));
+  var f=0,fj=0,de=0, vistos={};
+  _dpAsis.forEach(function(a){ if(String(a.empleado_id)===id){ var k=a.tipo+'|'+a.fecha; if(vistos[k])return; vistos[k]=1; if(a.tipo==='falta')f++; else if(a.tipo==='falta_justificada')fj++; else if(a.tipo==='descanso_excedido')de++; } });
+  var sAsis=Math.max(0,Math.min(100,100-12*f-4*fj-6*de));
   // Conducta / amonestaciones
   var nAm=0, montoAm=0;
   _dpAmon.forEach(function(a){ if(String(a.empleado_id)===id){ nAm++; montoAm+=_dpNum(a.monto); } });
@@ -127,7 +127,7 @@ function _dpMetrics(e){
   var parts=[{s:sVent,w:DP_PESOS.ventas},{s:sAsis,w:DP_PESOS.asistencia},{s:sCaja,w:DP_PESOS.caja},{s:sCond,w:DP_PESOS.conducta},{s:sGer,w:DP_PESOS.gerencia}];
   var tw=0,ts=0; parts.forEach(function(p){ if(p.s!=null){ tw+=p.w; ts+=p.w*p.s; } });
   var fin=tw>0?Math.round(ts/tw):null;
-  return {id:id,nombre:e.nombre,cargo:e.cargo||'',empresa:(e.empresa||''),ced:(e.cedula||''),tel:(e.telefono||''),ingreso:(e.fecha_ingreso||''),foto:(e.foto_url||''),faltas:f,faltasJ:fj,nAm:nAm,montoAm:montoAm,esCaja:esCaja,desc:desc,cerrTot:cerrTot,vpts:(vpts||0),tieneReto:(vpts!=null),sVent:sVent,sAsis:sAsis,sCaja:sCaja,sCond:sCond,sGer:sGer,ev:evObj,fin:fin};
+  return {id:id,nombre:e.nombre,cargo:e.cargo||'',empresa:(e.empresa||''),ced:(e.cedula||''),tel:(e.telefono||''),ingreso:(e.fecha_ingreso||''),foto:(e.foto_url||''),faltas:f,faltasJ:fj,descExcedido:de,nAm:nAm,montoAm:montoAm,esCaja:esCaja,desc:desc,cerrTot:cerrTot,vpts:(vpts||0),tieneReto:(vpts!=null),sVent:sVent,sAsis:sAsis,sCaja:sCaja,sCond:sCond,sGer:sGer,ev:evObj,fin:fin};
 }
 
 /* ---------- Colores / etiquetas ---------- */
@@ -218,6 +218,7 @@ function _dpCard(m){
         fact(m.faltas+(m.faltasJ?('<small style="font-size:10px;color:#9aa3c7"> +'+m.faltasJ+' just.</small>'):''),'Faltas')+
         fact(m.nAm,'Amonestaciones')+
         fact(detCaja,'Descuadres')+
+        fact(m.descExcedido,'Tarde descanso')+
         fact(m.tieneReto?_dpNum(m.vpts).toFixed(0):'\u2014','Pts del reto')+
       '</div>'+
     '</div>'+coment+

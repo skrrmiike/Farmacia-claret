@@ -57,7 +57,7 @@ function _mercadoRender(){
 
 /* ===================== CIERRE DE CAJA (Central · supervisor) ===================== */
 var _ccAct=null, _ccList=[], _ccFirmas=[], _ccEventos=[], _ccFecha='', _ccSaveT=null, _ccA2T=null;
-var _CC_DENOM=[5,10,20,50,100,200,500];
+var _CC_DENOM=[20,50,100,200,500];
 function _ccHoy(){ try{ return (typeof HOY==='function')?HOY():new Date(Date.now()-4*3600*1000).toISOString().slice(0,10); }catch(e){ return new Date().toISOString().slice(0,10); } }
 function _ccNum(v){ v=(''+(v==null?'':v)).trim(); if(v.indexOf(',')>=0){ v=(v.indexOf('.')>=0)?v.replace(/\./g,'').replace(',','.'):v.replace(',','.'); } v=parseFloat(v.replace(/[^0-9.\-]/g,'')); return isNaN(v)?0:v; }
 function _ccFmt(n){ return (Number(n)||0).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
