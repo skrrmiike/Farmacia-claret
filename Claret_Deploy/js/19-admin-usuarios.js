@@ -34,7 +34,8 @@ var PERM_MODS = [
   {k:'anomalias',label:'Banco de Anomalías',tabs:['tab-anomalias'],cat:'Personal y desempeño'},
   {k:'gerencia',label:'Gerencia',tabs:['tab-gerencia'],cat:'Gerencia y familia'},
   {k:'yapague',label:'Ya Pagué (pedidos y fondo)',tabs:['tab-yapague'],cat:'Gerencia y familia'},
-  {k:'consumo',label:'Consumo Familia',tabs:['tab-consumo'],cat:'Gerencia y familia'}
+  {k:'consumo',label:'Consumo Familia',tabs:['tab-consumo'],cat:'Gerencia y familia'},
+  {k:'planta',label:'Mapa en Vivo (Claret en Vivo · 3D)',tabs:['tab-planta'],cat:'Gerencia y familia'}
 ];
 var _permsUser=null;
 var PERM_USERS=[

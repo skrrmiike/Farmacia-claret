@@ -168,7 +168,7 @@ function renderInicio(){
   f=f.charAt(0).toUpperCase()+f.slice(1);
   var puede=function(t){ try{ return (typeof _tabAllowed==='function')?_tabAllowed(t):true; }catch(e){ return true; } };
   var SV=function(p,z,c){ return '<svg width="'+(z||18)+'" height="'+(z||18)+'" viewBox="0 0 24 24" fill="none" stroke="'+(c||'currentColor')+'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'; };
-  var P={caja:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',trofeo:'<path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z"/>',cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',box:'<path d="M21 8v8a2 2 0 0 1-1 1.7l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.7l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>'};
+  var P={caja:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',trofeo:'<path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z"/>',cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',box:'<path d="M21 8v8a2 2 0 0 1-1 1.7l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.7l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',mapa:'<path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/>'};
   el.innerHTML=_iniBancoPriorCard()+'<div id="ini-jp-firmas"></div>'+'<div id="ini-cxp-roja"></div>'+
     '<div style="background:linear-gradient(135deg,#131C33,#1E2E52 55%,#25397A);border-radius:18px;padding:22px 24px;margin-bottom:18px;color:#fff;box-shadow:0 2px 4px rgba(11,18,32,.18),0 18px 40px -14px rgba(11,18,32,.5),inset 0 1px 0 rgba(255,255,255,.08);position:relative;overflow:hidden">'+
       '<div style="position:absolute;right:-60px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(59,87,212,.4),transparent 65%);filter:blur(18px)"></div>'+
@@ -182,6 +182,10 @@ function renderInicio(){
       .map(function(a){ return '<div onclick="showTab(\''+a[0]+'\')" style="flex:1;min-width:145px;background:linear-gradient(160deg,#fff,#FCFCFD);border:1px solid rgba(16,24,40,.07);border-radius:13px;padding:14px;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.05),0 6px 16px -6px rgba(16,24,40,.10),inset 0 1px 0 #fff;transition:transform .14s,box-shadow .18s" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'">'+
         '<div style="color:#1E38A6;margin-bottom:8px">'+SV(a[2],20)+'</div>'+
         '<div style="font-size:13px;font-weight:500;color:var(--text)">'+a[1]+'</div></div>'; }).join('')+
+      (puede('planta')?('<div onclick="window.open(\'planta.html\',\'_blank\')" title="Mapa de la farmacia en tiempo real" style="flex:1;min-width:145px;background:linear-gradient(160deg,#eef6f1,#e3f0f7);border:1px solid rgba(47,110,163,.22);border-radius:13px;padding:14px;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.05),0 6px 16px -6px rgba(16,24,40,.10),inset 0 1px 0 #fff;transition:transform .14s" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'">'+
+        '<div style="color:#2f6ea3;margin-bottom:8px">'+SV(P.mapa,20,'#2f6ea3')+'</div>'+
+        '<div style="font-size:13px;font-weight:600;color:#1f4e78">Mapa en vivo</div>'+
+        '<div style="font-size:10.5px;color:#4b7ba0;margin-top:1px">Claret en Vivo · 3D</div></div>'):'')+
     '</div>';
   _iniKPIs();
   try{ _iniFirmasJP(); }catch(e){}
