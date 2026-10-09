@@ -267,7 +267,7 @@
     <input id="pgateInput" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" />
     <div class="pgate-err" id="pgateErr"></div>
     <button id="pgateBtn" onclick="gateEnter()">Entrar</button>
-    <div style="margin-top:14px;font-size:11px;color:#9aa7b3">Planta <b>v2</b> · Farmacia Claret</div>
+    <div style="margin-top:14px;font-size:11px;color:#9aa7b3">Planta <b>v3</b> · Farmacia Claret</div>
   </div>
 </div>
 
@@ -299,6 +299,8 @@ function horaCaracas(iso){ if(!iso) return ''; try{ return new Intl.DateTimeForm
 function nowHM(){ return horaCaracas(new Date().toISOString()); }
 
 var WORLD_W=19.9, WORLD_H=12.5;
+// Centro de la TIENDA (no del mundo con estacionamiento) — pivote de rotación
+var CENTER_X=8.9, CENTER_Z=4.7;
 
 // ---- layout real (diseñado por Miguel en el editor) ----
 // [label, type, x, y, w, h, color]
@@ -840,10 +842,18 @@ function placeModel(key,cx,cz,w,d,rotY,fitH){
   var b2=new THREE.Box3().setFromObject(obj), c2=new THREE.Vector3(); b2.getCenter(c2);
   obj.position.set(cx-c2.x, -b2.min.y, cz-c2.z);
   obj.traverse(function(m){ if(m.isMesh){ m.castShadow=true; m.receiveShadow=true; } });
+  obj.userData._keep=true;   // recursos del modelo .glb son compartidos: no liberarlos al reconstruir
   scene.add(obj); return true;
 }
 function modelPerson(cx,cz,gender){ return placeModel(gender==='f'?'persona_f':'persona_m',cx,cz,0.6,0.6,0,1.68); }
 
+function disposeScene(s){ if(!s) return;
+  s.traverse(function(o){
+    var keep=false,n=o; while(n){ if(n.userData&&n.userData._keep){keep=true;break;} n=n.parent; } if(keep) return;  // no tocar modelos .glb (recursos compartidos)
+    if(o.geometry&&o.geometry.dispose) o.geometry.dispose();
+    var m=o.material; if(m){ var arr=Array.isArray(m)?m:[m]; arr.forEach(function(x){ if(!x)return; if(o.isSprite && x.map && x.map.dispose) x.map.dispose(); if(x.dispose) x.dispose(); }); }
+  });
+}
 function build3D(){
   if(!_modelsReady){ preloadModels(function(){ _modelsReady=true; build3D(); }); return; }
   var cv=document.getElementById('c3d');
@@ -852,7 +862,10 @@ function build3D(){
     renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
     if(THREE.sRGBEncoding) renderer.outputEncoding=THREE.sRGBEncoding;
     if(THREE.ACESFilmicToneMapping){ renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0.98; }
+    cv.addEventListener('webglcontextlost',function(e){ e.preventDefault(); },false);
+    cv.addEventListener('webglcontextrestored',function(){ scene=null; if(view==='3d') build3D(); },false);
   }
+  if(scene) disposeScene(scene);   // liberar la escena anterior (evita que se sature y quede en blanco)
   var dark=matchMedia('(prefers-color-scheme:dark)').matches && document.documentElement.getAttribute('data-theme')!=='light';
   if(document.documentElement.getAttribute('data-theme')==='dark') dark=true;
   scene=new THREE.Scene(); scene.background=new THREE.Color(dark?0x0d141c:0xcad1d9);
@@ -1000,7 +1013,7 @@ function build3D(){
   addBox(0.9,0.75,0.95,0xeaf0f5,1.55,0.48,11.0);
   resize3D(); renderOnce();
 }
-function updateCam(){ var cxw=WORLD_W/2+(cam.tx||0), czw=WORLD_H/2+(cam.tz||0);
+function updateCam(){ var cxw=CENTER_X+(cam.tx||0), czw=CENTER_Z+(cam.tz||0);
   var x=cxw+cam.r*Math.sin(cam.phi)*Math.cos(cam.theta),y=cam.r*Math.cos(cam.phi),z=czw+cam.r*Math.sin(cam.phi)*Math.sin(cam.theta);
   camera.position.set(x,y,z); camera.lookAt(cxw,0,czw); }
 function resize3D(){ var w=stage.clientWidth,h=stage.clientHeight; renderer.setSize(w,h,false); if(!camera) camera=new THREE.PerspectiveCamera(48,w/h,0.1,200); camera.aspect=w/h; camera.updateProjectionMatrix(); updateCam(); }
@@ -1040,7 +1053,7 @@ window.resetVista=function(){ cam.r=22; cam.theta=1.45; cam.phi=0.9; cam.tx=0; c
 var _hint3dShown=false;
 window.setView=function(v){ view=v; Array.prototype.forEach.call(document.querySelectorAll('#viewSeg button'),function(b){b.classList.toggle('on',b.dataset.v===v);});
   var c=document.getElementById('c3d'), ct=document.getElementById('ctrl3d');
-  if(v==='3d'){ world.style.display='none'; c.style.display='block'; if(ct)ct.hidden=false; build3D();
+  if(v==='3d'){ world.style.display='none'; c.style.display='block'; if(ct)ct.hidden=false; build3D(); try{ _last3dSig=cajasSig(); }catch(e){}
     if(!_hint3dShown){ _hint3dShown=true; try{ toast('1 dedo gira · 2 dedos mueven · pellizca para zoom'); }catch(e){} } }
   else { c.style.display='none'; world.style.display='block'; if(ct)ct.hidden=true; render2D(); } };
 
@@ -1051,7 +1064,15 @@ function blankLive(){ return { fecha:ymdCaracas(), conectado:false, ultima_sync:
   stock:{bebidas:{total:0,items:[]},chuche:{total:0,items:[]},medicina:{total:0,items:[]}},
   yapague:{pcs:0,online:0,list:[]}, gente:0 }; }
 
-function repaint(){ renderKPIs(); renderAlerts(); if(view==='3d'){ if(renderer) build3D(); } else render2D(); }
+var _last3dSig=null;
+function cajasSig(){ try{
+    var c=Object.keys(LIVE.cajas||{}).sort().map(function(k){ var x=LIVE.cajas[k]; return k+':'+x.estado+':'+(x.cajero||''); }).join('|');
+    var y=((LIVE.yapague&&LIVE.yapague.list)||[]).map(function(p){ return p.n+(p.online?'1':'0'); }).join(',');
+    return c+'#'+y;
+  }catch(e){ return String(Math.random()); } }
+function repaint(force){ renderKPIs(); renderAlerts();
+  if(view==='3d'){ var s=cajasSig(); if(force||s!==_last3dSig){ _last3dSig=s; build3D(); } }
+  else render2D(); }
 
 // Cajas y alertas: función edge 'caja' acción 'dia' (igual que la app de cajeros)
 function fetchCajas(){ return cajaApi('dia',{fecha:ymdCaracas(),empresa:'farmacia'}).then(function(res){
