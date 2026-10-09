@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Claret en Vivo</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#2f6ea3">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
 <style>
@@ -65,7 +65,8 @@
   .stagewrap{flex:1;min-height:0;position:relative;margin:8px 16px 16px;border-radius:18px;overflow:hidden;background:var(--floor);border:1px solid var(--line);box-shadow:var(--shadow)}
   .stage{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch}
   #world{position:relative;margin:auto}
-  #c3d{position:absolute;inset:0;display:none}
+  #c3d{position:absolute;inset:0;display:none;touch-action:none;-ms-touch-action:none}
+  body{overscroll-behavior:none}
   .legend{position:absolute;left:12px;bottom:12px;z-index:6;background:color-mix(in srgb,var(--panel) 90%,transparent);backdrop-filter:blur(6px);
     border:1px solid var(--line);border-radius:12px;padding:8px 11px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;box-shadow:var(--shadow)}
   .legend b{display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--ink2)}
@@ -125,6 +126,10 @@
 
   .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;z-index:30;background:var(--floor)}
   .loading[hidden]{display:none}
+  .ctrl3d{position:absolute;right:12px;bottom:14px;z-index:8;display:flex;flex-direction:column;gap:7px}
+  .ctrl3d[hidden]{display:none}
+  .ctrl3d button{width:46px;height:46px;border-radius:13px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(6px);color:var(--ink);font-size:22px;font-weight:700;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .ctrl3d button:active{transform:scale(.94)}
   @media (max-width:560px){ .htitle .sub span.hidem{display:none} .kpi{min-width:118px} }
   @media (prefers-reduced-motion:reduce){ .livedot,.caja.abierto::after,.alertdot,.beacon{animation:none} }
 
@@ -232,6 +237,11 @@
       <b><span class="ldot" style="background:#eaa23a"></span>Descanso</b>
       <b><span class="ldot" style="background:#7f8c9a"></span>Cerrada</b>
     </div>
+    <div class="ctrl3d" id="ctrl3d" hidden>
+      <button onclick="zoom3D(0.8)" title="Acercar" aria-label="Acercar">＋</button>
+      <button onclick="zoom3D(1.25)" title="Alejar" aria-label="Alejar">－</button>
+      <button onclick="resetVista()" title="Centrar vista" aria-label="Centrar vista">⟲</button>
+    </div>
     <div class="loading" id="loading">Cargando datos de la farmacia…</div>
     <div class="edithint" id="edithint" hidden>✏️ Arrastra para mover · esquina para tamaño · toca para seleccionar</div>
   </div>
@@ -257,7 +267,7 @@
     <input id="pgateInput" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" />
     <div class="pgate-err" id="pgateErr"></div>
     <button id="pgateBtn" onclick="gateEnter()">Entrar</button>
-    <div style="margin-top:14px;font-size:11px;color:#9aa7b3">Planta <b>v1</b> · Farmacia Claret</div>
+    <div style="margin-top:14px;font-size:11px;color:#9aa7b3">Planta <b>v2</b> · Farmacia Claret</div>
   </div>
 </div>
 
@@ -293,81 +303,82 @@ var WORLD_W=19.9, WORLD_H=12.5;
 // ---- layout real (diseñado por Miguel en el editor) ----
 // [label, type, x, y, w, h, color]
 var LAYOUT=[
- ["Almacén (Bodega)","almacen",1.3,1.6,3.3,5.4,"#c9a66b"],
- ["Break Zone","break",1.2,7,3.4,2.4,"#93ab6e"],
- ["Sofá","sofa",1.4,7.15,1.7,0.6,""],
- ["Mesa comedor","mesacom",2.9,8.1,1.3,0.9,""],
- ["YaPagué Computadoras","oficina",4.9,5.5,3,2.2,"#8aa6c6"],
- ["PC 1","pc",5.0,5.65,0.55,0.55,""],
- ["PC 2","pc",7.1,5.65,0.55,0.55,""],
- ["PC 3","pc",7.1,6.75,0.55,0.55,""],
- ["Supervisores zelle","oficina",4.2,0,5,1.5,"#8aa6c6"],
- ["Angélica","sdesk",4.5,0.55,0.62,0.6,""],
- ["Edilso","sdesk",7.9,0.55,0.62,0.6,""],
- ["Área de pedido clientes","pedido",8,7.8,7.8,1.8,"#5f7fa6"],
- ["Delivery Zone","delivery",4,9.7,2.6,2.7,"#9aa6b0"],
- ["Estacionamiento","parking",6.7,9.7,12.8,2.7,"#8b9196"],
- ["Estacionamiento","parking",1.1,9.7,2.8,2.7,"#8b9196"],
- ["Baño","bano",3.6,1.7,1.0,1.5,"#9fcabf"],
- ["Baño","bano",11.5,1.8,1.0,1.5,"#9fcabf"],
- ["Baño","bano",12.6,1.8,1.0,1.5,"#9fcabf"],
- ["Baño","bano",4.7,1.7,1.0,1.5,"#9fcabf"],
- ["Mesón","meson",8.8,1.8,2.7,0.6,"#6b8fb5"],
- ["Mesón","meson",8.1,2.1,0.6,2.1,"#6b8fb5"],
- ["Nevera","nevera",8.2,5.3,2.8,0.8,"#3f9ec9","N"],
- ["Nevera","nevera",11.7,6.2,0.8,0.6,"#3f9ec9"],
- ["Nevera","nevera",3.7,2.7,0.8,0.6,"#3f9ec9"],
- ["Nevera","nevera",3,1.7,0.7,0.5,"#3f9ec9"],
- ["Chucherías / Snacks","merca",8.2,6.2,3.4,0.6,"#d8a24a"],
- ["Pepsi mercancía","merca",4.9,8.2,0.9,1.2,"#d8a24a"],
- ["Agua mercancía","merca",6.5,8.1,1.4,1,"#d8a24a"],
- ["patio","oficina",9.4,0,5,1.5,"#8aa6c6"],
- ["Supervisores $ / pago móvil","oficina",15.3,6.9,0.9,0.8,"#8aa6c6"],
- ["Caja 1","caja",8.8,7.1,0.9,0.7,""],
- ["Caja 2","caja",10.6,7.1,0.9,0.7,""],
- ["Caja 3","caja",12.5,7.1,0.9,0.7,""],
- ["Caja 4","caja",14.1,7.1,0.9,0.7,""],
- ["Caja 5","caja",15.6,7.8,0.7,1.0,"","W"],
- ["Caja 6","caja",15.6,9.0,0.7,1.0,"","W"],
- ["Estantería","shelf",1.4,2.2,0.4,4.4,"#6b7682"],
- ["Estantería","shelf",1.5,1.7,1.5,0.4,"#6b7682"],
- ["Estantería","shelf",3,4,0.4,2.3,"#6b7682"],
- ["Estantería","shelf",13.1,3,0.4,2.7,"#6b7682"],
- ["Estantería","shelf",16.4,1.9,0.4,4,"#6b7682"],
- ["Estantería","shelf",14.2,2.7,0.4,3.2,"#6b7682"],
- ["Estantería","shelf",15.3,2.7,0.4,3.2,"#6b7682"],
- ["Estantería","shelf",1.9,6.2,1.5,0.4,"#6b7682"],
- ["Estantería","shelf",2.4,3.7,1,0.4,"#6b7682"],
- ["Estantería","shelf",4.1,3.9,0.4,2.7,"#6b7682"],
- ["Estantería","shelf",2.4,2.8,1.3,0.4,"#6b7682"],
- ["Estantería","shelf",7.7,1.8,0.3,2.7,"#6b7682"],
- ["Estantería","shelf",6.6,1.8,0.3,2.3,"#6b7682"],
- ["Estantería","shelf",5.6,3.9,1.2,0.3,"#6b7682"],
- ["Estantería","shelf",5.6,2.9,0.4,1,"#6b7682"],
- ["Estantería","shelf",11.1,5.5,1.3,0.5,"#6b7682"],
- ["Estantería","shelf",12.2,3,0.4,1.5,"#6b7682"],
- ["Estantería","shelf",11.2,3,1,0.4,"#6b7682"],
- ["Estantería","shelf",10.8,3,0.4,1.5,"#6b7682"],
- ["Estantería","shelf",13.6,1.9,2.8,0.4,"#6b7682"],
- ["pared","pared",7.9,5.3,0.3,4.4,"#b9808a"],
- ["pared","pared",4.6,3.9,0.3,5.8,"#b9808a"],
- ["pared","pared",7.9,1.4,0.3,3.1,"#b9808a"],
- ["pared","pared",4.6,1.4,0.3,1.8,"#b9808a"],
- ["pared","pared",12.7,3,0.3,2.1,"#b9808a"],
- ["pared","pared",16.8,1.5,0.3,8.1,"#b9808a"],
- ["pared","pared",1,1.6,0.3,8.1,"#b9808a"],
- ["pared","pared",4.9,7.8,0.7,0.3,"#b9808a"],
- ["pared","pared",6.6,7.8,1.3,0.3,"#b9808a"],
- ["Vitrina","vidrio",1.1,9.4,16,0.3,"#bcd6e6"],
- ["pared","pared",1,1.4,16,0.3,"#b9808a"],
- ["pared","pared",1,0,16,0.3,"#b9808a"],
- ["pared","pared",9.2,0,0.3,1.4,"#b9808a"],
- ["pared","pared",3.9,0,0.3,1.4,"#b9808a"],
- ["pared","pared",14.4,0,0.3,1.4,"#b9808a"],
- ["Vidrio","vidrio",8,7.6,7.8,0.14,"#bcd6e6"],
- ["Entrada delivery","door",5.7,9.4,1.1,0.25,"#c6a06a"],
- ["Entrada","gdoor",11.2,9.4,1.6,0.25,"#bcd6e6"],
- ["puerta","door",6.8,1.5,1,0.3,"#c6a06a"]
+  ["Almacén (Bodega)","almacen",1.3,1.6,3.3,5.4,"#c9a66b"],
+  ["Break Zone","break",1.2,7,3.4,2.4,"#93ab6e"],
+  ["Sofá","sofa",1.4,7.1,0.6,1.7,""],
+  ["Mesa comedor","mesacom",2.5,7.7,1.3,0.9,""],
+  ["YaPagué Computadoras","oficina",4.9,5.5,3,2.2,"#8aa6c6"],
+  ["PC 1","pc",5,7.1,0.55,0.55,""],
+  ["PC 2","pc",7.2,6,0.55,0.55,""],
+  ["PC 3","pc",7.2,7,0.55,0.55,""],
+  ["Supervisores zelle","oficina",4.2,0,5,1.5,"#8aa6c6"],
+  ["Angélica","sdesk",4.5,0.55,0.62,0.6,""],
+  ["Edilso","sdesk",7.9,0.55,0.62,0.6,""],
+  ["Área de pedido clientes","pedido",8,7.7,7.8,1.8,"#5f7fa6"],
+  ["Delivery Zone","delivery",4,9.7,2.6,2.7,"#9aa6b0"],
+  ["Estacionamiento","parking",6.7,9.7,12.8,2.7,"#8b9196"],
+  ["Estacionamiento","parking",1.1,9.7,2.8,2.7,"#8b9196"],
+  ["Baño","bano",3.6,1.7,1,1.1,"#9fcabf"],
+  ["Baño","bano",11.5,1.8,1,1.2,"#9fcabf"],
+  ["Baño","bano",12.6,1.8,1,1.2,"#9fcabf"],
+  ["Baño","bano",4.9,1.7,1,1.1,"#9fcabf"],
+  ["Mesón","meson",8.8,1.8,2.7,0.6,"#6b8fb5"],
+  ["Mesón","meson",8.2,1.8,0.6,2.4,"#6b8fb5"],
+  ["Nevera","nevera",8.2,5.3,2.8,0.8,"#3f9ec9","N"],
+  ["Nevera","nevera",11.7,6.2,0.8,0.6,"#3f9ec9"],
+  ["Nevera","nevera",3.7,2.7,0.8,0.6,"#3f9ec9"],
+  ["Nevera","nevera",3,1.7,0.7,0.5,"#3f9ec9"],
+  ["Chucherías / Snacks","merca",8.2,6.2,3.4,0.6,"#d8a24a"],
+  ["Pepsi mercancía","merca",4.9,8.2,0.7,1.2,"#d8a24a"],
+  ["Agua mercancía","merca",6.5,8.1,1.4,0.9,"#d8a24a"],
+  ["patio","oficina",9.4,0,5,1.5,"#8aa6c6"],
+  ["Supervisores $ / pago móvil","oficina",15.3,6.9,0.9,0.8,"#8aa6c6"],
+  ["Caja 1","caja",8.8,7.1,0.9,0.7,""],
+  ["Caja 2","caja",10.6,7.1,0.9,0.7,""],
+  ["Caja 3","caja",12.5,7.1,0.9,0.7,""],
+  ["Caja 4","caja",14.1,7.1,0.9,0.7,""],
+  ["Caja 5","caja",15.6,7.7,0.7,0.9,"","W"],
+  ["Caja 6","caja",15.6,8.5,0.7,0.9,"","W"],
+  ["Estantería","shelf",1.3,1.7,0.4,4.8,"#6b7682"],
+  ["Estantería","shelf",1.5,1.7,1.5,0.4,"#6b7682"],
+  ["Estantería","shelf",3,4,0.4,2.3,"#6b7682"],
+  ["Estantería","shelf",13.1,3,0.4,2.7,"#6b7682"],
+  ["Estantería","shelf",16.4,1.9,0.4,4,"#6b7682"],
+  ["Estantería","shelf",14.2,2.7,0.4,3.2,"#6b7682"],
+  ["Estantería","shelf",15.3,2.7,0.4,3.2,"#6b7682"],
+  ["Estantería","shelf",1.7,6.2,1.7,0.4,"#6b7682"],
+  ["Estantería","shelf",2.4,3.7,1,0.4,"#6b7682"],
+  ["Estantería","shelf",4.1,3.9,0.4,2.7,"#6b7682"],
+  ["Estantería","shelf",2.4,2.8,1.3,0.4,"#6b7682"],
+  ["Estantería","shelf",7.7,1.8,0.3,2.7,"#6b7682"],
+  ["Estantería","shelf",6.6,1.8,0.3,2.3,"#6b7682"],
+  ["Estantería","shelf",5.6,3.9,1.2,0.3,"#6b7682"],
+  ["Estantería","shelf",5.6,2.9,0.4,1,"#6b7682"],
+  ["Estantería","shelf",11.1,5.5,1.3,0.5,"#6b7682"],
+  ["Estantería","shelf",12.2,3,0.4,1.5,"#6b7682"],
+  ["Estantería","shelf",11.2,3,1,0.4,"#6b7682"],
+  ["Estantería","shelf",10.8,3,0.4,1.5,"#6b7682"],
+  ["Estantería","shelf",13.6,1.9,2.8,0.4,"#6b7682"],
+  ["pared","pared",7.9,5.3,0.3,4.4,"#b9808a"],
+  ["pared","pared",4.6,3.9,0.3,5.8,"#b9808a"],
+  ["pared","pared",7.9,1.4,0.3,3.1,"#b9808a"],
+  ["pared","pared",4.6,1.4,0.3,1.8,"#b9808a"],
+  ["pared","pared",12.7,3,0.3,2.1,"#b9808a"],
+  ["pared","pared",16.8,1.5,0.3,8.1,"#b9808a"],
+  ["pared","pared",1,1.6,0.3,8.1,"#b9808a"],
+  ["pared","pared",4.9,7.8,0.7,0.3,"#b9808a"],
+  ["pared","pared",6.6,7.8,1.3,0.3,"#b9808a"],
+  ["Vitrina","vidrio",1.1,9.4,16,0.3,"#bcd6e6"],
+  ["pared","pared",1,1.4,16,0.3,"#b9808a"],
+  ["pared","pared",1,0,16,0.3,"#b9808a"],
+  ["pared","pared",9.2,0,0.3,1.4,"#b9808a"],
+  ["pared","pared",3.9,0,0.3,1.4,"#b9808a"],
+  ["pared","pared",14.4,0,0.3,1.4,"#b9808a"],
+  ["Vidrio","vidrio",8,7.6,7.8,0.14,"#bcd6e6"],
+  ["Entrada delivery","door",5.7,9.4,1.1,0.25,"#c6a06a"],
+  ["Entrada","gdoor",11.2,9.4,1.6,0.25,"#bcd6e6"],
+  ["puerta","door",6.8,1.4,1,0.4,"#c6a06a"],
+  ["Vidrio","vidrio",15.6,7.6,0.2,1.9,"#bcd6e6"]
 ];
 var CAJAS=["Caja 1","Caja 2","Caja 3","Caja 4","Caja 5","Caja 6"];
 var LAY=LAYOUT.map(function(r){return r.slice();});  // layout editable (se puede mover/guardar)
@@ -647,7 +658,7 @@ function renderAlerts(){
 function applyLive(data){ if(!data) return; LIVE=data; var l=document.getElementById('loading'); if(l) l.hidden=true; renderKPIs(); renderAlerts(); if(view==='2d') render2D(); else build3D(); }
 
 // ---------------- 3D (maqueta) ----------------
-var renderer,scene,camera,cam={r:22,theta:1.45,phi:0.9},P3=[],raycaster=new THREE.Raycaster();
+var renderer,scene,camera,cam={r:22,theta:1.45,phi:0.9,tx:0,tz:0},P3=[],raycaster=new THREE.Raycaster();
 function lbl3d(text,big){ var cv=document.createElement('canvas');cv.width=256;cv.height=64;var c=cv.getContext('2d');
   c.font='bold '+(big?26:22)+'px Sora, Arial';c.textAlign='center';c.textBaseline='middle';
   c.lineWidth=5;c.strokeStyle='rgba(255,255,255,.9)';c.strokeText(text,128,32);c.fillStyle='#122034';c.fillText(text,128,32);
@@ -989,8 +1000,9 @@ function build3D(){
   addBox(0.9,0.75,0.95,0xeaf0f5,1.55,0.48,11.0);
   resize3D(); renderOnce();
 }
-function updateCam(){ var x=WORLD_W/2+cam.r*Math.sin(cam.phi)*Math.cos(cam.theta),y=cam.r*Math.cos(cam.phi),z=WORLD_H/2+cam.r*Math.sin(cam.phi)*Math.sin(cam.theta);
-  camera.position.set(x,y,z); camera.lookAt(WORLD_W/2,0,WORLD_H/2); }
+function updateCam(){ var cxw=WORLD_W/2+(cam.tx||0), czw=WORLD_H/2+(cam.tz||0);
+  var x=cxw+cam.r*Math.sin(cam.phi)*Math.cos(cam.theta),y=cam.r*Math.cos(cam.phi),z=czw+cam.r*Math.sin(cam.phi)*Math.sin(cam.theta);
+  camera.position.set(x,y,z); camera.lookAt(cxw,0,czw); }
 function resize3D(){ var w=stage.clientWidth,h=stage.clientHeight; renderer.setSize(w,h,false); if(!camera) camera=new THREE.PerspectiveCamera(48,w/h,0.1,200); camera.aspect=w/h; camera.updateProjectionMatrix(); updateCam(); }
 function renderOnce(){ if(renderer&&scene&&camera){ updateCam(); renderer.render(scene,camera); } }
 function pickAt(e){
@@ -1001,25 +1013,36 @@ function pickAt(e){
   var hits=raycaster.intersectObjects(P3,false);
   if(hits.length&&hits[0].object.userData.k) inspect(hits[0].object.userData.k);
 }
-(function(){ var cv=document.getElementById('c3d'),o=null,pts={},pd0=0,r0=0,downX=0,downY=0,moved=false;
-  cv.addEventListener('pointerdown',function(e){ if(view!=='3d')return; pts[e.pointerId]={x:e.clientX,y:e.clientY}; var k=Object.keys(pts);
-    if(k.length===1){o={x:e.clientX,y:e.clientY,th:cam.theta,ph:cam.phi}; downX=e.clientX; downY=e.clientY; moved=false;} else if(k.length===2){pd0=dist(pts[k[0]],pts[k[1]]);r0=cam.r;}
-    cv.setPointerCapture(e.pointerId); });
-  cv.addEventListener('pointermove',function(e){ if(view!=='3d')return; if(pts[e.pointerId])pts[e.pointerId]={x:e.clientX,y:e.clientY}; var k=Object.keys(pts);
+(function(){ var cv=document.getElementById('c3d'),o=null,pts={},pd0=0,r0=0,downX=0,downY=0,moved=false,pm0=null,tg0=null;
+  function mid(a,b){ return {x:(a.x+b.x)/2,y:(a.y+b.y)/2}; }
+  cv.addEventListener('pointerdown',function(e){ if(view!=='3d')return; e.preventDefault(); pts[e.pointerId]={x:e.clientX,y:e.clientY}; var k=Object.keys(pts);
+    if(k.length===1){o={x:e.clientX,y:e.clientY,th:cam.theta,ph:cam.phi}; downX=e.clientX; downY=e.clientY; moved=false;}
+    else if(k.length===2){pd0=dist(pts[k[0]],pts[k[1]]);r0=cam.r; pm0=mid(pts[k[0]],pts[k[1]]); tg0={x:cam.tx||0,z:cam.tz||0};}
+    try{ cv.setPointerCapture(e.pointerId); }catch(_e){} },{passive:false});
+  cv.addEventListener('pointermove',function(e){ if(view!=='3d')return; if(!pts[e.pointerId])return; e.preventDefault(); pts[e.pointerId]={x:e.clientX,y:e.clientY}; var k=Object.keys(pts);
     if(Math.abs(e.clientX-downX)>6||Math.abs(e.clientY-downY)>6) moved=true;
-    if(k.length===2){ var d=dist(pts[k[0]],pts[k[1]]); if(pd0>0){cam.r=Math.max(7,Math.min(50,r0*pd0/d));renderOnce();} return; }
-    if(o){ cam.theta=o.th+(e.clientX-o.x)*0.008; cam.phi=Math.max(0.25,Math.min(1.45,o.ph-(e.clientY-o.y)*0.006)); renderOnce(); } });
-  function up(e){ var single=Object.keys(pts).length===1; delete pts[e.pointerId]; pd0=0; if(Object.keys(pts).length===0)o=null;
+    if(k.length>=2){ var p1=pts[k[0]],p2=pts[k[1]]; var d=dist(p1,p2); if(pd0>0){cam.r=Math.max(7,Math.min(50,r0*pd0/d));}
+      var m=mid(p1,p2); if(pm0&&tg0){ var sc=cam.r/520; cam.tx=tg0.x-(m.x-pm0.x)*sc; cam.tz=tg0.z-(m.y-pm0.y)*sc; cam.tx=Math.max(-8,Math.min(8,cam.tx)); cam.tz=Math.max(-7,Math.min(7,cam.tz)); }
+      renderOnce(); return; }
+    if(o){ cam.theta=o.th+(e.clientX-o.x)*0.009; cam.phi=Math.max(0.22,Math.min(1.45,o.ph-(e.clientY-o.y)*0.007)); renderOnce(); } },{passive:false});
+  function up(e){ var single=Object.keys(pts).length===1; delete pts[e.pointerId]; pd0=0; pm0=null; if(Object.keys(pts).length===0)o=null;
     if(view==='3d'&&single&&!moved) pickAt(e); }
   cv.addEventListener('pointerup',up);
-  cv.addEventListener('pointercancel',function(e){ delete pts[e.pointerId]; pd0=0; if(Object.keys(pts).length===0)o=null; });
+  cv.addEventListener('pointercancel',function(e){ delete pts[e.pointerId]; pd0=0; pm0=null; if(Object.keys(pts).length===0)o=null; });
   cv.addEventListener('wheel',function(e){ if(view!=='3d')return; e.preventDefault(); cam.r=Math.max(7,Math.min(50,cam.r*(e.deltaY>0?1.1:0.9))); renderOnce(); },{passive:false});
+  // iOS Safari: bloquear el zoom de gesto del navegador para que el pellizco mueva solo el mapa
+  ['gesturestart','gesturechange','gestureend'].forEach(function(g){ cv.addEventListener(g,function(e){ e.preventDefault(); },{passive:false}); });
   function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
 })();
+window.zoom3D=function(f){ cam.r=Math.max(7,Math.min(50,cam.r*f)); renderOnce(); };
+window.resetVista=function(){ cam.r=22; cam.theta=1.45; cam.phi=0.9; cam.tx=0; cam.tz=0; renderOnce(); };
 
+var _hint3dShown=false;
 window.setView=function(v){ view=v; Array.prototype.forEach.call(document.querySelectorAll('#viewSeg button'),function(b){b.classList.toggle('on',b.dataset.v===v);});
-  var c=document.getElementById('c3d');
-  if(v==='3d'){ world.style.display='none'; c.style.display='block'; build3D(); } else { c.style.display='none'; world.style.display='block'; render2D(); } };
+  var c=document.getElementById('c3d'), ct=document.getElementById('ctrl3d');
+  if(v==='3d'){ world.style.display='none'; c.style.display='block'; if(ct)ct.hidden=false; build3D();
+    if(!_hint3dShown){ _hint3dShown=true; try{ toast('1 dedo gira · 2 dedos mueven · pellizca para zoom'); }catch(e){} } }
+  else { c.style.display='none'; world.style.display='block'; if(ct)ct.hidden=true; render2D(); } };
 
 // ════════ DATOS EN VIVO (Supabase real) ════════
 function blankLive(){ return { fecha:ymdCaracas(), conectado:false, ultima_sync:'—',
