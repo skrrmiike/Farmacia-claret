@@ -1,0 +1,31 @@
+Modelos 3D (.glb) para "Claret en Vivo" (planta.html)
+=====================================================
+Pon aquí los archivos .glb que exportes de Blender. En planta.html, dentro
+del bloque  var MODELS = { ... }  descomenta/añade la línea del objeto y
+apunta a su archivo. Si un objeto no tiene .glb, se usa la figura hecha por
+código (que ya se ve bien), así que puedes ir reemplazando pieza por pieza.
+
+Nombres sugeridos (los que ya están preparados en el código):
+  estanteria.glb   -> estantes de medicina (shelf)
+  nevera.glb       -> neveras de bebidas (nevera)
+  gondola.glb      -> góndola de chucherías / mercancía (merca)
+  sofa.glb         -> sofá del break zone (sofa)
+  mesa.glb         -> mesa de comer del break zone (mesacom)
+  persona_f.glb    -> cajera / persona (mujer)
+  persona_m.glb    -> cajero / persona (hombre)
+
+Reglas de exportación desde Blender (importante para que calce):
+  - Formato: glTF Binary (.glb). Incluye las texturas dentro del archivo.
+  - Escala real en METROS (1 unidad = 1 metro). Una estantería ~1.85 m de alto.
+  - Eje arriba: Y up (en el exportador glTF de Blender es la opción por defecto).
+  - Origen (pivote) centrado en la base del objeto: X,Y al centro y Z=0 abajo,
+    apoyado en el "suelo". Usa Object > Set Origin > Origin to Center of Mass
+    y luego baja el objeto para que su base quede en Z=0.
+  - Orientación: el frente del objeto mirando hacia +Z (hacia el pasillo/cliente).
+  - Pocos polígonos (low-poly) para que el celular no se trabe. Ideal < 50k
+    triángulos por modelo; texturas <= 1024 px.
+  - Aplica transformaciones antes de exportar: Ctrl+A > All Transforms.
+
+El código ajusta automáticamente el tamaño del modelo al hueco que ocupa en
+la planta y lo apoya en el piso, así que no tiene que ser exacto al milímetro,
+pero respetar metros/orientación hace que se vea natural.
